@@ -1,0 +1,19 @@
+# Abhängigkeiten und gebaute Dateien
+node_modules
+dist
+
+# Mac
+.DS_Store
+
+# Persönliche Einstellungen und Geheimnisse
+.claude/settings.local.json
+.env
+.env.*
+*.local
+*.pem
+*.key
+
+# Kurs-Werkzeuge: bleiben nur auf diesem Mac
+.agents/
+.claude/skills/
+skills-lock.json

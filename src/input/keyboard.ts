@@ -1,0 +1,64 @@
+import type { InputState } from '../logic/input';
+
+const LEFT = new Set(['ArrowLeft', 'KeyA']);
+const RIGHT = new Set(['ArrowRight', 'KeyD']);
+const JUMP = new Set(['ArrowUp', 'KeyW', 'Space']);
+const ENTER = new Set(['Enter', 'NumpadEnter']);
+const GAME_KEYS = new Set([...LEFT, ...RIGHT, ...JUMP, ...ENTER]);
+
+export interface Keyboard {
+  /** Current input. "Pressed" events stay until `consume()` is called. */
+  read(): InputState;
+  /** Call after each logic step: pressed events count for exactly one step. */
+  consume(): void;
+}
+
+/**
+ * Turns key events into an InputState. Uses `event.code` (key position),
+ * so it works the same on German and English keyboards.
+ */
+export function createKeyboard(target: Window): Keyboard {
+  const held = new Set<string>();
+  let jumpPressed = false;
+  let enterPressed = false;
+
+  target.addEventListener('keydown', (e) => {
+    if (!GAME_KEYS.has(e.code)) return;
+    // Space and arrows would otherwise scroll the page.
+    e.preventDefault();
+    held.add(e.code);
+    // Auto repeat of a held key is not a new press.
+    if (e.repeat) return;
+    if (JUMP.has(e.code)) jumpPressed = true;
+    if (ENTER.has(e.code)) enterPressed = true;
+  });
+
+  target.addEventListener('keyup', (e) => {
+    if (!GAME_KEYS.has(e.code)) return;
+    e.preventDefault();
+    held.delete(e.code);
+  });
+
+  // Window loses focus → keyup events would get lost, so release everything.
+  target.addEventListener('blur', () => {
+    held.clear();
+    jumpPressed = false;
+    enterPressed = false;
+  });
+
+  const anyHeld = (keys: Set<string>) => [...keys].some((k) => held.has(k));
+
+  return {
+    read: () => ({
+      left: anyHeld(LEFT),
+      right: anyHeld(RIGHT),
+      jumpHeld: anyHeld(JUMP),
+      jumpPressed,
+      enterPressed,
+    }),
+    consume: () => {
+      jumpPressed = false;
+      enterPressed = false;
+    },
+  };
+}
