@@ -105,7 +105,9 @@ Build order. Each slice is something you can see and click when it's done. `/afs
 11. **Claudias neues Aussehen** — man sieht, dass Claudia eine Roboterin ist.
     Done when: Claudia sieht im Spiel, auf dem Titelbild und im Abspann erkennbar weiblich aus
     (z. B. Schleife, Wimpern oder eine andere Antenne). Die Spielfigur ist dabei genauso groß wie
-    vorher, sodass sich am Spielgefühl nichts ändert.
+    vorher, sodass sich am Spielgefühl nichts ändert. Die Beine schwingen beim Laufen weich wie im
+    Prototyp, statt zwischen zwei festen Stellungen hin- und herzuspringen. Das fällt vor allem bei
+    der dreifach großen Figur auf dem Titelbild auf (Wunsch aus dem Test von Slice 4).
 
 ## Open questions
 
