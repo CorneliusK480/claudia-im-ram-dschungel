@@ -916,3 +916,730 @@ Game Over (state gameover) (game.html, Zeilen 1390–1398):
     }
 ```
 
+---
+
+## 9. Spielablauf-Bildschirme im Detail (Slice 4)
+
+Aus `game.html` nachgetragen (Titel, Level-Intro, Pause, Level geschafft, Game Over, Abspann,
+Highscore, Tasten). Code wörtlich, „Claude“ steht so wie im Prototyp; im neuen Spiel wird daraus
+„Claudia“. Was schon in Abschnitt 7 oder 8 steht, wird hier nicht wiederholt:
+`text()`, `panel()`, `blinkCol()`, `rr()`, `hash()`, `pick()`, `drawRobot()`, `drawHUD()`,
+Spieler zeichnen, `hurt()`/`die()`/`respawn()`, Todessprüche und Feedback-Texte sowie die Zeichnung
+von Todesbalken, „Level geschafft“ und Game Over. Hintergrund und Welt (`drawBackground()`
+Zeilen 842–894, `drawTiles()` 916–965, `drawWorld()` 1129–1285) sind im neuen Code schon umgesetzt.
+
+**Lesehilfe für Positionen:** `VW / 2 = 480`, `VH / 2 = 272`. Bei `text(str, x, y, size, color, align)`
+ist `y` die Grundlinie. Ohne Angabe ist der Text um `x` zentriert, immer fett, mit Schatten `#000a`
+um +2/+2 px.
+
+**Zeitbasis:** feste Schritte von 1/60 s. `gt` ist die Gesamtspielzeit. `stateT` ist die Zeit seit
+dem letzten Zustandswechsel. Beide laufen in jedem Zustand weiter, auch in der Pause.
+
+### 9.1 Zustände
+
+#### Alle Werte von `state`
+
+| Wert | Bedeutung |
+|---|---|
+| `'title'` | Titelbild (Startwert, Zeile 302) |
+| `'intro'` | Level-Intro (Levelname wird eingeblendet) |
+| `'play'` | Spielen |
+| `'pause'` | Pause |
+| `'dead'` | Todesbalken nach dem Verlust eines Lebens |
+| `'levelDone'` | Level geschafft |
+| `'gameover'` | Game Over |
+| `'win'` | Abspann nach dem letzten Level |
+
+#### Übergänge
+
+| Von → Nach | Auslöser (Taste/Bedingung) | Was dabei passiert / zurückgesetzt wird |
+|---|---|---|
+| Seitenstart → `title` | `toTitle()` in Zeile 1412 | `loadLevel(0)` (setzt kurz `intro`, baut Level 1 neu auf), `playMusic('jungle')`, `setState('title')` |
+| `title` → `intro` | `go` = `pressed.start \|\| pressed.jump` (ENTER, Leertaste, ↑, W, Touch-Sprungknopf, Tippen auf die Zeichenfläche). Keine Wartezeit. | `newGame()`: `score = 0`, `lives = 3`, `tokens = 0`, `hasDouble = false`, `loadLevel(0)` |
+| `intro` → `play` | `stateT > 2.5` (automatisch) **oder** `stateT > 0.4 && go` | nichts weiter |
+| `play` → `pause` | `pressed.pause` (P oder ESC) | nichts |
+| `pause` → `play` | `pressed.pause \|\| pressed.start` (P, ESC oder ENTER, Touch: Tippen auf die Zeichenfläche) | nichts. Leertaste/↑/W setzen die Pause **nicht** fort. |
+| `play` → `dead` | `die()`: Treffer ohne Firewall (`hurt()`), Lava (`p.y + p.h > VH - 30` in Lava-Leveln, Meldung „Überhitzt! CPU bei 105 °C“) oder Absturz (`p.y > VH + 40`) | `lives--`, `deathMsg` (eigene Meldung oder zufällig aus `DEATH_MSGS`), `SND.hurt()`, `shake = 0.3`, `feedback = null`, `invertT = 0`, Partikel `#D97757` |
+| `dead` → `play` | `lives > 0` und (Feedback gegeben und 1.6 s vergangen **oder** ohne Feedback `stateT > 3.2` **oder** `stateT > 0.7 && pressed.start` = nur ENTER bzw. Tippen) | `respawn()`: Position = letzter Checkpoint (`spawnX/spawnY`), `vx = vy = 0`, `inv = 1.5`, `shield = false`, `riding = null`, Boss-Geschosse/Schockwellen/Prompt-Schüsse gelöscht, API-Credits `rate` zurück auf 5, `banner = null`. `levelTime` läuft **weiter** (kein Reset). |
+| `dead` → `gameover` | wie oben, aber `lives <= 0` | `saveHigh()`, `playMusic(null)` (Musik aus), `SND.over()` |
+| `play` → `levelDone` | Spieler berührt das (entsperrte) Ziel-Terminal | `score += 500 + bonus`, `ents.goal.bonus = bonus`, `SND.win()`, Partikel |
+| `levelDone` → `intro` | `stateT > 1.2 && go`, wenn es ein nächstes Level gibt | `loadLevel(levelIdx + 1)` |
+| `levelDone` → `win` | `stateT > 1.2 && go` nach dem letzten Level | `saveHigh()`, `playMusic(null)`, `SND.win()` |
+| `gameover` → `intro` | `stateT > 1.2 && go` (ENTER, Leertaste, ↑, W, Touch) | `lives = 3`, `score = Math.floor(score / 2)`, `loadLevel(levelIdx)` (gleiches Level von vorn) |
+| `gameover` → `title` | `stateT > 1.2 && pressed.pause` (ESC **oder P**) | `toTitle()` |
+| `win` → `title` | `stateT > 1.2 && go` | `toTitle()` |
+
+Taste M (Ton an/aus) wirkt in **jedem** Zustand (Zeile 397). In den Zuständen `intro`, `dead`, `levelDone`, `win` und `title` wird P/ESC ignoriert.
+
+Zustandsvariablen (Zeilen 301–308):
+
+(game.html, Zeilen 301–308)
+
+```js
+// ---------------------------------------------------------------- Zustand
+let state = 'title', stateT = 0, gt = 0, shake = 0;
+let levelIdx = 0, L, grid, theme;
+let p, cam = 0, score = 0, lives = 3, tokens = 0, levelTime = 0, deathMsg = '', hasDouble = false;
+let highscore = +(localStorage.getItem('claudeJungleHigh') || 0);
+let rate = { credits: 5, lock: 0, idle: 0 };   // API-Credits für die Prompt-Kanone
+let invertT = 0, banner = null, feedback = null, bossPromptCd = 0;
+let ents; // alle Objekte des aktuellen Levels
+```
+
+`loadLevel()`, `newGame()` und `setState()` (Zeilen 322–352). `loadLevel()` ruft am Ende `setState('intro')` auf und setzt `cam = 0` und `levelTime = 0`:
+
+(game.html, Zeilen 322–352)
+
+```js
+function loadLevel(i) {
+  levelIdx = i; L = LEVELS[i]; theme = L.theme; grid = buildGrid(L);
+  ents = {
+    bugs: (L.bugs || []).map(([c, r]) => ({ x: c * T + 4, y: (r + 1) * T - 18, w: 24, h: 18, vx: -60, vy: 0, alive: true, squash: 0 })),
+    viruses: (L.viruses || []).map(([c, r], k) => ({ x0: c * T, y0: r * T, x: c * T, y: r * T, w: 24, h: 24, t: k * 1.7, alive: true, squash: 0 })),
+    movers: [
+      ...(L.movers || []).map(([c, r, len, range, speed]) => ({ x0: c * T, x: c * T, y: r * T, w: len * T, h: 12, range: range * T, speed, t: 0, dx: 0 })),
+      ...(L.crumbles || []).map(([c, r, len]) => ({ crumble: true, x: c * T, y: r * T, y0: r * T, w: len * T, h: 14, dx: 0, vy: 0, timer: -1, gone: 0 })),
+    ],
+    tokens: [], power: (L.power || []).map(([c, r]) => ({ x: c * T + 16, y: r * T + 16, taken: false })),
+    dj: (L.dj || []).map(([c, r]) => ({ x: c * T + 16, y: r * T + 16, taken: false })),
+    saves: (L.saves || []).map(c => ({ x: c * T, y: 14 * T, active: false })),
+    leaks: (L.leaks || []).map(([c, r], k) => ({ x: c * T + 16, y: r * T, t: 0.5 + k * 0.6, period: 1.8 + hash(k + 3) * 1.2 })),
+    injectors: (L.injectors || []).map(([c, r]) => ({ x: c * T + 5, y: (r + 1) * T - 34, w: 22, h: 34, vx: -40, vy: 0, alive: true, squash: 0,
+      sign: pick(INJECT_SIGNS), signT: Math.random() * 2 })),
+    drops: [], particles: [], texts: [], projs: [], waves: [], shots: [], pets: [],
+    goal: { x: L.goal[0] * T, y: (L.goal[1] - 1) * T, w: 48, h: 64, locked: !!L.boss },
+    boss: L.boss ? { x: L.boss[0] * T, y: FLOOR - 72, w: 96, h: 72, vx: 0, vy: 0, hp: 5, maxHp: 5, inv: 0, face: -1,
+                     mode: 'walk', attackT: 2.5, throwT: 0, talk: '', talkT: 0, talkCd: 3, dead: false, deadT: 0, onGround: true } : null,
+  };
+  rate = { credits: 5, lock: 0, idle: 0 }; invertT = 0; banner = null;
+  for (const [c, r, n] of [...(L.tokens || []), ...(L.fakeTokens || [])]) for (let k = 0; k < n; k++) ents.tokens.push({ x: (c + k) * T + 16, y: r * T + 16, taken: false });
+  p = { x: L.start[0] * T + 5, y: L.start[1] * T + 4, w: 22, h: 28, vx: 0, vy: 0, onGround: false, coyote: 0, jumpBuf: 0, usedDouble: false,
+        face: 1, shield: false, inv: 0, riding: null, runT: 0, spawnX: L.start[0] * T + 5, spawnY: L.start[1] * T + 4 };
+  cam = 0; levelTime = 0;
+  playMusic(L.music);
+  setState('intro');
+}
+
+function newGame() { score = 0; lives = 3; tokens = 0; hasDouble = false; loadLevel(0); }
+function setState(s) { state = s; stateT = 0; }
+```
+
+Die komplette Zustandsmaschine `update()` (Zeilen 393–436). Am Ende werden alle `pressed`-Tasten gelöscht, ein Tastendruck gilt also nur für einen Schritt:
+
+(game.html, Zeilen 393–436)
+
+```js
+function update(dt) {
+  gt += dt; stateT += dt;
+  shake = Math.max(0, shake - dt);
+  if (banner && (banner.t -= dt) <= 0) banner = null;
+  if (pressed.mute) muted = !muted;
+  const go = pressed.start || pressed.jump;
+
+  if (state === 'title') {
+    cam = (gt * 60) % (L.width * T - VW);
+    if (go) newGame();
+  } else if (state === 'intro') {
+    updateWorld(dt, false);
+    if (stateT > 2.5 || (stateT > 0.4 && go)) setState('play');
+  } else if (state === 'play') {
+    if (pressed.pause) setState('pause');
+    else { levelTime += dt; updatePlayer(dt); updateWorld(dt, true); }
+  } else if (state === 'pause') {
+    if (pressed.pause || pressed.start) setState('play');
+  } else if (state === 'dead') {
+    updateWorld(dt, false);
+    // "War diese Antwort hilfreich?" – ← = 👍, → = 👎
+    if (!feedback && stateT > 0.7 && (pressed.left || pressed.right)) {
+      feedback = { up: !!pressed.left, text: pick(pressed.left ? FEEDBACK_UP : FEEDBACK_DOWN), t: stateT };
+      SND.blip();
+    }
+    const done = feedback ? stateT - feedback.t > 1.6 : stateT > 3.2;
+    if (done || (stateT > 0.7 && pressed.start)) {
+      if (lives <= 0) { saveHigh(); playMusic(null); SND.over(); setState('gameover'); }
+      else respawn();
+    }
+  } else if (state === 'levelDone') {
+    updateWorld(dt, false);
+    if (stateT > 1.2 && go) {
+      if (levelIdx + 1 < LEVELS.length) loadLevel(levelIdx + 1);
+      else { saveHigh(); playMusic(null); setState('win'); SND.win(); }
+    }
+  } else if (state === 'gameover') {
+    if (stateT > 1.2 && go) { lives = 3; score = Math.floor(score / 2); loadLevel(levelIdx); }
+    else if (stateT > 1.2 && pressed.pause) toTitle();
+  } else if (state === 'win') {
+    if (stateT > 1.2 && go) toTitle();
+  }
+  for (const k in pressed) delete pressed[k];
+}
+```
+
+`toTitle()`, `saveHigh()` und `showBanner()` (Zeilen 438–441):
+
+(game.html, Zeilen 438–441)
+
+```js
+function toTitle() { loadLevel(0); playMusic('jungle'); setState('title'); }
+function saveHigh() { if (score > highscore) { highscore = score; localStorage.setItem('claudeJungleHigh', highscore); } }
+
+function showBanner(text, color = '#fff', t = 2.2) { banner = { text, color, t }; }
+```
+
+Auslöser für den Tod: Lava und Absturz (Zeilen 534–535):
+
+(game.html, Zeilen 534–535)
+
+```js
+  if (theme.lava && p.y + p.h > VH - 30) return die('Überhitzt! CPU bei 105 °C');
+  if (p.y > VH + 40) return die();
+```
+
+Musik in der Pause stummschalten (Zeilen 286–289; `tickMusic` plant keine neuen Noten, solange `state === 'pause'`):
+
+(game.html, Zeilen 286–289)
+
+```js
+function tickMusic() {
+  if (!actx || actx.state !== 'running') return;
+  const tr = music.track;
+  if (!tr || muted || state === 'pause') { music.next = 0; return; }
+```
+
+---
+
+### 9.2 Titelbild
+
+**Was gezeichnet wird (in dieser Reihenfolge):**
+
+1. **Hintergrund:** `drawBackground()` + `drawWorld()` von **Level 1** (der Titel ruft immer vorher `loadLevel(0)` auf), inkl. Bildschirmwackeln-Transform. Die Kamera fährt automatisch: `cam = (gt * 60) % (L.width * T - VW)`, also 60 px/s nach rechts. Bei Level 1 ist `L.width * T - VW = 130 * 32 - 960 = 3200`, danach springt sie zurück auf 0 (nach ≈ 53.3 s). `updateWorld` läuft im Titel **nicht**: Gegner stehen still, aber alles, was nur von `gt` abhängt, bewegt sich (Binär-Regen, Lianen, schwebende/drehende Tokens, Bug-Beine, Virus-Drehung …). Der Spieler-Roboter in der Welt wird im Titel **nicht** gezeichnet (Zeile 1267).
+2. `panel(0.55)`: schwarze Abdunklung über das ganze Bild, Alpha 0.55.
+3. `'CLAUDE'`: 64 px, `#D97757`, x `VW / 2` (480), y 130
+4. `'im RAM-Dschungel'`: 32 px, `theme.accent` (Level 1: `#3cff9a`), x `VW / 2`, y 180
+5. **Figur:** `drawRobot(VW / 2 - 33, 215 + Math.abs(Math.sin(gt * 3)) * -20, 1, gt * 300, 3)`, also Skalierung 3 (22 px Breite × 3 = 66 px, darum `- 33` zum Zentrieren), schaut nach rechts (`face = 1`). **Hüpfen:** y schwankt zwischen 215 (unten) und 195 (oben), Form `|sin|` = federnde Bögen, ein Hüpfer dauert π/3 ≈ 1.05 s. **Beine** laufen (`run = gt * 300` → Schrittphase `Math.sin(run / 7) * 2.5`). Die Augen blinken alle 3.2 s für 0.12 s. Die Antennenkugel ist gelb, oder lila, wenn `hasDouble` noch vom letzten Spiel `true` ist (wird erst bei `newGame()` zurückgesetzt).
+6. `'Drücke ENTER oder LEERTASTE'`: 22 px, `blinkCol()`, y 360. **Blinken:** `gt % 1 < 0.6` → `#fff`, sonst `#fff6`: 0.6 s voll weiß, 0.4 s halbtransparent, Takt 1 s.
+7. `'← → / A D : laufen     ↑ / W / Leertaste : springen'`: 15 px, `#ccc`, y 410
+8. `'X / F : Prompt abfeuern     P : Pause     M : Musik & Ton an/aus'`: 15 px, `#ccc`, y 435
+9. `'Hilf Claude, sich durch den Speicher zum OUTPUT zu kämpfen!'`: 15 px, `#ffd84a`, y 480
+10. Nur wenn `highscore` ungleich 0: `` `Highscore: ${highscore}` ``, 14 px, `#fff9`, y 515
+
+Kein HUD auf dem Titelbild (`return` vor `drawHUD()`).
+
+**Tasten zum Starten:** `go = pressed.start || pressed.jump`, also ENTER, Leertaste, ↑, W. Auf Touch-Geräten der Sprungknopf ⤒ oder Tippen auf die Zeichenfläche. Keine Eingabesperre. Der erste Tastendruck startet auch das Audio (`initAudio()` im keydown-Handler). Erst ab da ist die Titelmusik `jungle` hörbar.
+
+**Was beim Start passiert:** `newGame()`: `score = 0`, `lives = 3`, `tokens = 0`, `hasDouble = false`, dann `loadLevel(0)`: `levelIdx = 0`, Level/Gegner/Tokens neu, neuer Spieler `p` (ohne Firewall, ohne Unverwundbarkeit, Start-Position), `rate` (5 API-Credits), `invertT = 0`, `banner = null`, `cam = 0`, `levelTime = 0`, Musik des Levels, Zustand `intro`. `highscore` bleibt.
+
+Titel-Logik in `update()` (Zeilen 400–402):
+
+(game.html, Zeilen 400–402)
+
+```js
+  if (state === 'title') {
+    cam = (gt * 60) % (L.width * T - VW);
+    if (go) newGame();
+```
+
+`newGame()` (Zeile 351) und `toTitle()` (Zeile 438):
+
+(game.html, Zeile 351)
+
+```js
+function newGame() { score = 0; lives = 3; tokens = 0; hasDouble = false; loadLevel(0); }
+```
+
+(game.html, Zeile 438)
+
+```js
+function toTitle() { loadLevel(0); playMusic('jungle'); setState('title'); }
+```
+
+Anfang von `render()`: Hintergrund und Welt mit Wackeln, dann das Titelbild (Zeilen 1342–1359):
+
+(game.html, Zeilen 1342–1359)
+
+```js
+function render() {
+  ctx.save();
+  if (shake > 0) ctx.translate((Math.random() - 0.5) * 12 * shake / 0.3, (Math.random() - 0.5) * 12 * shake / 0.3);
+  drawBackground();
+  drawWorld();
+  ctx.restore();
+  if (state === 'title') {
+    panel(0.55);
+    text('CLAUDE', VW / 2, 130, 64, '#D97757');
+    text('im RAM-Dschungel', VW / 2, 180, 32, theme.accent);
+    drawRobot(VW / 2 - 33, 215 + Math.abs(Math.sin(gt * 3)) * -20, 1, gt * 300, 3);
+    text('Drücke ENTER oder LEERTASTE', VW / 2, 360, 22, blinkCol());
+    text('← → / A D : laufen     ↑ / W / Leertaste : springen', VW / 2, 410, 15, '#ccc');
+    text('X / F : Prompt abfeuern     P : Pause     M : Musik & Ton an/aus', VW / 2, 435, 15, '#ccc');
+    text('Hilf Claude, sich durch den Speicher zum OUTPUT zu kämpfen!', VW / 2, 480, 15, '#ffd84a');
+    if (highscore) text(`Highscore: ${highscore}`, VW / 2, 515, 14, '#fff9');
+    return;
+  }
+```
+
+---
+
+### 9.3 Level-Intro
+
+- **Dauer:** 2.5 s automatisch (`stateT > 2.5`).
+- **Überspringen:** ja, ab `stateT > 0.4` mit `go` (ENTER, Leertaste, ↑, W, Touch). Weil `pressed` nach jedem Schritt geleert wird, löst die Taste zum Überspringen **keinen** Sprung im Spiel aus.
+- **Ein- und Ausblenden:** `a = Math.min(1, stateT * 3, (2.5 - stateT) * 3)` als `globalAlpha`. Das heißt 0.33 s einblenden, voll sichtbar bis 2.17 s, dann 0.33 s ausblenden. Beim Überspringen verschwindet das Intro sofort, ohne Ausblenden.
+- **Halbtransparente Ebene:** ja, nur ein Balken, kein Vollbild-Panel: `#000b` (schwarz, Alpha ≈ 0.73), volle Breite, `y = VH / 2 - 70` (202), Höhe 120. Er wird zusätzlich mit `a` ausgeblendet.
+- **Texte:**
+  - `L.name` (z. B. `'Level 1: RAM-Dschungel'`): 34 px, x `VW / 2`, y `VH / 2 - 15` (257), Farbe `theme.accent`, im Boss-Level `#ff4f6a`
+  - `L.sub` (z. B. `'Spring auf Bugs, um sie zu fixen. Sammle Tokens!'`): 17 px, `#fff`, y `VH / 2 + 25` (297)
+- **HUD** wird gezeichnet (unter dem Balken).
+- **Welt läuft weiter:** ja, `updateWorld(dt, false)`. Gegner laufen, Plattformen fahren, Partikel und Texte laufen weiter, aber ohne Kollision mit Claude (`interactive = false`). Der Boss steht still (`b.vx = 0`). Die Kamera folgt dem Spieler (Zeilen 697–702).
+- **Claude bewegt sich nicht:** `updatePlayer()` wird nur in `play` aufgerufen. Der Roboter wird an der Startposition gezeichnet, ohne Laufanimation.
+- **Level-Zeit:** läuft **nicht** (`levelTime += dt` nur in `play`). Sie wurde in `loadLevel()` auf 0 gesetzt.
+- Pause ist im Intro nicht möglich.
+
+Intro-Logik (Zeilen 403–405):
+
+(game.html, Zeilen 403–405)
+
+```js
+  } else if (state === 'intro') {
+    updateWorld(dt, false);
+    if (stateT > 2.5 || (stateT > 0.4 && go)) setState('play');
+```
+
+Intro-Zeichnung (Zeilen 1360–1367):
+
+(game.html, Zeilen 1360–1367)
+
+```js
+  drawHUD();
+  if (state === 'intro') {
+    const a = Math.min(1, stateT * 3, (2.5 - stateT) * 3);
+    ctx.globalAlpha = Math.max(0, a);
+    ctx.fillStyle = '#000b'; ctx.fillRect(0, VH / 2 - 70, VW, 120);
+    text(L.name, VW / 2, VH / 2 - 15, 34, ents.boss ? '#ff4f6a' : theme.accent);
+    text(L.sub, VW / 2, VH / 2 + 25, 17, '#fff');
+    ctx.globalAlpha = 1;
+```
+
+Kamera in `updateWorld()` (Zeilen 697–702):
+
+(game.html, Zeilen 697–702)
+
+```js
+  // Kamera
+  if (state !== 'title') {
+    const target = p.x + p.w / 2 - VW / 2 + p.face * 60;
+    cam += (target - cam) * Math.min(1, dt * 5);
+    cam = Math.max(0, Math.min(cam, L.width * T - VW));
+  }
+```
+
+Boss steht still, wenn nicht interaktiv (Zeilen 816–818):
+
+(game.html, Zeilen 816–818)
+
+```js
+  } else {
+    b.vx = 0;
+  }
+```
+
+Level-Namen und Untertitel (Zeilen 44–45, 61–62, 79–80, 100–101, 120–121):
+
+(game.html, Zeilen 44–45)
+
+```js
+    name: 'Level 1: RAM-Dschungel',
+    sub: 'Spring auf Bugs, um sie zu fixen. Sammle Tokens!',
+```
+
+(game.html, Zeilen 61–62)
+
+```js
+    name: 'Level 2: Cache-Canyon',
+    sub: 'Reite auf den Datenbussen über den Canyon!',
+```
+
+(game.html, Zeilen 79–80)
+
+```js
+    name: 'Level 3: Festplatten-Höhle',
+    sub: 'Vorsicht: Memory Leaks tropfen von der Decke!',
+```
+
+(game.html, Zeilen 100–101)
+
+```js
+    name: 'Level 4: CPU-Vulkan',
+    sub: 'Überhitzte Register zerbröseln unter dir. Nicht trödeln!',
+```
+
+(game.html, Zeilen 120–121)
+
+```js
+    name: 'Level 5: Legacy-Code',
+    sub: 'BOSS: LEGACY_BUG.exe – seit 1998 ungetestet. Spring ihm auf den Kopf!',
+```
+
+---
+
+### 9.4 Pause
+
+- **Pausieren:** P oder ESC (beide auf `'pause'` gelegt), **nur im Zustand `play`**.
+- **Weiter:** P, ESC oder ENTER (`pressed.pause || pressed.start`). Auf Touch-Geräten: Tippen auf die Zeichenfläche setzt `pressed.start` und setzt die Pause fort. Es gibt aber **keinen** Touch-Knopf zum Pausieren.
+- **Andere Tasten in der Pause:** M (Ton an/aus) funktioniert. ESC macht dasselbe wie P. Alles andere wird ignoriert.
+- **Was steht still:** Spieler, Welt, Gegner, Partikel, Kamera, `levelTime`, `invertT` (Prompt-Injection-Timer) und die API-Credits. Das liegt daran, dass `updatePlayer`/`updateWorld` nicht laufen.
+- **Was läuft weiter:** `gt` und `stateT` (darum bewegen sich alle `gt`-Animationen in der Zeichnung weiter, z. B. Binär-Regen, Token-Drehen, Lianen, Blinken). Außerdem laufen der Banner-Timer (`banner.t`, Zeile 396) und das Abklingen von `shake` (Zeile 395) weiter. Die **Musik** stoppt (`tickMusic` plant keine Noten, `music.next = 0`). Bereits geplante Noten (bis 0.15 s) klingen noch aus.
+- **Zeichnung:** Welt und HUD, darüber `panel(0.6)` (Vollbild schwarz, Alpha 0.6), dann
+  - `'PAUSE'`: 48 px, `#fff`, x `VW / 2`, y `VH / 2 - 10` (262)
+  - `'Claude denkt nach... (P zum Weiterspielen)'`: 16 px, `#ccc`, y `VH / 2 + 30` (302)
+- **Automatisch bei Tab-Wechsel:** **nein.** Es gibt keinen `visibilitychange`-, `blur`- oder `focus`-Handler. Im Hintergrund-Tab pausiert der Browser `requestAnimationFrame`, das Spiel friert also faktisch ein, steht danach aber weiter im Zustand `play`. Beim Zurückkehren wird der Zeitsprung auf 0.25 s gekappt (`Math.min(0.25, …)`), also höchstens 15 Simulationsschritte Nachholen. Gedrückt gehaltene Tasten (`held`) können „hängen“, wenn sie während des Tab-Wechsels losgelassen wurden, weil dann kein `keyup` ankommt.
+
+Pause-Logik (Zeilen 406–410):
+
+(game.html, Zeilen 406–410)
+
+```js
+  } else if (state === 'play') {
+    if (pressed.pause) setState('pause');
+    else { levelTime += dt; updatePlayer(dt); updateWorld(dt, true); }
+  } else if (state === 'pause') {
+    if (pressed.pause || pressed.start) setState('play');
+```
+
+Pause-Zeichnung (Zeilen 1368–1371):
+
+(game.html, Zeilen 1368–1371)
+
+```js
+  } else if (state === 'pause') {
+    panel(0.6);
+    text('PAUSE', VW / 2, VH / 2 - 10, 48, '#fff');
+    text('Claude denkt nach... (P zum Weiterspielen)', VW / 2, VH / 2 + 30, 16, '#ccc');
+```
+
+Hauptschleife mit der 0.25-s-Kappung (Zeilen 1411–1421):
+
+(game.html, Zeilen 1411–1421)
+
+```js
+// ---------------------------------------------------------------- Loop
+toTitle();
+let last = performance.now(), acc = 0;
+function frame(now) {
+  acc += Math.min(0.25, (now - last) / 1000); last = now;
+  while (acc >= STEP) { update(STEP); acc -= STEP; }
+  tickMusic();
+  render();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+```
+
+---
+
+### 9.5 Level geschafft
+
+- **Auslöser:** im Zustand `play`, wenn das Ziel **nicht gesperrt** ist (`!ents.goal.locked`) und der Spieler die Zone `{ x: goal.x, y: goal.y - 160, w: 48, h: 224 }` berührt. Die Zone ist absichtlich hoch, damit es auch im Sprung zählt. Das Ziel steht bei `goal.x = L.goal[0] * T`, `goal.y = (L.goal[1] - 1) * T`. Im Boss-Level ist das Ziel gesperrt (`locked: !!L.boss`), bis der Boss besiegt ist und dann 1.8 s vergangen sind.
+- **Punkte:** `score += 500 + bonus`. Zeitbonus: `bonus = Math.max(0, Math.floor((240 - levelTime) * 5))`, also 5 Punkte pro Sekunde unter 240 s, abgerundet, nie negativ. Ab 240 s gibt es 0 Bonus.
+- **levelTime:** wird in `loadLevel()` auf 0 gesetzt (Levelstart, Level nochmal nach Game Over). Sie zählt nur im Zustand `play` hoch, also nicht im Intro, in der Pause, im Todesbalken oder in „Level geschafft“. Beim Respawn nach einem Tod wird sie **nicht** zurückgesetzt.
+- **Sound/Effekt:** `SND.win()` und 40 Partikel in `theme.accent`. Das Terminal zeigt jetzt `'✓'` statt `'>_'`.
+- **Welt** läuft weiter (`updateWorld(dt, false)`), Claude steht still, Kollisionen sind aus.
+- **Zeichnung:** Welt und HUD, darüber `panel(0.5)`, dann
+  - `'Task erfolgreich abgeschlossen ✓'`: 32 px, `theme.accent`, y `VH / 2 - 40` (232)
+  - `` `Zeitbonus: +${ents.goal.bonus}   Score: ${score}` ``: 18 px, `#ffd84a`, y `VH / 2` (272). Der Score enthält schon die 500 und den Bonus.
+  - erst ab `stateT > 1.2`: `'ENTER: nächster Task'` bzw. nach dem letzten Level `'ENTER: Abschluss'`, 18 px, `blinkCol()`, y `VH / 2 + 50` (322)
+- **Eingabesperre:** 1.2 s (`stateT > 1.2`).
+- **Tasten weiter:** `go`, also ENTER, Leertaste, ↑, W (Touch: Sprungknopf, Tippen).
+- **Nach dem letzten Level** (`levelIdx + 1 >= LEVELS.length`, also nach Level 5): `saveHigh()`, Musik aus, Zustand `win`, `SND.win()` (der Sieg-Jingle erklingt damit ein zweites Mal).
+- **Beim Wechsel ins nächste Level** (`loadLevel(levelIdx + 1)`):
+  - **übernommen:** `lives`, `score`, `tokens` (Zähler läuft weiter, auch für 1UP alle 100), `hasDouble` (Doppelsprung bleibt), `highscore`, `muted`
+  - **zurückgesetzt:** Spieler `p` wird neu erzeugt: Firewall (`shield`) **weg**, `inv = 0`, Start-Position, Checkpoint = Start, Blick nach rechts. Ebenfalls zurückgesetzt: alle Objekte (`ents`), API-Credits (`rate`), `invertT`, `banner`, `cam = 0`, `levelTime = 0`. Die Musik wechselt zum Level-Track, der Zustand wird `intro`.
+
+Ziel-Erkennung in `updatePlayer()` (Zeilen 570–576):
+
+(game.html, Zeilen 570–576)
+
+```js
+  // Ziel (hohe Trefferzone, damit es auch im Sprung zählt)
+  if (!ents.goal.locked && overlap(p, { x: ents.goal.x, y: ents.goal.y - 160, w: 48, h: 224 })) {
+    const bonus = Math.max(0, Math.floor((240 - levelTime) * 5));
+    score += 500 + bonus; ents.goal.bonus = bonus;
+    SND.win(); burst(ents.goal.x + 24, ents.goal.y + 20, theme.accent, 40, 300);
+    setState('levelDone');
+  }
+```
+
+Ziel-Objekt in `loadLevel()` (Zeile 338):
+
+(game.html, Zeile 338)
+
+```js
+    goal: { x: L.goal[0] * T, y: (L.goal[1] - 1) * T, w: 48, h: 64, locked: !!L.boss },
+```
+
+Ziel wird nach dem Boss entsperrt (Zeilen 737–740):
+
+(game.html, Zeilen 737–740)
+
+```js
+    if (b.deadT > 1.8 && ents.goal.locked) {
+      ents.goal.locked = false; SND.power();
+      say(VW / 2 - 140, 200, 'Legacy-Code refactored! Ab zum OUTPUT!', '#9aff9a');
+    }
+```
+
+Logik in `update()` (Zeilen 423–428):
+
+(game.html, Zeilen 423–428)
+
+```js
+  } else if (state === 'levelDone') {
+    updateWorld(dt, false);
+    if (stateT > 1.2 && go) {
+      if (levelIdx + 1 < LEVELS.length) loadLevel(levelIdx + 1);
+      else { saveHigh(); playMusic(null); setState('win'); SND.win(); }
+    }
+```
+
+`levelTime` zählt nur in `play` (Zeilen 406–408):
+
+(game.html, Zeilen 406–408)
+
+```js
+  } else if (state === 'play') {
+    if (pressed.pause) setState('pause');
+    else { levelTime += dt; updatePlayer(dt); updateWorld(dt, true); }
+```
+
+Ziel-Terminal mit `'✓'` (Zeilen 1155–1167):
+
+(game.html, Zeilen 1155–1167)
+
+```js
+  // Ziel-Terminal
+  const gl = ents.goal;
+  if (!gl.locked) {
+    ctx.save();
+    ctx.shadowColor = theme.accent; ctx.shadowBlur = 20 + Math.sin(gt * 4) * 8;
+    ctx.fillStyle = '#222'; rr(gl.x, gl.y, 48, 40, 5); ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = '#071a10'; ctx.fillRect(gl.x + 5, gl.y + 5, 38, 28);
+    ctx.fillStyle = theme.accent; ctx.font = `bold 14px ${FONT}`;
+    ctx.fillText(state === 'levelDone' ? '✓' : (gt % 1 < 0.5 ? '>_' : '>'), gl.x + 10, gl.y + 24);
+    ctx.fillStyle = '#333'; ctx.fillRect(gl.x + 20, gl.y + 40, 8, 14); ctx.fillRect(gl.x + 10, gl.y + 54, 28, 10);
+    ctx.fillStyle = theme.accent; ctx.font = `bold 10px ${FONT}`; ctx.fillText('OUTPUT', gl.x + 6, gl.y - 6);
+  }
+```
+
+---
+
+### 9.6 Game Over
+
+- **Auslöser:** Todesbalken endet mit `lives <= 0` (siehe 9.1). Genau **dabei** wird `saveHigh()` aufgerufen. Der Highscore wird also mit dem **vollen** Score verglichen, bevor halbiert wird. Danach: Musik aus, `SND.over()`.
+- **Welt** steht still (`updateWorld` wird nicht aufgerufen). Nur `gt`-Animationen laufen weiter. Der Roboter wird an seiner letzten Position gezeichnet (der Zustand ist nicht `dead`). Bei einem Absturz liegt diese Position außerhalb des Bildes.
+- **Zeichnung:** Welt und HUD, darüber `panel(0.75)`, dann
+  - `'KONTEXTFENSTER VOLL'`: 40 px, `#ff6b6b`, y `VH / 2 - 60` (212)
+  - `'Game Over – die Session ist abgelaufen.'`: 18 px, `#fff`, y `VH / 2 - 20` (252)
+  - `` `Score: ${score}   Highscore: ${highscore}` ``: 18 px, `#ffd84a`, y `VH / 2 + 15` (287). Hier steht der noch **nicht** halbierte Score.
+  - erst ab `stateT > 1.2`:
+    - `'ENTER: Level nochmal versuchen (Score halbiert)'`: 17 px, `blinkCol()`, y `VH / 2 + 65` (337)
+    - `'ESC: zurück zum Hauptmenü'`: 15 px, `#ccc`, y `VH / 2 + 92` (364)
+- **Eingabesperre:** 1.2 s.
+- **Tasten:**
+  - ENTER, Leertaste, ↑, W (`go`, Touch: Sprungknopf/Tippen) → **Level nochmal**
+  - ESC **und P** (`pressed.pause`) → **Hauptmenü**. Der Text nennt nur ESC.
+- **„Level nochmal“:** `lives = 3`, `score = Math.floor(score / 2)` (**abgerundet**, z. B. 1235 → 617), dann `loadLevel(levelIdx)`: **dasselbe** Level von vorn (Checkpoints verfallen, alle Tokens/Gegner neu, `levelTime = 0`, Firewall weg, Intro wird erneut gezeigt).
+  - **bleibt:** `tokens` (der Zähler wird **nicht** zurückgesetzt), `hasDouble`, `highscore`, `levelIdx`. Ein erneutes Halbieren beim nächsten Game Over ist möglich.
+- **„Hauptmenü“:** `toTitle()`: `loadLevel(0)`, `playMusic('jungle')`, Zustand `title`. `score`, `lives`, `tokens` und `hasDouble` werden dabei **nicht** zurückgesetzt. Das passiert erst beim Start über `newGame()`. Sichtbar ist das nur an der Antennenfarbe der Titel-Figur.
+
+Übergang `dead` → `gameover` (Zeilen 419–421):
+
+(game.html, Zeilen 419–421)
+
+```js
+    if (done || (stateT > 0.7 && pressed.start)) {
+      if (lives <= 0) { saveHigh(); playMusic(null); SND.over(); setState('gameover'); }
+      else respawn();
+```
+
+Game-Over-Logik (Zeilen 429–431):
+
+(game.html, Zeilen 429–431)
+
+```js
+  } else if (state === 'gameover') {
+    if (stateT > 1.2 && go) { lives = 3; score = Math.floor(score / 2); loadLevel(levelIdx); }
+    else if (stateT > 1.2 && pressed.pause) toTitle();
+```
+
+---
+
+### 9.7 Abspann (Zustand `win`)
+
+- **Auslöser:** „Level geschafft“ im letzten Level (Level 5, Boss) + `go`. Vorher: `saveHigh()`, Musik aus, `SND.win()`.
+- **Hintergrund:** Welt von Level 5 (still, nur `gt`-Animationen) und HUD, darüber `panel(0.7)`. `theme.accent` ist hier der von Level 5: `#9aff9a`.
+- **Texte:**
+  - `'ALLE TASKS ERLEDIGT! 🎉'`: 40 px, `theme.accent`, x `VW / 2`, y 150
+  - Figur: `drawRobot(VW / 2 - 33, 190 - Math.abs(Math.sin(gt * 5)) * 30, 1, gt * 300, 3)`. Skalierung 3, Blick nach rechts, laufende Beine. Sie hüpft zwischen y 190 und 160, ein Hüpfer dauert π/5 ≈ 0.63 s (schneller und höher als auf dem Titelbild).
+  - `'Legacy-Code besiegt. Der Nutzer ist begeistert.'`: 17 px, `#fff`, y 330
+  - `'Claude hat sich einen Keks verdient. 🍪'`: 17 px, `#fff`, y 355
+  - `` `Endstand: ${score}  (${tokens} Tokens)` ``: 22 px, `#ffd84a`, y 395 (zwei Leerzeichen vor der Klammer)
+  - `'NEUER HIGHSCORE!'`: 20 px, `#ff9de2`, y 430. Er erscheint, wenn `score >= highscore`. Weil `saveHigh()` vorher schon gelaufen ist, gilt das bei neuem Rekord **und** bei exaktem Gleichstand mit dem alten Rekord. Es blinkt nicht.
+  - erst ab `stateT > 1.2`: `'ENTER: nochmal spielen'`, 18 px, `blinkCol()`, y 480
+- **Tasten:** `go` (ENTER, Leertaste, ↑, W, Touch) nach 1.2 s → `toTitle()`. Man landet also auf dem **Titelbild**, nicht direkt in einem neuen Spiel. P/ESC tun nichts.
+
+Logik (Zeilen 427 und 432–433):
+
+(game.html, Zeile 427)
+
+```js
+      else { saveHigh(); playMusic(null); setState('win'); SND.win(); }
+```
+
+(game.html, Zeilen 432–433)
+
+```js
+  } else if (state === 'win') {
+    if (stateT > 1.2 && go) toTitle();
+```
+
+Zeichnung (Zeilen 1399–1408):
+
+(game.html, Zeilen 1399–1408)
+
+```js
+  } else if (state === 'win') {
+    panel(0.7);
+    text('ALLE TASKS ERLEDIGT! 🎉', VW / 2, 150, 40, theme.accent);
+    drawRobot(VW / 2 - 33, 190 - Math.abs(Math.sin(gt * 5)) * 30, 1, gt * 300, 3);
+    text('Legacy-Code besiegt. Der Nutzer ist begeistert.', VW / 2, 330, 17, '#fff');
+    text('Claude hat sich einen Keks verdient. 🍪', VW / 2, 355, 17, '#fff');
+    text(`Endstand: ${score}  (${tokens} Tokens)`, VW / 2, 395, 22, '#ffd84a');
+    if (score >= highscore) text('NEUER HIGHSCORE!', VW / 2, 430, 20, '#ff9de2');
+    if (stateT > 1.2) text('ENTER: nochmal spielen', VW / 2, 480, 18, blinkCol());
+  }
+```
+
+---
+
+### 9.8 Highscore & Speicher
+
+- **localStorage-Schlüssel:** `'claudeJungleHigh'` (genau so geschrieben)
+- **Lesen:** einmal beim Laden der Seite (Zeile 305), `+(… || 0)` → Zahl, 0 wenn nicht vorhanden.
+- **Schreiben:** nur in `saveHigh()`, und nur wenn `score > highscore`. Dann wird zuerst die Variable `highscore` gesetzt und danach `localStorage.setItem`. `saveHigh()` wird an genau zwei Stellen aufgerufen:
+  1. beim Übergang `dead` → `gameover` (Zeile 420)
+  2. nach dem letzten Level beim Übergang `levelDone` → `win` (Zeile 427)
+
+  Beim Verlassen der Seite mitten im Spiel, in der Pause oder bei „Level geschafft“ in Level 1–4 wird **nicht** gespeichert.
+- **Anzeige:** Titelbild (nur wenn ungleich 0), Game Over, Abspann („NEUER HIGHSCORE!“).
+- **Wenn localStorage blockiert ist:** Es gibt **kein** `try/catch` darum. Das folgende Verhalten habe ich aus dem Code abgeleitet und nicht im Browser getestet:
+  - Wirft schon `localStorage.getItem` (z. B. `SecurityError` bei blockierten Cookies/Speicher), bricht das ganze Skript in Zeile 305 ab, bevor die Spielschleife startet. Die Zeichenfläche bleibt leer und das Spiel startet nicht.
+  - Wirft nur `setItem` (z. B. Speicher voll), fliegt der Fehler mitten in `update()`. `highscore` ist dann im Speicher schon gesetzt, aber `setState('gameover')` bzw. `setState('win')` wird nicht mehr erreicht. Weil der Fehler in `frame()` vor `requestAnimationFrame(frame)` auftritt, **friert das Spiel ein**.
+
+(game.html, Zeile 305)
+
+```js
+let highscore = +(localStorage.getItem('claudeJungleHigh') || 0);
+```
+
+(game.html, Zeile 439)
+
+```js
+function saveHigh() { if (score > highscore) { highscore = score; localStorage.setItem('claudeJungleHigh', highscore); } }
+```
+
+---
+
+---
+
+### 9.9 Tastenzuordnung insgesamt
+
+| Taste | Aktion (`KEYMAP`) |
+|---|---|
+| ← / A | `left` (im Todesbalken: 👍) |
+| → / D | `right` (im Todesbalken: 👎) |
+| Leertaste / ↑ / W | `jump` (zählt auch als `go`) |
+| ENTER | `start` (zählt als `go`, setzt Pause fort, beendet Todesbalken nach 0.7 s) |
+| P / ESC | `pause` (Pause an/aus, im Game Over: Hauptmenü) |
+| M | `mute` (Musik & Ton an/aus, in jedem Zustand) |
+| X / F | `shoot` (Prompt abfeuern) |
+
+- `keydown`: nur für zugeordnete Tasten. Dabei `preventDefault()` (die Seite scrollt nicht), `initAudio()`, und `pressed[k]` nur beim **ersten** Drücken. Auto-Repeat löst also nichts erneut aus.
+- `keyup`: setzt `held[k] = false`.
+- Touch (nur wenn `'ontouchstart' in window`): Knöpfe ◀ ▶ 💬 ⤒ (`left`, `right`, `shoot`, `jump`). Tippen auf die Zeichenfläche = `start`. Es gibt keinen Touch-Knopf für Pause und Ton.
+- `pressed` wird am Ende jedes `update()`-Schritts geleert (Zeile 435).
+
+Touch-Knöpfe im HTML (Zeilen 19–22):
+
+(game.html, Zeilen 19–22)
+
+```js
+<div id="touch">
+  <div class="grp"><button data-k="left">◀</button><button data-k="right">▶</button></div>
+  <div class="grp"><button data-k="shoot">💬</button><button data-k="jump">⤒</button></div>
+</div>
+```
+
+Eingabe (Zeilen 153–173):
+
+(game.html, Zeilen 153–173)
+
+```js
+// ---------------------------------------------------------------- Input
+const held = {}, pressed = {};
+const KEYMAP = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right',
+  Space: 'jump', ArrowUp: 'jump', KeyW: 'jump', Enter: 'start', KeyP: 'pause', Escape: 'pause', KeyM: 'mute',
+  KeyX: 'shoot', KeyF: 'shoot' };
+addEventListener('keydown', e => {
+  const k = KEYMAP[e.code]; if (!k) return;
+  e.preventDefault(); initAudio();
+  if (!held[k]) pressed[k] = true;
+  held[k] = true;
+});
+addEventListener('keyup', e => { const k = KEYMAP[e.code]; if (k) held[k] = false; });
+if ('ontouchstart' in window) {
+  document.getElementById('touch').style.display = 'flex';
+  document.querySelectorAll('#touch button').forEach(b => {
+    const k = b.dataset.k;
+    b.addEventListener('touchstart', e => { e.preventDefault(); initAudio(); if (!held[k]) pressed[k] = true; held[k] = true; });
+    b.addEventListener('touchend', e => { e.preventDefault(); held[k] = false; });
+  });
+  canvas.addEventListener('touchstart', () => { initAudio(); pressed.start = true; });
+}
+```
+
+Ton an/aus und `go` in `update()` (Zeilen 397–398):
+
+(game.html, Zeilen 397–398)
+
+```js
+  if (pressed.mute) muted = !muted;
+  const go = pressed.start || pressed.jump;
+```
+
+---
+
+### 9.10 Alle Stellen mit „Claude“ in game.html
+
+Groß-/Kleinschreibung genau „Claude“:
+
+| Zeile | Stelle |
+|---|---|
+| 6 | `<title>Claude im RAM-Dschungel</title>` (Browser-Tab-Titel) |
+| 132 | `DEATH_MSGS`: `'404: Claude nicht gefunden'` (sichtbarer Text) |
+| 147 | `FEEDBACK_UP`: `'Danke für dein Feedback! Claude ist trotzdem kaputt.'` (sichtbarer Text) |
+| 789 | Kommentar: `// Kontakt mit Claude` |
+| 793 | Kommentar: `// Claude über den Boss setzen, sonst zählt der nächste Frame als seitlicher Treffer` |
+| 812 | Kommentar: `// Rückstoß, damit Claude (z. B. mit Firewall) nicht im Boss hängen bleibt` |
+| 1356 | Titelbild: `'Hilf Claude, sich durch den Speicher zum OUTPUT zu kämpfen!'` |
+| 1371 | Pause: `'Claude denkt nach... (P zum Weiterspielen)'` |
+| 1404 | Abspann: `'Claude hat sich einen Keks verdient. 🍪'` |
+
+In anderer Schreibweise:
+
+| Zeile | Stelle |
+|---|---|
+| 25 | Kommentar: `//  CLAUDE IM RAM-DSCHUNGEL – ein kleines Jump & Run` |
+| 305 | localStorage-Schlüssel `'claudeJungleHigh'` (lesen) |
+| 439 | localStorage-Schlüssel `'claudeJungleHigh'` (schreiben) |
+| 1350 | Titelbild: `'CLAUDE'` (große Überschrift) |

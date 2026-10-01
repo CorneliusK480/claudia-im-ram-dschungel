@@ -108,6 +108,9 @@ Titel ─ENTER─▶ Level-Intro ─▶ Spiel ─P─▶ Pause ─P─▶ Spiel
                                    nach Level 5 ─▶ Abspann ─ENTER─▶ Titel
 ```
 
+Wird beim Spielen der Browser-Tab verlassen, geht das Spiel automatisch in die Pause (bewusste
+Abweichung vom Prototyp, entschieden in Slice 4).
+
 ## States
 
 - **Empty:** Kein Highscore vorhanden → die Zeile „Highscore“ auf dem Titel fehlt einfach.
