@@ -86,7 +86,7 @@ Halbtransparente Ebenen über dem Spiel:
 - **Tod:** roter Balken mit Todesspruch, „Noch 2 Leben“, danach
   „War diese Antwort hilfreich? ← 👍 👎 →“ mit frecher Antwort
 - **Level geschafft:** „Task erfolgreich abgeschlossen ✓“, Zeitbonus, „ENTER: nächster Task“
-- **Game Over:** „KONTEXTFENSTER VOLL“, Score und Highscore, ENTER = nochmal (Score halbiert),
+- **Game Over:** „KONTEXTFENSTER VOLL“, Score und Highscore, ENTER = nochmal (Score 0),
   ESC = Menü
 - **Abspann:** „ALLE TASKS ERLEDIGT! 🎉“, tanzender Roboter, Endstand, ggf. „NEUER HIGHSCORE!“
 

@@ -4,8 +4,10 @@ import type { World } from '../logic/world';
 import { texts } from '../texts';
 import { withAlpha } from './color';
 
-/** The OUTPUT terminal: a small computer case with a dark screen. */
-export function drawTerminal(ctx: CanvasRenderingContext2D, world: World, theme: Theme, camX: number): void {
+/** The OUTPUT terminal: a small computer case with a dark screen. Shows ✓ once the level is done. */
+export function drawTerminal(
+  ctx: CanvasRenderingContext2D, world: World, theme: Theme, camX: number, done: boolean,
+): void {
   const { x: gx, y, w, h } = world.goalRect;
   const x = gx - camX;
   if (x + w < 0 || x > VIEW_W) return;
@@ -26,7 +28,7 @@ export function drawTerminal(ctx: CanvasRenderingContext2D, world: World, theme:
   ctx.font = `bold 14px ${FONT}`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
-  ctx.fillText('>_', x + 10, y + 21);
+  ctx.fillText(done ? '✓' : '>_', x + 10, y + 21);
   // label
   ctx.font = `bold 9px ${FONT}`;
   ctx.textAlign = 'center';

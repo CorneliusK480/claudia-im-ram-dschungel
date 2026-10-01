@@ -32,7 +32,7 @@ sein, dass man es verstehen, prüfen und erweitern kann.
 1. Eine Spielerin öffnet den Link, startet auf dem Titelbild und spielt Level 1–5 nacheinander durch.
 2. Ein Spieler springt auf Bugs, sammelt Tokens und verwandelt Gegner mit der Prompt-Kanone in
    Toaster, Gummienten oder Zimmerpflanzen.
-3. Eine Spielerin verliert alle Leben, versucht das Level nochmal (Score halbiert) oder geht zurück
+3. Eine Spielerin verliert alle Leben, versucht das Level nochmal (Score wieder bei 0) oder geht zurück
    ins Menü.
 4. Ein Spieler besiegt den Boss LEGACY_BUG.exe, sieht den Abspann und hat vielleicht einen neuen
    Highscore.
@@ -75,9 +75,9 @@ Build order. Each slice is something you can see and click when it's done. `/afs
    Done when: Man sammelt Tokens, besiegt Bugs durch Draufspringen und verliert bei Berührung ein
    Leben (mit Todesspruch wie „Segmentation fault!“). Man steigt an Checkpoints wieder ein, und oben
    zeigt die Leiste Leben, Tokens und Score.
-4. **Spielablauf-Bildschirme** — vom Titel bis Game Over.
+4. **Spielablauf-Bildschirme** (done) — vom Titel bis Game Over.
    Done when: Titelbild → Level-Intro → Spiel → Pause (P) → „Level geschafft“ mit Zeitbonus →
-   Game Over (Level nochmal mit halbiertem Score oder zurück ins Menü). Der Highscore ist auch nach
+   Game Over (Level nochmal mit Score 0 oder zurück ins Menü). Der Highscore ist auch nach
    dem Neuladen noch da.
 5. **Musik & Sound** — Chiptune und Geräusche.
    Done when: Jedes Level hat seine eigene Musik, Aktionen machen Geräusche, und M schaltet den Ton

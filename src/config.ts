@@ -56,6 +56,23 @@ export const INVULNERABLE_TIME = 1.5;
 /** Respawn this far right of the checkpoint column's left edge. */
 export const CHECKPOINT_SPAWN_X = 5;
 
+// Screens (docs/prototype-reference.md, section 9)
+export const INTRO_TIME = 2.5;
+/** The intro can be skipped only after this time. */
+export const INTRO_SKIP_AFTER = 0.4;
+/** The title camera moves this fast to the right. */
+export const TITLE_CAM_SPEED = 60;
+/** Leg speed of the big title Claudia, as if walking this many px/s (slower than SPEED, else it blurs). */
+export const TITLE_RUN_SPEED = 60;
+/** Keys work on the "task done" screen only after this time. */
+export const GOAL_INPUT_AFTER = 1.2;
+export const GOAL_POINTS = 500;
+/** Time bonus: BONUS_PER_SECOND points for every second below BONUS_TIME_LIMIT. */
+export const BONUS_TIME_LIMIT = 240;
+export const BONUS_PER_SECOND = 5;
+/** Name of the highscore in the browser storage. */
+export const HIGHSCORE_KEY = 'claudiaRamDschungelHighscore';
+
 // Effects
 export const DEATH_SHAKE = 0.3;
 /** Largest shake offset, at shake = DEATH_SHAKE. */
@@ -76,6 +93,7 @@ export const FRAME_COLOR = '#020a06';
 export const ERROR_COLOR = '#ff6b6b';
 export const SCORE_COLOR = '#ffd84a';
 export const DEATH_COLOR = '#D97757';
+export const TITLE_COLOR = '#D97757';
 export const BUG_PARTICLE_COLOR = '#ff5a8a';
 export const FONT = '"Courier New", monospace';
 

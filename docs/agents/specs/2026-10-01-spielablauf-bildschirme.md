@@ -3,7 +3,7 @@ date: 2026-10-01
 topic: "Spielablauf-Bildschirme"
 slice: 4
 tags: [spec]
-status: ready
+status: done
 ---
 
 # SPEC: Spielablauf-Bildschirme
@@ -11,7 +11,7 @@ status: ready
 ## Goal
 
 Das Spiel bekommt seinen Rahmen: Titelbild → Level-Intro → Spiel → Pause → „Level geschafft“ mit
-+500 und Zeitbonus → Game Over mit „Level nochmal (Score halbiert)“ oder zurück zum Titel. Der
++500 und Zeitbonus → Game Over mit „Level nochmal“ oder zurück zum Titel. Der
 Highscore wird im Browser gespeichert und ist nach dem Neuladen noch da. Alles sieht aus und verhält
 sich wie im Prototyp, mit zwei bewussten Abweichungen (Ende nach Level 1, Pause beim Tab-Wechsel).
 
@@ -41,9 +41,9 @@ schlagen kann.
    auf dem **Titelbild**, das jetzt „Highscore: S“ zeigt.
 8. **Game Over:** Nach dem Todesbalken des letzten Lebens wird der Highscore gespeichert (falls
    höher). Ich sehe „KONTEXTFENSTER VOLL“, „Game Over – die Session ist abgelaufen.“ und
-   „Score: X   Highscore: Y“. Nach 1,2 s erscheinen „ENTER: Level nochmal versuchen (Score
-   halbiert)“ und „ESC: zurück zum Hauptmenü“.
-   - ENTER, Leertaste, ↑ oder W: Level 1 startet neu mit Intro, 3 Leben und halbiertem Score.
+   „Score: X   Highscore: Y“. Nach 1,2 s erscheinen „ENTER: Level nochmal versuchen“ und
+   „ESC: zurück zum Hauptmenü“.
+   - ENTER, Leertaste, ↑ oder W: Level 1 startet neu mit Intro, 3 Leben, Score 0 und Tokens 0.
    - ESC oder P: zurück zum Titelbild.
 
 ## Screen
@@ -84,7 +84,7 @@ Game Over (Spiel steht, stark abgedunkelt)
 │                          KONTEXTFENSTER VOLL                               │
 │                 Game Over – die Session ist abgelaufen.                    │
 │                     Score: 1235   Highscore: 2410                          │
-│            ENTER: Level nochmal versuchen (Score halbiert)   (ab 1,2 s)    │
+│                  ENTER: Level nochmal versuchen   (ab 1,2 s)               │
 │                      ESC: zurück zum Hauptmenü                (ab 1,2 s)    │
 └────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -106,7 +106,7 @@ steht „Claudia“ statt „Claude“.
 - **Level geschafft** — wie in Slice 3, aber mit der Zeile „Zeitbonus: +N   Score: S“ (gelb). Der
   Score enthält schon die 500 und den Bonus. Das Terminal zeigt ✓ statt `>_`, dazu 40 Partikel in
   der Akzentfarbe. Hinweis „ENTER: Abschluss“ (blinkt), weil Level 1 vorerst das letzte Level ist.
-- **Game Over** — ersetzt den Platzhalter aus Slice 3. Der Score ist hier noch nicht halbiert.
+- **Game Over** — ersetzt den Platzhalter aus Slice 3.
 
 ## Rules & edge cases
 
@@ -129,12 +129,11 @@ steht „Claudia“ statt „Claude“.
 - **Ziel** — Claudia steht still, die Bugs laufen weiter, Kollisionen sind aus. Eingaben wirken
   erst nach 1,2 s. Dann führen ENTER, Leertaste, ↑ oder W zum Titelbild (siehe Decisions).
 - **Game Over** — Eingaben wirken erst nach 1,2 s. Das Spiel steht.
-  - ENTER, Leertaste, ↑ oder W: dasselbe Level von vorn, mit Intro. 3 Leben, Score halbiert und
-    abgerundet (z. B. 1235 → 617). Alle Bugs und Tokens wieder da, Checkpoint grau, Level-Zeit 0.
-    Der **Token-Zähler bleibt**. Wer wieder Game Over geht, wird erneut halbiert.
+  - ENTER, Leertaste, ↑ oder W: dasselbe Level von vorn, mit Intro. 3 Leben, Score 0, Tokens 0
+    (wie bei Super Mario). Alle Bugs und Tokens wieder da, Checkpoint grau, Level-Zeit 0. Nur der
+    Highscore bleibt.
   - ESC oder P: zum Titelbild. Auf dem Titel steht der Highscore. Ein neuer Start beginnt bei 0.
-- **Highscore speichern** — nur in zwei Momenten: beim Übergang zum Game Over (mit dem vollen Score,
-  vor dem Halbieren) und beim „Abschluss“ nach Level 1. Gespeichert wird nur, wenn der Score höher
+- **Highscore speichern** — nur in zwei Momenten: beim Übergang zum Game Over (mit dem erreichten Score) und beim „Abschluss“ nach Level 1. Gespeichert wird nur, wenn der Score höher
   ist als der bisherige. Verlässt man die Seite mitten im Spiel, wird nichts gespeichert.
 - **Game-Over-Anzeige** — „Highscore: Y“ zeigt schon den neuen Wert, wenn gerade ein Rekord
   aufgestellt wurde.
@@ -175,8 +174,9 @@ Settled during the interview — the plan must not ask these again.
   beim Planen ergänzt.
 - **Pause-Tasten wie im Prototyp** — P/ESC rein, P/ESC/ENTER raus, Leertaste nicht.
 - **P führt im Game Over auch zum Titel** — wie im Prototyp, obwohl dort nur ESC steht.
-- **Token-Zähler bleibt bei „Level nochmal“** — wie im Prototyp.
-- **Highscore mit vollem Score** — Er wird vor dem Halbieren verglichen und gespeichert.
+- **„Level nochmal“ beginnt bei 0** — Beim Umsetzen geändert (Nutzer, 2026-10-01): wie bei Super
+  Mario Score 0 und Tokens 0, nur der Highscore bleibt. Abgelehnt: halbierter Score mit bleibendem
+  Token-Zähler wie im Prototyp (wirkte komisch).
 - **Steuerungshilfe komplett** — Die Titelseite nennt alle Tasten, auch die erst später wirkenden.
 - **Umbenennung** — „CLAUDIA“, „Hilf Claudia, …“, „Claudia denkt nach...“.
 - **Speicher blockiert** — Das Spiel läuft weiter, statt wie der Prototyp abzustürzen
@@ -186,22 +186,22 @@ Settled during the interview — the plan must not ask these again.
 
 ## Acceptance criteria
 
-- [ ] Beim Öffnen der Seite sehe ich das Titelbild: „CLAUDIA“ in Orange, „im RAM-Dschungel“, eine große hüpfende Claudia, blinkend „Drücke ENTER oder LEERTASTE“, die Steuerungshilfe und „Hilf Claudia, …“. Dahinter zieht Level 1 abgedunkelt vorbei, und oben ist keine Anzeige.
-- [ ] Beim allerersten Besuch fehlt die Zeile „Highscore“.
-- [ ] ENTER, Leertaste, ↑ oder W startet das Spiel. Ein Balken zeigt „Level 1: RAM-Dschungel“ und „Spring auf Bugs, um sie zu fixen. Sammle Tokens!“ und blendet dann aus. Die Bugs laufen, Claudia steht still. Oben steht x3, Tokens 0, Score 0.
-- [ ] Drücke ich im Intro kurz nach dem Start ENTER oder die Leertaste, ist es sofort weg, und Claudia springt dabei nicht.
-- [ ] Mit P beim Spielen steht alles still, und ich sehe „PAUSE“ und „Claudia denkt nach... (P zum Weiterspielen)“. P, ESC oder ENTER spielen weiter, die Leertaste nicht. ESC pausiert ebenfalls.
-- [ ] Wechsle ich beim Spielen in einen anderen Tab und komme zurück, steht das Spiel in der Pause.
-- [ ] Klicke ich beim Spielen in ein anderes Programm und komme zurück, steht das Spiel in der Pause.
-- [ ] Am OUTPUT-Terminal erscheint „Task erfolgreich abgeschlossen ✓“, darunter „Zeitbonus: +N   Score: S“. Der Score ist um 500 + N gestiegen, und je schneller ich war, desto größer ist N. Das Terminal zeigt ✓. Nach gut 1 s erscheint „ENTER: Abschluss“.
-- [ ] ENTER führt danach zum Titelbild, auf dem jetzt „Highscore: S“ steht.
-- [ ] Nach dem letzten Leben erscheint „KONTEXTFENSTER VOLL“ mit „Score: X   Highscore: Y“. Ist X ein neuer Rekord, ist Y = X. Nach gut 1 s erscheinen „ENTER: Level nochmal versuchen (Score halbiert)“ und „ESC: zurück zum Hauptmenü“.
-- [ ] ENTER zeigt wieder das Intro. Danach habe ich x3, den halben Score (abgerundet) und denselben Token-Zähler, und die Diskette ist grau.
-- [ ] ESC (oder P) im Game Over führt zum Titelbild. Ein neuer Start beginnt bei Score 0 und Tokens 0.
-- [ ] Lade ich die Seite neu, steht der Highscore weiter auf dem Titelbild.
-- [ ] Ein niedrigerer Score überschreibt den Highscore nicht.
+- [x] Beim Öffnen der Seite sehe ich das Titelbild: „CLAUDIA“ in Orange, „im RAM-Dschungel“, eine große hüpfende Claudia, blinkend „Drücke ENTER oder LEERTASTE“, die Steuerungshilfe und „Hilf Claudia, …“. Dahinter zieht Level 1 abgedunkelt vorbei, und oben ist keine Anzeige.
+- [x] Beim allerersten Besuch fehlt die Zeile „Highscore“.
+- [x] ENTER, Leertaste, ↑ oder W startet das Spiel. Ein Balken zeigt „Level 1: RAM-Dschungel“ und „Spring auf Bugs, um sie zu fixen. Sammle Tokens!“ und blendet dann aus. Die Bugs laufen, Claudia steht still. Oben steht x3, Tokens 0, Score 0.
+- [x] Drücke ich im Intro kurz nach dem Start ENTER oder die Leertaste, ist es sofort weg, und Claudia springt dabei nicht.
+- [x] Mit P beim Spielen steht alles still, und ich sehe „PAUSE“ und „Claudia denkt nach... (P zum Weiterspielen)“. P, ESC oder ENTER spielen weiter, die Leertaste nicht. ESC pausiert ebenfalls.
+- [x] Wechsle ich beim Spielen in einen anderen Tab und komme zurück, steht das Spiel in der Pause.
+- [x] Klicke ich beim Spielen in ein anderes Programm und komme zurück, steht das Spiel in der Pause.
+- [x] Am OUTPUT-Terminal erscheint „Task erfolgreich abgeschlossen ✓“, darunter „Zeitbonus: +N   Score: S“. Der Score ist um 500 + N gestiegen, und je schneller ich war, desto größer ist N. Das Terminal zeigt ✓. Nach gut 1 s erscheint „ENTER: Abschluss“.
+- [x] ENTER führt danach zum Titelbild, auf dem jetzt „Highscore: S“ steht.
+- [x] Nach dem letzten Leben erscheint „KONTEXTFENSTER VOLL“ mit „Score: X   Highscore: Y“. Ist X ein neuer Rekord, ist Y = X. Nach gut 1 s erscheinen „ENTER: Level nochmal versuchen“ und „ESC: zurück zum Hauptmenü“.
+- [x] ENTER zeigt wieder das Intro. Danach habe ich x3, Score 0 und Tokens 0, und die Diskette ist grau.
+- [x] ESC (oder P) im Game Over führt zum Titelbild. Ein neuer Start beginnt bei Score 0 und Tokens 0.
+- [x] Lade ich die Seite neu, steht der Highscore weiter auf dem Titelbild.
+- [x] Ein niedrigerer Score überschreibt den Highscore nicht.
 
-Automatisch getestet: Zeitbonus-Formel (auch 0 ab 240 s), Halbieren mit Abrunden, Level-Zeit
+Automatisch getestet: Zeitbonus-Formel (auch 0 ab 240 s), Neustart bei 0 nach Game Over, Level-Zeit
 läuft nicht in Intro, Pause und Todesbalken, blockierter oder ungültiger Speicher.
 
 ## References

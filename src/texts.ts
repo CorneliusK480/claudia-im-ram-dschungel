@@ -3,10 +3,23 @@
 export const texts = {
   levelLoadError: (n: number) => `Level ${n} konnte nicht geladen werden`,
   goalTitle: 'Task erfolgreich abgeschlossen ✓',
-  goalHint: 'ENTER: nochmal',
+  goalBonusLine: (bonus: number, score: number) => `Zeitbonus: +${bonus}   Score: ${score}`,
+  goalFinish: 'ENTER: Abschluss',
   terminalLabel: 'OUTPUT',
   moreErrors: (n: number) => `… und ${n} weitere`,
-  scoreLine: (n: number) => `Score: ${n}`,
+
+  // Title
+  titleName: 'CLAUDIA',
+  titleSub: 'im RAM-Dschungel',
+  titlePress: 'Drücke ENTER oder LEERTASTE',
+  titleKeys1: '← → / A D : laufen     ↑ / W / Leertaste : springen',
+  titleKeys2: 'X / F : Prompt abfeuern     P : Pause     M : Musik & Ton an/aus',
+  titleHelp: 'Hilf Claudia, sich durch den Speicher zum OUTPUT zu kämpfen!',
+  titleHighscore: (n: number) => `Highscore: ${n}`,
+
+  // Pause
+  pauseTitle: 'PAUSE',
+  pauseText: 'Claudia denkt nach... (P zum Weiterspielen)',
 
   // HUD
   hudLives: (n: number) => `x${n}`,
@@ -35,6 +48,9 @@ export const texts = {
   noLivesLeft: 'Keine Leben mehr...',
   gameOverTitle: 'KONTEXTFENSTER VOLL',
   gameOverText: 'Game Over – die Session ist abgelaufen.',
+  gameOverScore: (score: number, high: number) => `Score: ${score}   Highscore: ${high}`,
+  gameOverRetry: 'ENTER: Level nochmal versuchen',
+  gameOverMenu: 'ESC: zurück zum Hauptmenü',
 
   // Loading
   fileNotFound: (status: number) => `Datei nicht gefunden (${status})`,

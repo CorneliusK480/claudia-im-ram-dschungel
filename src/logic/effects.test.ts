@@ -1,12 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { STEP } from '../config';
-import { loadLevel1 } from '../test/level1';
+import { playingGame } from '../test/game';
 import { fixedRandom } from '../test/random';
 import { burst, createEffects, say, stepEffects } from './effects';
-import { createGame, stepGame, type GameState } from './game';
+import { stepGame, type GameState } from './game';
 import { NO_INPUT } from './input';
-
-const level = loadLevel1();
 
 function steps(state: GameState, n: number): GameState {
   for (let i = 0; i < n; i++) state = stepGame(state, NO_INPUT, STEP);
@@ -15,7 +13,7 @@ function steps(state: GameState, n: number): GameState {
 
 describe('floating texts', () => {
   it('are still there after 77 steps and gone after 78 (1.3 s)', () => {
-    let state = createGame(level);
+    let state = playingGame();
     say(state.effects, 100, 300, 'Hallo', '#fff');
     state = steps(state, 77);
     expect(state.effects.texts).toHaveLength(1);
@@ -44,13 +42,14 @@ describe('particles', () => {
     expect(effects.particles[0].vy).toBeCloseTo(vy + 10);
   });
 
-  it('do not move once the level is won', () => {
-    const state = createGame(level, fixedRandom([0.5]));
+  it('fly on once the level is won', () => {
+    const state = playingGame(fixedRandom([0.5]));
     burst(state.effects, state.random, 100, 100, '#fff', 4);
     state.mode = 'won';
-    const before = structuredClone(state.effects);
-    steps(state, 30);
-    expect(state.effects).toEqual(before);
+    const { x, y } = state.effects.particles[0];
+    steps(state, 10);
+    expect(state.effects.particles[0].x).not.toBe(x);
+    expect(state.effects.particles[0].y).not.toBe(y);
   });
 });
 

@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { STEP } from '../config';
+import { playingGame } from '../test/game';
 import { loadLevel1 } from '../test/level1';
 import { fixedRandom } from '../test/random';
 import { texts } from '../texts';
-import { createGame, stepGame, type GameState } from './game';
+import { stepGame, type GameState } from './game';
 import { NO_INPUT } from './input';
 import { createPlayer } from './player';
 import { buildTokens, touchesToken } from './tokens';
@@ -14,7 +15,7 @@ const world = buildWorld(level);
 
 /** A game with Claudia's centre exactly on the first token (x 304, y 336), floating in the air. */
 function onFirstToken(): GameState {
-  const state = createGame(level, fixedRandom([0.5]));
+  const state = playingGame(fixedRandom([0.5]));
   const token = state.tokens[0];
   Object.assign(state.player, { x: token.x - 11, y: token.y - 14, onGround: false });
   return state;

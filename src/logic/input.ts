@@ -7,6 +7,8 @@ export interface InputState {
   jumpPressed: boolean;
   /** Enter was newly pressed since the last logic step. */
   enterPressed: boolean;
+  /** P or ESC was newly pressed since the last logic step. */
+  pausePressed: boolean;
 }
 
 export const NO_INPUT: InputState = {
@@ -15,4 +17,5 @@ export const NO_INPUT: InputState = {
   jumpHeld: false,
   jumpPressed: false,
   enterPressed: false,
+  pausePressed: false,
 };

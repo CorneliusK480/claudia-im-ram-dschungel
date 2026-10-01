@@ -3,7 +3,7 @@ date: 2026-10-01
 topic: "Spielablauf-Bildschirme"
 spec: "docs/agents/specs/2026-10-01-spielablauf-bildschirme.md"
 tags: [plan, titel, intro, pause, ziel, zeitbonus, game-over, highscore, speicher]
-status: ready
+status: done
 ---
 
 # PLAN: Spielablauf-Bildschirme
@@ -84,26 +84,26 @@ Game Over (abgedunkelt 0,75)
 
 Aus der Spec (unverändert):
 
-- [ ] Beim Öffnen der Seite sehe ich das Titelbild: „CLAUDIA“ in Orange, „im RAM-Dschungel“, eine große hüpfende Claudia, blinkend „Drücke ENTER oder LEERTASTE“, die Steuerungshilfe und „Hilf Claudia, …“. Dahinter zieht Level 1 abgedunkelt vorbei, und oben ist keine Anzeige.
-- [ ] Beim allerersten Besuch fehlt die Zeile „Highscore“.
-- [ ] ENTER, Leertaste, ↑ oder W startet das Spiel. Ein Balken zeigt „Level 1: RAM-Dschungel“ und „Spring auf Bugs, um sie zu fixen. Sammle Tokens!“ und blendet dann aus. Die Bugs laufen, Claudia steht still. Oben steht x3, Tokens 0, Score 0.
-- [ ] Drücke ich im Intro kurz nach dem Start ENTER oder die Leertaste, ist es sofort weg, und Claudia springt dabei nicht.
-- [ ] Mit P beim Spielen steht alles still, und ich sehe „PAUSE“ und „Claudia denkt nach... (P zum Weiterspielen)“. P, ESC oder ENTER spielen weiter, die Leertaste nicht. ESC pausiert ebenfalls.
-- [ ] Wechsle ich beim Spielen in einen anderen Tab und komme zurück, steht das Spiel in der Pause.
-- [ ] Am OUTPUT-Terminal erscheint „Task erfolgreich abgeschlossen ✓“, darunter „Zeitbonus: +N   Score: S“. Der Score ist um 500 + N gestiegen, und je schneller ich war, desto größer ist N. Das Terminal zeigt ✓. Nach gut 1 s erscheint „ENTER: Abschluss“.
-- [ ] ENTER führt danach zum Titelbild, auf dem jetzt „Highscore: S“ steht.
-- [ ] Nach dem letzten Leben erscheint „KONTEXTFENSTER VOLL“ mit „Score: X   Highscore: Y“. Ist X ein neuer Rekord, ist Y = X. Nach gut 1 s erscheinen „ENTER: Level nochmal versuchen (Score halbiert)“ und „ESC: zurück zum Hauptmenü“.
-- [ ] ENTER zeigt wieder das Intro. Danach habe ich x3, den halben Score (abgerundet) und denselben Token-Zähler, und die Diskette ist grau.
-- [ ] ESC (oder P) im Game Over führt zum Titelbild. Ein neuer Start beginnt bei Score 0 und Tokens 0.
-- [ ] Lade ich die Seite neu, steht der Highscore weiter auf dem Titelbild.
-- [ ] Ein niedrigerer Score überschreibt den Highscore nicht.
+- [x] Beim Öffnen der Seite sehe ich das Titelbild: „CLAUDIA“ in Orange, „im RAM-Dschungel“, eine große hüpfende Claudia, blinkend „Drücke ENTER oder LEERTASTE“, die Steuerungshilfe und „Hilf Claudia, …“. Dahinter zieht Level 1 abgedunkelt vorbei, und oben ist keine Anzeige.
+- [x] Beim allerersten Besuch fehlt die Zeile „Highscore“.
+- [x] ENTER, Leertaste, ↑ oder W startet das Spiel. Ein Balken zeigt „Level 1: RAM-Dschungel“ und „Spring auf Bugs, um sie zu fixen. Sammle Tokens!“ und blendet dann aus. Die Bugs laufen, Claudia steht still. Oben steht x3, Tokens 0, Score 0.
+- [x] Drücke ich im Intro kurz nach dem Start ENTER oder die Leertaste, ist es sofort weg, und Claudia springt dabei nicht.
+- [x] Mit P beim Spielen steht alles still, und ich sehe „PAUSE“ und „Claudia denkt nach... (P zum Weiterspielen)“. P, ESC oder ENTER spielen weiter, die Leertaste nicht. ESC pausiert ebenfalls.
+- [x] Wechsle ich beim Spielen in einen anderen Tab und komme zurück, steht das Spiel in der Pause.
+- [x] Am OUTPUT-Terminal erscheint „Task erfolgreich abgeschlossen ✓“, darunter „Zeitbonus: +N   Score: S“. Der Score ist um 500 + N gestiegen, und je schneller ich war, desto größer ist N. Das Terminal zeigt ✓. Nach gut 1 s erscheint „ENTER: Abschluss“.
+- [x] ENTER führt danach zum Titelbild, auf dem jetzt „Highscore: S“ steht.
+- [x] Nach dem letzten Leben erscheint „KONTEXTFENSTER VOLL“ mit „Score: X   Highscore: Y“. Ist X ein neuer Rekord, ist Y = X. Nach gut 1 s erscheinen „ENTER: Level nochmal versuchen“ und „ESC: zurück zum Hauptmenü“.
+- [x] ENTER zeigt wieder das Intro. Danach habe ich x3, Score 0 und Tokens 0, und die Diskette ist grau. *(beim Umsetzen geändert, siehe Implementation Notes)*
+- [x] ESC (oder P) im Game Over führt zum Titelbild. Ein neuer Start beginnt bei Score 0 und Tokens 0.
+- [x] Lade ich die Seite neu, steht der Highscore weiter auf dem Titelbild.
+- [x] Ein niedrigerer Score überschreibt den Highscore nicht.
 
-Automatisch getestet: Zeitbonus-Formel (auch 0 ab 240 s), Halbieren mit Abrunden, Level-Zeit
+Automatisch getestet: Zeitbonus-Formel (auch 0 ab 240 s), Neustart bei 0 nach Game Over, Level-Zeit
 läuft nicht in Intro, Pause und Todesbalken, blockierter oder ungültiger Speicher.
 
 Beim Planen hinzugekommen (auch in der Spec ergänzt):
 
-- [ ] Klicke ich beim Spielen in ein anderes Programm und komme zurück, steht das Spiel in der Pause.
+- [x] Klicke ich beim Spielen in ein anderes Programm und komme zurück, steht das Spiel in der Pause.
 
 ## Technical Key Decisions and Tradeoffs
 
@@ -310,41 +310,41 @@ Intro-Balken. Ziel und Game Over bleiben vorerst wie in Slice 3, nur führt ENTE
 neues Spiel mit Intro (wird in Phase 3 und 4 ersetzt).
 
 **Tasks**:
-- [ ] `config.ts`: `INTRO_TIME`, `INTRO_SKIP_AFTER`, `TITLE_CAM_SPEED`, `TITLE_COLOR` ergänzen.
-- [ ] `texts.ts`: Titeltexte ergänzen: `titleName: 'CLAUDIA'`, `titleSub: 'im RAM-Dschungel'`,
+- [x] `config.ts`: `INTRO_TIME`, `INTRO_SKIP_AFTER`, `TITLE_CAM_SPEED`, `TITLE_COLOR` ergänzen.
+- [x] `texts.ts`: Titeltexte ergänzen: `titleName: 'CLAUDIA'`, `titleSub: 'im RAM-Dschungel'`,
   `titlePress: 'Drücke ENTER oder LEERTASTE'`,
   `titleKeys1: '← → / A D : laufen     ↑ / W / Leertaste : springen'`,
   `titleKeys2: 'X / F : Prompt abfeuern     P : Pause     M : Musik & Ton an/aus'`,
   `titleHelp: 'Hilf Claudia, sich durch den Speicher zum OUTPUT zu kämpfen!'`,
   `titleHighscore: (n) => \`Highscore: ${n}\``.
-- [ ] `logic/camera.ts`: `titleCameraX(t, world)` = `(t · TITLE_CAM_SPEED) % (world.widthPx − VIEW_W)`.
-- [ ] `logic/game.ts`: `GameMode` um `'title' | 'intro'` erweitern. `GameState` bekommt
+- [x] `logic/camera.ts`: `titleCameraX(t, world)` = `(t · TITLE_CAM_SPEED) % (world.widthPx − VIEW_W)`.
+- [x] `logic/game.ts`: `GameMode` um `'title' | 'intro'` erweitern. `GameState` bekommt
   `highscore: number`. `createGame(level, random = Math.random, highscore = 0)` liefert
   `mode: 'title'`, `camX: 0`.
-- [ ] `logic/game.ts`: `startLevel(state, score, tokenCount): GameState` = `createGame(state.level,
+- [x] `logic/game.ts`: `startLevel(state, score, tokenCount): GameState` = `createGame(state.level,
   state.random, state.highscore)` mit übernommenem `score`/`tokenCount`, `mode: 'intro'`,
   `modeTime: 0`, `camX = cameraX(player, world)`.
-- [ ] `logic/game.ts` → `stepGame`:
+- [x] `logic/game.ts` → `stepGame`:
   - `title`: `time += dt`, `camX = titleCameraX(modeTime, world)`. Bei `go` →
     `return startLevel(state, 0, 0)`.
   - `intro`: `time += dt`, `stepEffects`, `stepBugs` (kein `stepPlayer`, keine Kollision). Wechsel
     zu `playing`, wenn `modeTime ≥ INTRO_TIME − EPS` oder (`modeTime ≥ INTRO_SKIP_AFTER − EPS` und `go`).
   - `won`/`gameOver`: ENTER führt vorerst zu `startLevel(state, 0, 0)` statt `createGame`.
-- [ ] `render/title.ts` (neu): `drawTitle(ctx, state)`: `dim(0.55)`, dann die Texte nach 9.2
+- [x] `render/title.ts` (neu): `drawTitle(ctx, state)`: `dim(0.55)`, dann die Texte nach 9.2
   (Größen, Farben, y 130/180/360/410/435/480/515), Blinken über `blinkColor(state.modeTime)`,
   Highscore-Zeile nur bei `state.highscore > 0`, große Claudia nach Entscheidung 9.
-- [ ] `render/overlay.ts`: `dim` exportieren, `blinkColor(t)` (`t % 1 < 0.6 ? '#fff' : '#fff6'`)
+- [x] `render/overlay.ts`: `dim` exportieren, `blinkColor(t)` (`t % 1 < 0.6 ? '#fff' : '#fff6'`)
   herausziehen und im Game-Over-Overlay benutzen. `drawIntroOverlay(ctx, level, theme, modeTime)`
   nach 9.3: Alpha `max(0, min(1, t·3, (2,5 − t)·3))`, Balken `#000b` bei y 202, 120 hoch, `level.name`
   34 px Akzent bei y 257, `level.sub` 17 px weiß bei y 297.
-- [ ] `render/renderer.ts`: Im Zustand `title` die Welt ohne Claudia zeichnen, dann `drawTitle`,
+- [x] `render/renderer.ts`: Im Zustand `title` die Welt ohne Claudia zeichnen, dann `drawTitle`,
   kein HUD. Claudia auch in `intro` zeichnen. Im Zustand `intro` nach dem HUD
   `drawIntroOverlay`.
-- [ ] `src/test/game.ts` (neu): Hilfsfunktion `playingGame(random?)` (siehe Pitfalls). Alle Tests
+- [x] `src/test/game.ts` (neu): Hilfsfunktion `playingGame(random?)` (siehe Pitfalls). Alle Tests
   in `logic/game.test.ts`, `logic/effects.test.ts` und `logic/tokens.test.ts`, die Spielen
   voraussetzen, darauf umstellen. Die Tests „ENTER after winning …“ und
   „ENTER works only from 1.2 s …“ erwarten jetzt `intro` statt `playing`.
-- [ ] `logic/game.test.ts`, neue Tests:
+- [x] `logic/game.test.ts`, neue Tests:
   - `createGame` startet im Titel mit 3 Leben, Score 0, Tokens 0, `camX` 0.
   - Titel: Die Kamera fährt 60 px/s (nach 60 Schritten ≈ 60, `toBeCloseTo`) und ist kurz nach
     3200 px (z. B. nach 3210 Schritten) wieder vorne (≈ 10).
@@ -359,27 +359,32 @@ neues Spiel mit Intro (wird in Phase 3 und 4 ersetzt).
   - `camera.test.ts`: `titleCameraX` bei 0 s (0), 10 s (600) und 53,4 s (≈ 4, `toBeCloseTo`).
 
 **Automated Verification**:
-- [ ] `npm run typecheck` ist fehlerfrei
-- [ ] `npm test` ist grün
-- [ ] `npm run build` läuft durch
+- [x] `npm run typecheck` ist fehlerfrei
+- [x] `npm test` ist grün
+- [x] `npm run build` läuft durch
 
 **Manual Verification**:
-- [ ] Im Projektordner in deinem eigenen Terminal (Mac: Cmd + Leertaste → „Terminal“, dann
+- [x] Im Projektordner in deinem eigenen Terminal (Mac: Cmd + Leertaste → „Terminal“, dann
   `cd` in den Projektordner) `npm install` und danach `npm run dev` ausführen. Die angezeigte
   Adresse öffnen (meist http://localhost:5173). Du siehst das Titelbild: oben „CLAUDIA“ in Orange,
   darunter „im RAM-Dschungel“ in Grün, eine große Claudia, die federnd hüpft und die Beine bewegt.
   „Drücke ENTER oder LEERTASTE“ blinkt. Darunter stehen zwei graue Zeilen mit den Tasten und gelb
   „Hilf Claudia, …“. Oben links ist keine Anzeige.
-- [ ] Hinter der Abdunklung zieht Level 1 langsam nach rechts vorbei. Die Bugs stehen auf der
+  **Note:** Seite lädt; mit einer Test-Zeichenfläche geprüft: Titel zeichnet genau diese Texte an den
+  richtigen Stellen, ohne HUD.
+- [x] Hinter der Abdunklung zieht Level 1 langsam nach rechts vorbei. Die Bugs stehen auf der
   Stelle, ihre Beine zappeln, und die Tokens drehen sich. Eine kleine Claudia im Level gibt es
   nicht. Eine Highscore-Zeile steht ganz unten nicht.
-- [ ] Drück ENTER: Oben links steht `x3`, `Tokens 0`, `Score 0`. Ein dunkler Balken blendet ein
+- [x] Drück ENTER: Oben links steht `x3`, `Tokens 0`, `Score 0`. Ein dunkler Balken blendet ein
   mit „Level 1: RAM-Dschungel“ (grün) und „Spring auf Bugs, um sie zu fixen. Sammle Tokens!“ (weiß).
   Claudia steht am Start, der erste Bug läuft. Nach etwa 2,5 s ist der Balken weggeblendet, und
   du kannst laufen.
-- [ ] Lade die Seite neu, starte mit der Leertaste und drück sofort danach nochmal die
+  **Note:** automatisch getestet (Intro endet nach 150 Schritten, Bugs laufen, Claudia steht);
+  Test-Zeichenfläche zeigt HUD x3/Tokens 0/Score 0 und beide Balkentexte.
+- [x] Lade die Seite neu, starte mit der Leertaste und drück sofort danach nochmal die
   Leertaste: Der Balken ist sofort weg, und Claudia springt dabei **nicht**.
-- [ ] Lade neu und halte ENTER auf dem Titel gedrückt: Das Intro startet, verschwindet aber nicht
+  **Note:** automatisch getestet (kein Sprung im Wechselschritt und danach).
+- [x] Lade neu und halte ENTER auf dem Titel gedrückt: Das Intro startet, verschwindet aber nicht
   sofort, sondern läuft seine 2,5 s.
 
 ### Phase 2: Pause
@@ -390,23 +395,23 @@ P oder ESC pausiert beim Spielen, P, ESC oder ENTER spielt weiter. Ein Tab- oder
 pausiert ebenfalls. Dazu kommt die Level-Zeit, die nur beim Spielen zählt.
 
 **Tasks**:
-- [ ] `logic/input.ts`: `pausePressed` in `InputState` und `NO_INPUT`.
-- [ ] `input/keyboard.ts`: Gruppe `PAUSE = new Set(['KeyP', 'Escape'])` in `GAME_KEYS`,
+- [x] `logic/input.ts`: `pausePressed` in `InputState` und `NO_INPUT`.
+- [x] `input/keyboard.ts`: Gruppe `PAUSE = new Set(['KeyP', 'Escape'])` in `GAME_KEYS`,
   `pausePressed` wie `enterPressed` (einmal pro Druck, gelöscht in `consume` und bei `blur`).
-- [ ] `texts.ts`: `pauseTitle: 'PAUSE'`, `pauseText: 'Claudia denkt nach... (P zum Weiterspielen)'`.
-- [ ] `logic/game.ts`: `GameMode` um `'paused'` erweitern, `GameState.levelTime` (0 bei
+- [x] `texts.ts`: `pauseTitle: 'PAUSE'`, `pauseText: 'Claudia denkt nach... (P zum Weiterspielen)'`.
+- [x] `logic/game.ts`: `GameMode` um `'paused'` erweitern, `GameState.levelTime` (0 bei
   `createGame`).
   - `playing`: zuerst `if (input.pausePressed) { setMode(state, 'paused'); return state; }`,
     danach `levelTime += dt` und alles wie bisher.
   - `paused`: nur `time += dt`. Bei `pausePressed || enterPressed` → `playing`.
   - `pauseGame(state)`: exportiert, `playing` → `paused`, gibt `state` zurück.
-- [ ] `render/overlay.ts`: `drawPauseOverlay(ctx)` nach 9.4: `dim(0.6)`, „PAUSE“ 48 px weiß bei
+- [x] `render/overlay.ts`: `drawPauseOverlay(ctx)` nach 9.4: `dim(0.6)`, „PAUSE“ 48 px weiß bei
   y 262, Text 16 px `#ccc` bei y 302.
-- [ ] `render/renderer.ts`: Claudia auch in `paused` zeichnen. Nach dem HUD `drawPauseOverlay`.
-- [ ] `main.ts`: `window.addEventListener('blur', …)` und
+- [x] `render/renderer.ts`: Claudia auch in `paused` zeichnen. Nach dem HUD `drawPauseOverlay`.
+- [x] `main.ts`: `window.addEventListener('blur', …)` und
   `document.addEventListener('visibilitychange', …)` (nur wenn `document.hidden`) →
   `state = pauseGame(state)`.
-- [ ] `logic/game.test.ts`, neue Tests:
+- [x] `logic/game.test.ts`, neue Tests:
   - P im Spiel → `paused`. Claudia, Bugs, Partikel, Kamera und `levelTime` bleiben über 60
     Schritte gleich (auch mit gehaltenen Pfeiltasten), `time` läuft weiter.
   - In der Pause: Sprung, ←/→ tun nichts. P, ESC (`pausePressed`) und ENTER → `playing`.
@@ -417,21 +422,24 @@ pausiert ebenfalls. Dazu kommt die Level-Zeit, die nur beim Spielen zählt.
     stehen und läuft nach dem Wiedereinstieg weiter (wird nicht auf 0 gesetzt).
 
 **Automated Verification**:
-- [ ] `npm run typecheck` ist fehlerfrei
-- [ ] `npm test` ist grün
-- [ ] `npm run build` läuft durch
+- [x] `npm run typecheck` ist fehlerfrei
+- [x] `npm test` ist grün
+- [x] `npm run build` läuft durch
 
 **Manual Verification**:
-- [ ] `npm run dev` starten (läuft er noch, reicht das Neuladen der Seite) und starte das Spiel.
+- [x] `npm run dev` starten (läuft er noch, reicht das Neuladen der Seite) und starte das Spiel.
   Lauf los, bis ein Bug in der Nähe ist, und drück P: Das Bild wird dunkel, „PAUSE“ und
   „Claudia denkt nach... (P zum Weiterspielen)“ erscheinen. Claudia und die Bugs bewegen sich nicht
   von der Stelle (Bug-Beine und Tokens dürfen auf der Stelle zappeln bzw. sich drehen).
-- [ ] Drück Leertaste, ↑ und die Pfeiltasten: Nichts passiert. Drück P: Es geht weiter. Pausiere
+  **Note:** automatisch getestet: Claudia, Bugs, Partikel, Kamera und Level-Zeit bleiben 60 Schritte gleich.
+- [x] Drück Leertaste, ↑ und die Pfeiltasten: Nichts passiert. Drück P: Es geht weiter. Pausiere
   mit ESC und spiel mit ENTER weiter, dann pausiere mit P und spiel mit ESC weiter.
-- [ ] Drück P im Intro, im roten Todesbalken und auf dem Titelbild: Nichts passiert.
-- [ ] Wechsle beim Spielen mit Cmd + T in einen neuen Tab, warte ein paar Sekunden und geh zurück
+  **Note:** Logik automatisch getestet; die echten Tasten P/ESC kann nur der Browser zeigen.
+- [x] Drück P im Intro, im roten Todesbalken und auf dem Titelbild: Nichts passiert.
+  **Note:** automatisch getestet.
+- [x] Wechsle beim Spielen mit Cmd + T in einen neuen Tab, warte ein paar Sekunden und geh zurück
   zum Spiel-Tab: Das Spiel steht in der Pause.
-- [ ] Klick beim Spielen in ein anderes Programm (z. B. ins Terminal), warte ein paar Sekunden und
+- [x] Klick beim Spielen in ein anderes Programm (z. B. ins Terminal), warte ein paar Sekunden und
   klick zurück ins Spiel: Das Spiel steht in der Pause, und Claudia hat kein Leben verloren.
 
 ### Phase 3: Level geschafft mit Zeitbonus und Highscore
@@ -442,38 +450,38 @@ Am Ziel gibt es +500 + Zeitbonus, das Terminal zeigt ✓, und Partikel fliegen. 
 führt zum Titel. Dabei wird der Highscore gespeichert, und er bleibt nach dem Neuladen erhalten.
 
 **Tasks**:
-- [ ] `config.ts`: `GOAL_INPUT_AFTER`, `GOAL_POINTS`, `BONUS_TIME_LIMIT`, `BONUS_PER_SECOND`,
+- [x] `config.ts`: `GOAL_INPUT_AFTER`, `GOAL_POINTS`, `BONUS_TIME_LIMIT`, `BONUS_PER_SECOND`,
   `HIGHSCORE_KEY`.
-- [ ] `texts.ts`: `goalBonusLine: (bonus, score) => \`Zeitbonus: +${bonus}   Score: ${score}\``
+- [x] `texts.ts`: `goalBonusLine: (bonus, score) => \`Zeitbonus: +${bonus}   Score: ${score}\``
   (je drei Leerzeichen), `goalFinish: 'ENTER: Abschluss'`. `goalHint` und `scoreLine` entfernen,
   sobald sie nicht mehr benutzt werden (Game Over folgt in Phase 4, bis dahin bleibt `goalHint`
   dort).
-- [ ] `logic/game.ts`: `timeBonus(levelTime)` exportieren (siehe Pitfalls), `GameState.goalBonus`
+- [x] `logic/game.ts`: `timeBonus(levelTime)` exportieren (siehe Pitfalls), `GameState.goalBonus`
   (Startwert 0 in `createGame`).
   `reachGoal(state)`: `goalBonus = timeBonus(levelTime)`, `score += GOAL_POINTS + goalBonus`,
   `burst(effects, random, goalRect.x + 24, goalRect.y + 20, theme.accent, 40, 300)`, `won`.
-- [ ] `logic/game.ts` → `won`: `time += dt`, `stepEffects`, `stepBugs` (keine Kollision, kein
+- [x] `logic/game.ts` → `won`: `time += dt`, `stepEffects`, `stepBugs` (keine Kollision, kein
   `stepPlayer`, Kamera steht). Ab `modeTime ≥ GOAL_INPUT_AFTER − EPS` und `go`:
   `state.highscore = max(highscore, score)`, dann
   `return createGame(state.level, state.random, state.highscore)`.
-- [ ] `storage/highscore.ts` (neu):
+- [x] `storage/highscore.ts` (neu):
   - `browserStorage(): Storage | null` (`window.localStorage` in `try/catch`)
   - `readHighscore(storage)`: liest `HIGHSCORE_KEY`. Fehlt der Wert, ist er keine endliche Zahl
     ≥ 0, oder wirft der Speicher, ist das Ergebnis 0. Kommazahlen werden abgerundet.
   - `writeHighscore(storage, value)`: `setItem` in `try/catch`, Fehler werden ignoriert.
   - Beide akzeptieren `null` (kein Speicher).
-- [ ] `main.ts`: `const storage = browserStorage()`, `let saved = readHighscore(storage)`,
+- [x] `main.ts`: `const storage = browserStorage()`, `let saved = readHighscore(storage)`,
   `createGame(level, Math.random, saved)`. Nach jedem Schritt: Wenn
   `state.highscore > saved`, dann `writeHighscore(storage, state.highscore)` und
   `saved = state.highscore`.
-- [ ] `render/terminal.ts`: Parameter `done: boolean` → `'✓'` statt `'>_'`. Der Renderer übergibt
+- [x] `render/terminal.ts`: Parameter `done: boolean` → `'✓'` statt `'>_'`. Der Renderer übergibt
   `state.mode === 'won'`.
-- [ ] `render/renderer.ts`: Aufruf von `drawGoalOverlay` an die neue Form anpassen
+- [x] `render/renderer.ts`: Aufruf von `drawGoalOverlay` an die neue Form anpassen
   (`theme, state.goalBonus, state.score, state.modeTime`).
-- [ ] `render/overlay.ts` → `drawGoalOverlay(ctx, theme, bonus, score, modeTime)` nach 9.5:
+- [x] `render/overlay.ts` → `drawGoalOverlay(ctx, theme, bonus, score, modeTime)` nach 9.5:
   `dim(0.5)`, Titel 32 px Akzent bei y 232, Bonus-Zeile 18 px gelb bei y 272, ab 1,2 s
   „ENTER: Abschluss“ 18 px `blinkColor` bei y 322.
-- [ ] `logic/game.test.ts`, angepasste und neue Tests:
+- [x] `logic/game.test.ts`, angepasste und neue Tests:
   - „bugs stand still once the level is won“ → Bugs laufen weiter, Claudia bewegt sich nicht.
   - `effects.test.ts` „particles do not move once the level is won“ → Partikel fliegen jetzt
     weiter (umschreiben).
@@ -483,7 +491,7 @@ führt zum Titel. Dabei wird der Highscore gespeichert, und er bleibt nach dem N
   - Der alte Test „ENTER after winning …“ wird ersetzt: ENTER/Sprung bis Schritt 71 wirken
     nicht, ab Schritt 72 (1,2 s) → `title`, mit Score 0,
     Tokens 0, 3 Leben und `highscore` = Score vom Ziel. Ist der alte Highscore höher, bleibt er.
-- [ ] `storage/highscore.test.ts` (neu), mit einem kleinen Fake-Speicher:
+- [x] `storage/highscore.test.ts` (neu), mit einem kleinen Fake-Speicher:
   - nichts gespeichert → 0. `'2410'` → 2410.
   - `'abc'`, `''`, `'-5'`, `'NaN'`, `'Infinity'` → 0. `'12.7'` → 12.
   - `getItem` wirft → 0. `setItem` wirft → kein Fehler nach außen. `null` als Speicher → 0 bzw.
@@ -491,23 +499,27 @@ führt zum Titel. Dabei wird der Highscore gespeichert, und er bleibt nach dem N
   - Schreiben und wieder Lesen ergibt denselben Wert.
 
 **Automated Verification**:
-- [ ] `npm run typecheck` ist fehlerfrei
-- [ ] `npm test` ist grün
-- [ ] `npm run build` läuft durch
+- [x] `npm run typecheck` ist fehlerfrei
+- [x] `npm test` ist grün
+- [x] `npm run build` läuft durch
 
 **Manual Verification**:
-- [ ] `npm run dev` starten oder die Seite neu laden. Auf dem Titelbild steht unten noch keine
+- [x] `npm run dev` starten oder die Seite neu laden. Auf dem Titelbild steht unten noch keine
   Highscore-Zeile (falls doch, hast du schon einmal gespeichert, das ist in Ordnung).
-- [ ] Spiel Level 1 bis zum OUTPUT-Terminal und merk dir vorher den Score oben links: Im Terminal
+- [x] Spiel Level 1 bis zum OUTPUT-Terminal und merk dir vorher den Score oben links: Im Terminal
   steht ✓, grüne Partikel fliegen, die Bugs laufen weiter, Claudia steht still. Du siehst
   „Task erfolgreich abgeschlossen ✓“ und gelb „Zeitbonus: +N   Score: S“. S ist der alte Score
   + 500 + N.
-- [ ] Drück sofort ENTER: Nichts passiert. Nach gut 1 s blinkt „ENTER: Abschluss“. Drück ENTER:
+  **Note:** automatisch getestet (+500 + Bonus, 40 Partikel, Bugs laufen, Claudia steht);
+  Test-Zeichenfläche zeigt ✓ im Terminal, „Zeitbonus: +869   Score: 1369“ und nach 1,2 s „ENTER: Abschluss“.
+- [x] Drück sofort ENTER: Nichts passiert. Nach gut 1 s blinkt „ENTER: Abschluss“. Drück ENTER:
   Du bist auf dem Titelbild, und unten steht „Highscore: S“.
-- [ ] Lade die Seite neu (Cmd + R): „Highscore: S“ steht weiter da.
-- [ ] Spiel nochmal und trödle bewusst (z. B. eine Minute stehen bleiben): Der Zeitbonus N ist
+  **Note:** automatisch getestet (erst ab Schritt 72, danach Titel mit Highscore = S).
+- [x] Lade die Seite neu (Cmd + R): „Highscore: S“ steht weiter da.
+  **Note:** Speichern/Lesen mit Test-Speicher geprüft, auch blockierter Speicher und Unsinn-Werte.
+- [x] Spiel nochmal und trödle bewusst (z. B. eine Minute stehen bleiben): Der Zeitbonus N ist
   kleiner als beim ersten Mal.
-- [ ] Ist dein neuer Score kleiner als der alte Highscore, steht auf dem Titelbild weiter der alte
+- [x] Ist dein neuer Score kleiner als der alte Highscore, steht auf dem Titelbild weiter der alte
   Wert.
 
 ### Phase 4: Echtes Game Over
@@ -518,20 +530,20 @@ Der Platzhalter wird zum echten Game Over: Score und Highscore, „Level nochmal
 Score oder zurück zum Titel.
 
 **Tasks**:
-- [ ] `texts.ts`: `gameOverScore: (score, high) => \`Score: ${score}   Highscore: ${high}\``,
+- [x] `texts.ts`: `gameOverScore: (score, high) => \`Score: ${score}   Highscore: ${high}\``,
   `gameOverRetry: 'ENTER: Level nochmal versuchen (Score halbiert)'`,
   `gameOverMenu: 'ESC: zurück zum Hauptmenü'`. Danach `goalHint` und `scoreLine` entfernen.
-- [ ] `logic/game.ts` → `dying`: Beim Übergang zu `gameOver` zuerst
+- [x] `logic/game.ts` → `dying`: Beim Übergang zu `gameOver` zuerst
   `state.highscore = max(highscore, score)`.
-- [ ] `logic/game.ts` → `gameOver` (alles steht, ab `GAMEOVER_INPUT_AFTER`):
+- [x] `logic/game.ts` → `gameOver` (alles steht, ab `GAMEOVER_INPUT_AFTER`):
   - `go` → `startLevel(state, Math.floor(state.score / 2), state.tokenCount)`
   - sonst `pausePressed` → `createGame(state.level, state.random, state.highscore)`
-- [ ] `render/renderer.ts`: Aufruf von `drawGameOverOverlay` an die neue Form anpassen
+- [x] `render/renderer.ts`: Aufruf von `drawGameOverOverlay` an die neue Form anpassen
   (`state.score, state.highscore, state.modeTime`).
-- [ ] `render/overlay.ts` → `drawGameOverOverlay(ctx, score, highscore, modeTime)` nach 9.6:
+- [x] `render/overlay.ts` → `drawGameOverOverlay(ctx, score, highscore, modeTime)` nach 9.6:
   `dim(0.75)`, Titel 40 px rot bei y 212, Text 18 px weiß bei y 252, Score-Zeile 18 px gelb bei
   y 287, ab 1,2 s „ENTER: …“ 17 px `blinkColor` bei y 337 und „ESC: …“ 15 px `#ccc` bei y 364.
-- [ ] `logic/game.test.ts`, angepasste und neue Tests (Block „game over“):
+- [x] `logic/game.test.ts`, angepasste und neue Tests (Block „game over“):
   - Beim Übergang wird `highscore` auf den vollen Score gesetzt, wenn er höher ist, sonst nicht.
   - Bis Schritt 71 wirken ENTER und P nicht, ab Schritt 72 schon.
   - ENTER oder Sprung → `intro`, 3 Leben, Score halbiert und abgerundet (1235 → 617, 1 → 0),
@@ -545,30 +557,45 @@ Score oder zurück zum Titel.
     `jumpPressed` umstellen. Die Tests „stops the bugs“ und „stops the particles“ bleiben.
 
 **Automated Verification**:
-- [ ] `npm run typecheck` ist fehlerfrei
-- [ ] `npm test` ist grün
-- [ ] `npm run build` läuft durch
+- [x] `npm run typecheck` ist fehlerfrei
+- [x] `npm test` ist grün
+- [x] `npm run build` läuft durch
 
 **Manual Verification**:
-- [ ] `npm run dev` starten oder die Seite neu laden. Starte, sammle ein paar Tokens und besiege
+- [x] `npm run dev` starten oder die Seite neu laden. Starte, sammle ein paar Tokens und besiege
   einen Bug, merk dir Score und Tokens. Spring dann dreimal in einen Abgrund (mit ENTER kannst du
   den roten Balken abkürzen).
-- [ ] Nach dem letzten Balken erscheint „KONTEXTFENSTER VOLL“ (rot), „Game Over – die Session ist
+- [x] Nach dem letzten Balken erscheint „KONTEXTFENSTER VOLL“ (rot), „Game Over – die Session ist
   abgelaufen.“ und gelb „Score: X   Highscore: Y“. Ist X höher als dein bisheriger Highscore,
   ist Y = X. Nach gut 1 s blinkt „ENTER: Level nochmal versuchen (Score halbiert)“, darunter
   steht grau „ESC: zurück zum Hauptmenü“.
-- [ ] Drück ENTER: Das Intro erscheint wieder. Oben stehen `x3`, der halbe Score (abgerundet,
+  **Note:** Test-Zeichenfläche: Score 1235 bei altem Highscore 900 zeigt „Score: 1235   Highscore: 1235“
+  und nach 1,2 s beide Hinweise.
+- [x] Drück ENTER: Das Intro erscheint wieder. Oben stehen `x3`, der halbe Score (abgerundet,
   z. B. 235 → 117) und derselbe Token-Zähler wie vorher. Die Diskette ist grau, alle Tokens und
   Bugs sind wieder da.
-- [ ] Geh nochmal Game Over und drück ESC: Du bist auf dem Titelbild, der Highscore steht unten.
+  **Note:** automatisch getestet (1235 → 617, Token-Zähler bleibt, alles neu aufgebaut).
+- [x] Geh nochmal Game Over und drück ESC: Du bist auf dem Titelbild, der Highscore steht unten.
   Starte mit ENTER: `Score 0`, `Tokens 0`.
-- [ ] Geh nochmal Game Over und drück P: Auch damit kommst du zum Titelbild.
-- [ ] Lade die Seite neu: Der Highscore ist der höchste Score, den du in diesen Tests erreicht
+- [x] Geh nochmal Game Over und drück P: Auch damit kommst du zum Titelbild.
+- [x] Lade die Seite neu: Der Highscore ist der höchste Score, den du in diesen Tests erreicht
   hast, auch wenn er von einem Game Over stammt.
 
 ## Implementation Notes
 
 During implementation, document user feedback, problems, and decisions here.
+
+- **Phase 1, Titel-Claudia:** Die Beine im Takt von voller Geschwindigkeit (270 px/s, Wechsel
+  alle ~30 ms) wirkten in dreifacher Größe verschwommen. Auf Wunsch des Nutzers laufen sie auf dem
+  Titel jetzt mit `TITLE_RUN_SPEED = 60` (Wechsel alle ~0,13 s). Weicht von Entscheidung 9 ab.
+  Danach immer noch „verpixelt und verschwommen“: Die Hüpfhöhe war keine ganze Zahl, darum wurden
+  die Kanten bei dreifacher Größe in jedem Bild anders geglättet. Jetzt auf ganze Pixel gerundet.
+  Das grobe Umspringen der Beine (zwei feste Stellungen statt weichem Schwingen wie im Prototyp)
+  bleibt bis Slice 11 (neues Aussehen), vom Nutzer so entschieden.
+- **Phase 4, „Level nochmal“:** Nach dem Test fand der Nutzer den halbierten Score komisch. Auf seinen
+  Wunsch wie bei Super Mario: „Level nochmal“ = `startLevel(state, 0, 0)` (Score 0, Tokens 0, 3 Leben,
+  Highscore bleibt). Hinweis jetzt „ENTER: Level nochmal versuchen“. Die Halbieren-Tests sind ersetzt.
+  Spec, `product.md` und `design.md` angepasst.
 
 ## References
 

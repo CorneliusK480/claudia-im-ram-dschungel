@@ -1,8 +1,9 @@
 import { PLACEHOLDER_SKY, STEP } from './config';
 import { createKeyboard } from './input/keyboard';
 import { loadLevel } from './level/load';
-import { createGame, stepGame } from './logic/game';
+import { createGame, pauseGame, stepGame } from './logic/game';
 import { startLoop } from './loop';
+import { browserStorage, readHighscore, writeHighscore } from './storage/highscore';
 import { drawSky } from './render/background';
 import { drawError } from './render/error';
 import { render } from './render/renderer';
@@ -26,13 +27,26 @@ async function start(): Promise<void> {
     return;
   }
 
-  let state = createGame(result.level);
+  const storage = browserStorage();
+  let saved = readHighscore(storage);
+  let state = createGame(result.level, Math.random, saved);
   const keyboard = createKeyboard(window);
+  // Leaving the tab or the window while playing pauses the game.
+  window.addEventListener('blur', () => {
+    state = pauseGame(state);
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) state = pauseGame(state);
+  });
   draw = () => render(ctx, state);
   startLoop(
     () => {
       state = stepGame(state, keyboard.read(), STEP);
       keyboard.consume();
+      if (state.highscore > saved) {
+        writeHighscore(storage, state.highscore);
+        saved = state.highscore;
+      }
     },
     () => draw(),
   );

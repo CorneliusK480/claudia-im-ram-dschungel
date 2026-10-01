@@ -4,7 +4,8 @@ const LEFT = new Set(['ArrowLeft', 'KeyA']);
 const RIGHT = new Set(['ArrowRight', 'KeyD']);
 const JUMP = new Set(['ArrowUp', 'KeyW', 'Space']);
 const ENTER = new Set(['Enter', 'NumpadEnter']);
-const GAME_KEYS = new Set([...LEFT, ...RIGHT, ...JUMP, ...ENTER]);
+const PAUSE = new Set(['KeyP', 'Escape']);
+const GAME_KEYS = new Set([...LEFT, ...RIGHT, ...JUMP, ...ENTER, ...PAUSE]);
 
 export interface Keyboard {
   /** Current input. "Pressed" events stay until `consume()` is called. */
@@ -21,6 +22,7 @@ export function createKeyboard(target: Window): Keyboard {
   const held = new Set<string>();
   let jumpPressed = false;
   let enterPressed = false;
+  let pausePressed = false;
 
   target.addEventListener('keydown', (e) => {
     if (!GAME_KEYS.has(e.code)) return;
@@ -31,6 +33,7 @@ export function createKeyboard(target: Window): Keyboard {
     if (e.repeat) return;
     if (JUMP.has(e.code)) jumpPressed = true;
     if (ENTER.has(e.code)) enterPressed = true;
+    if (PAUSE.has(e.code)) pausePressed = true;
   });
 
   target.addEventListener('keyup', (e) => {
@@ -44,6 +47,7 @@ export function createKeyboard(target: Window): Keyboard {
     held.clear();
     jumpPressed = false;
     enterPressed = false;
+    pausePressed = false;
   });
 
   const anyHeld = (keys: Set<string>) => [...keys].some((k) => held.has(k));
@@ -55,10 +59,12 @@ export function createKeyboard(target: Window): Keyboard {
       jumpHeld: anyHeld(JUMP),
       jumpPressed,
       enterPressed,
+      pausePressed,
     }),
     consume: () => {
       jumpPressed = false;
       enterPressed = false;
+      pausePressed = false;
     },
   };
 }
