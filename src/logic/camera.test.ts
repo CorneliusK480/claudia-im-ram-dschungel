@@ -20,8 +20,4 @@ describe('cameraX', () => {
   it('is 3200 at the end', () => {
     expect(cameraX({ ...createPlayer(world), x: 4138 }, world)).toBe(3200);
   });
-
-  it('ist absichtlich kaputt (Slice-2-Prüfung)', () => {
-    expect(1).toBe(2);
-  });
 });

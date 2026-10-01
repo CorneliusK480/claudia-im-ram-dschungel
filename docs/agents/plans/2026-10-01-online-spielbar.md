@@ -462,11 +462,11 @@ Der Veröffentlichungs-Roboter kommt dazu. Danach ist das Spiel unter dem Link e
 - [x] **Sichtbare Änderung (Agent):** In `public/levels/level1.json` die erste `sky`-Farbe
       vorübergehend von `#03140c` auf `#3a0b4a` (lila) ändern. Die Nutzerin bzw. der Nutzer
       committet „Test: Himmel lila“ und pusht.
-- [-] **Kaputter Test (Agent):** Die Farbe zurück auf `#03140c` setzen **und** in
+- [x] **Kaputter Test (Agent):** Die Farbe zurück auf `#03140c` setzen **und** in
       `src/logic/camera.test.ts` einen absichtlich falschen Test ergänzen:
       `it('ist absichtlich kaputt (Slice-2-Prüfung)', () => { expect(1).toBe(2); });`.
       Die Nutzerin bzw. der Nutzer committet „Test: absichtlich kaputt“ und pusht.
-- [ ] **Aufräumen (Agent):** Den absichtlich kaputten Test wieder entfernen. Die Nutzerin bzw. der
+- [-] **Aufräumen (Agent):** Den absichtlich kaputten Test wieder entfernen. Die Nutzerin bzw. der
       Nutzer committet „Kaputten Test entfernt“ und pusht.
 
 **Automated Verification**:
@@ -493,7 +493,7 @@ Hart neu laden heißt hier: Cmd + Shift + R in Chrome und Firefox, **Cmd + Optio
       normale GitHub-„404“-Seite erscheint.
 - [x] Nach dem Push „Test: Himmel lila“: Bei *Actions* ein grünes ✓. Den Link mit
       Cmd + Shift + R neu laden (eventuell bis zu 10 Minuten warten): Der Himmel ist oben **lila**.
-- [ ] Nach dem Push „Test: absichtlich kaputt“: Bei *Actions* ein **rotes ✗**. Klickt man den Lauf
+- [x] Nach dem Push „Test: absichtlich kaputt“: Bei *Actions* ein **rotes ✗**. Klickt man den Lauf
       an, ist beim Schritt `npm test` der Test „ist absichtlich kaputt“ rot, und `deploy` wurde
       nicht ausgeführt. Im Postfach der GitHub-Kontoadresse liegt eine E-Mail über den
       fehlgeschlagenen Lauf. Den Link mit Cmd + Shift + R neu laden: Der Himmel ist **immer noch
