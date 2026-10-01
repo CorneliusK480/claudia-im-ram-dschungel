@@ -119,7 +119,8 @@ steht „Claudia“ statt „Claude“.
   Rein mit P oder ESC, raus mit P, ESC oder ENTER. Leertaste, ↑, W und alle anderen Tasten wirken
   nicht. In der Pause steht alles: Claudia, Bugs, Partikel, Kamera und Level-Zeit. Nur reine
   Zeichen-Animationen dürfen weiterlaufen (wie im Prototyp).
-- **Tab-Wechsel** — Wird der Tab beim Spielen verlassen, geht das Spiel in die Pause. In allen
+- **Tab-Wechsel** — Wird der Tab oder das Browserfenster beim Spielen verlassen (anderer Tab,
+  Fenster minimiert, Klick in ein anderes Programm), geht das Spiel in die Pause. In allen
   anderen Zuständen bleibt es wie in Slice 1 und 3: Nach der Rückkehr springt nichts vor.
 - **Level-Zeit** — zählt nur beim Spielen. Sie startet bei 0, wenn das Level beginnt (auch bei
   „Level nochmal“), und läuft nach einem Tod weiter.
@@ -170,6 +171,8 @@ Settled during the interview — the plan must not ask these again.
   dem letzten Level kommt der Abspann (Slice 9). Abgelehnt: ein Platzhalter-Abspann (wird später
   ohnehin ersetzt) und „Level 1 nochmal“ (kein echtes Ende, Highscore nur bei Game Over).
 - **Automatische Pause beim Tab-Wechsel** — bewusste Abweichung vom Prototyp, nur beim Spielen.
+  Gilt auch, wenn das Browserfenster verlassen wird (z. B. Klick in ein anderes Programm),
+  beim Planen ergänzt.
 - **Pause-Tasten wie im Prototyp** — P/ESC rein, P/ESC/ENTER raus, Leertaste nicht.
 - **P führt im Game Over auch zum Titel** — wie im Prototyp, obwohl dort nur ESC steht.
 - **Token-Zähler bleibt bei „Level nochmal“** — wie im Prototyp.
@@ -189,6 +192,7 @@ Settled during the interview — the plan must not ask these again.
 - [ ] Drücke ich im Intro kurz nach dem Start ENTER oder die Leertaste, ist es sofort weg, und Claudia springt dabei nicht.
 - [ ] Mit P beim Spielen steht alles still, und ich sehe „PAUSE“ und „Claudia denkt nach... (P zum Weiterspielen)“. P, ESC oder ENTER spielen weiter, die Leertaste nicht. ESC pausiert ebenfalls.
 - [ ] Wechsle ich beim Spielen in einen anderen Tab und komme zurück, steht das Spiel in der Pause.
+- [ ] Klicke ich beim Spielen in ein anderes Programm und komme zurück, steht das Spiel in der Pause.
 - [ ] Am OUTPUT-Terminal erscheint „Task erfolgreich abgeschlossen ✓“, darunter „Zeitbonus: +N   Score: S“. Der Score ist um 500 + N gestiegen, und je schneller ich war, desto größer ist N. Das Terminal zeigt ✓. Nach gut 1 s erscheint „ENTER: Abschluss“.
 - [ ] ENTER führt danach zum Titelbild, auf dem jetzt „Highscore: S“ steht.
 - [ ] Nach dem letzten Leben erscheint „KONTEXTFENSTER VOLL“ mit „Score: X   Highscore: Y“. Ist X ein neuer Rekord, ist Y = X. Nach gut 1 s erscheinen „ENTER: Level nochmal versuchen (Score halbiert)“ und „ESC: zurück zum Hauptmenü“.
