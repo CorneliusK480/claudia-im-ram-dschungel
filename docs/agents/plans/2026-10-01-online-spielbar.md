@@ -355,23 +355,23 @@ Veröffentlicht wird in dieser Phase noch nichts, das kommt in Phase 4.
       ausführen, das darf nichts finden. Außerdem selbst nach dem Firmennamen aus `skills-lock.json`
       suchen, ohne ihn irgendwo im Projekt aufzuschreiben (dieser Plan ist öffentlich). Der Agent committet
       **nicht**, das macht die Nutzerin bzw. der Nutzer in GitHub Desktop.
-- [ ] **GitHub Desktop installieren** (Nutzerin bzw. Nutzer): `https://desktop.github.com`
+- [x] **GitHub Desktop installieren** (Nutzerin bzw. Nutzer): `https://desktop.github.com`
       öffnen → *Download for macOS*. Die heruntergeladene Datei öffnen und *GitHub Desktop* in den
       Ordner *Programme* ziehen. Starten.
-- [ ] **Anmelden:** *Sign in to GitHub.com* → Browser öffnet sich → *Authorize desktop* →
+- [x] **Anmelden:** *Sign in to GitHub.com* → Browser öffnet sich → *Authorize desktop* →
       zurück in die App. Bei *Configure Git* den GitHub-Benutzernamen als Name eintragen und bei
       *Email* im Auswahlfeld die Ersatz-E-Mail `…@users.noreply.github.com` wählen → *Finish*.
       (Später zu finden unter *GitHub Desktop → Settings → Git*.)
-- [ ] **Projekt hinzufügen:** *File → Add Local Repository…* → *Choose…* → den Projektordner
+- [x] **Projekt hinzufügen:** *File → Add Local Repository…* → *Choose…* → den Projektordner
       `little_game_real` wählen → *Add Repository*.
-- [ ] **Erster Commit:** Links im Reiter *Changes* steht die Dateiliste mit Häkchen. Mit der Liste
+- [x] **Erster Commit:** Links im Reiter *Changes* steht die Dateiliste mit Häkchen. Mit der Liste
       des Agents vergleichen: keine `.DS_Store`, kein `dist`, kein `node_modules`, keine
       Kurs-Werkzeuge. Unten links bei *Summary* „Erste Version: Claudia läuft durch Level 1“
       eintragen → *Commit to main*.
-- [ ] **Öffentlich hochladen:** Oben *Publish repository* klicken. Name:
+- [x] **Öffentlich hochladen:** Oben *Publish repository* klicken. Name:
       `claudia-im-ram-dschungel`. Das Häkchen bei **Keep this code private entfernen**. →
       *Publish Repository*.
-- [ ] **GitHub Pages einstellen:** Auf github.com das Projekt öffnen
+- [x] **GitHub Pages einstellen:** Auf github.com das Projekt öffnen
       (`https://github.com/<dein-github-name>/claudia-im-ram-dschungel`) → oben *Settings* → links
       *Pages* → bei *Build and deployment* → *Source* die Option **GitHub Actions** wählen.
       Sonst nichts ändern, es gibt keinen *Save*-Knopf. GitHub schlägt danach fertige Workflows
@@ -379,22 +379,22 @@ Veröffentlicht wird in dieser Phase noch nichts, das kommt in Phase 4.
       Agent in Phase 4 an.
 
 **Automated Verification**:
-- [ ] `git status` zeigt nach dem Commit der Nutzerin bzw. des Nutzers „nothing to commit, working
+- [x] `git status` zeigt nach dem Commit der Nutzerin bzw. des Nutzers „nothing to commit, working
       tree clean“
-- [ ] `git log --format='%an <%ae>'` zeigt nur die Ersatz-E-Mail
-- [ ] `git ls-files` enthält keine `.DS_Store`, nichts unter `dist/`, `node_modules/`, `.agents/`,
+- [x] `git log --format='%an <%ae>'` zeigt nur die Ersatz-E-Mail
+- [x] `git ls-files` enthält keine `.DS_Store`, nichts unter `dist/`, `node_modules/`, `.agents/`,
       `.claude/skills/` und kein `skills-lock.json`
 
 **Manual Verification**:
-- [ ] `https://github.com/<dein-github-name>/claudia-im-ram-dschungel` öffnen: Ordner `docs`, `public`,
+- [x] `https://github.com/<dein-github-name>/claudia-im-ram-dschungel` öffnen: Ordner `docs`, `public`,
       `src` und Dateien wie `index.html`, `package.json` sind zu sehen. Es gibt **keine**
       `.DS_Store`, keinen `dist`- und keinen `node_modules`-Ordner, kein `.agents` und kein
       `skills-lock.json`. Der Ordner `.claude` fehlt ganz.
-- [ ] Direkt hinter dem Projektnamen (oben links) steht **Public**.
-- [ ] Ein privates Browserfenster öffnen (Cmd + Shift + N in Chrome und Safari,
+- [x] Direkt hinter dem Projektnamen (oben links) steht **Public**.
+- [x] Ein privates Browserfenster öffnen (Cmd + Shift + N in Chrome und Safari,
       Cmd + Shift + P in Firefox), also ohne Anmeldung, und denselben Link aufrufen: Das Projekt ist sichtbar,
       aber es gibt keinen Knopf zum Ändern.
-- [ ] Bei *Settings → Pages* steht als Source „GitHub Actions“.
+- [x] Bei *Settings → Pages* steht als Source „GitHub Actions“.
 
 ### Phase 4: Online und automatisch
 
@@ -404,7 +404,7 @@ Der Veröffentlichungs-Roboter kommt dazu. Danach ist das Spiel unter dem Link e
 Änderung geht nach bestandenen Tests automatisch online.
 
 **Tasks**:
-- [ ] `.github/workflows/deploy.yml` anlegen (Agent):
+- [x] `.github/workflows/deploy.yml` anlegen (Agent):
       ```yaml
       # Bei jedem Push auf main: prüfen, bauen und auf GitHub Pages veröffentlichen.
       # Schlägt ein Schritt fehl, wird nichts veröffentlicht und die alte Version bleibt online.
@@ -451,13 +451,13 @@ Der Veröffentlichungs-Roboter kommt dazu. Danach ist das Spiel unter dem Link e
             - id: deployment
               uses: actions/deploy-pages@v4
       ```
-- [ ] Kurze Anleitung „So veröffentlichst du eine Änderung“ in `docs/architecture.md` unter
+- [x] Kurze Anleitung „So veröffentlichst du eine Änderung“ in `docs/architecture.md` unter
       *Technology* ergänzen, mit Link-Muster, dem Ablauf „Commit → Push → ✓ → bis 10 Min. →
       Cmd + Shift + R“ und dem Hinweis auf ✗ und E-Mail.
-- [ ] Nutzerin bzw. Nutzer: In GitHub Desktop erscheint `.github/workflows/deploy.yml` (und
+- [-] Nutzerin bzw. Nutzer: In GitHub Desktop erscheint `.github/workflows/deploy.yml` (und
       `docs/architecture.md`). Summary „Veröffentlichung einrichten“ → *Commit to main* → oben
       *Push origin*.
-- [ ] Der Agent trägt den echten Link `https://<dein-github-name>.github.io/claudia-im-ram-dschungel/`
+- [x] Der Agent trägt den echten Link `https://<dein-github-name>.github.io/claudia-im-ram-dschungel/`
       unter *Implementation Notes* in diesem Plan ein (in der Spec bleibt der Platzhalter).
 - [ ] **Sichtbare Änderung (Agent):** In `public/levels/level1.json` die erste `sky`-Farbe
       vorübergehend von `#03140c` auf `#3a0b4a` (lila) ändern. Die Nutzerin bzw. der Nutzer
@@ -507,6 +507,8 @@ During implementation, document user feedback, problems, and decisions here.
 
 - GitHub-Benutzername: `CorneliusK480`. Projekt-Link: `https://github.com/CorneliusK480/claudia-im-ram-dschungel`.
 - Phase 3: Dateiliste geprüft (45 Dateien). Keine `.DS_Store`, kein `dist`, kein `node_modules`, keine Kurs-Werkzeuge. Die Suche nach Firmenname, Firmen-Adresse und privaten Daten fand nichts.
+- Spiel-Link: `https://corneliusk480.github.io/claudia-im-ram-dschungel/`.
+- Phase 4: Aktuelle Hauptversionen der Aktionen (Stand 2026-10-01): checkout v7, setup-node v7, configure-pages v6, upload-pages-artifact v5, deploy-pages v5.
 - Testanleitungen gibt der Agent als eine vollständige Liste, nicht Schritt für Schritt mit einzelnen Fragen (Wunsch der Nutzerin bzw. des Nutzers).
 
 ## References

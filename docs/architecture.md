@@ -62,6 +62,22 @@ So lassen sich die Regeln automatisch testen, ohne dass ein Bildschirm nötig is
 | Veröffentlichen | GitHub Pages, automatisch über GitHub Actions | Kostenlos. Jede Änderung im Hauptzweig ist kurz danach online. |
 | Code-Ablage | Git + GitHub | Versionsgeschichte, und Voraussetzung für GitHub Pages. |
 
+### So veröffentlichst du eine Änderung
+
+Das Spiel liegt unter `https://<dein-github-name>.github.io/claudia-im-ram-dschungel/`.
+
+1. In GitHub Desktop im Reiter *Changes* die geänderten Dateien prüfen, bei *Summary* kurz
+   beschreiben, was sich geändert hat → *Commit to main*.
+2. Oben auf *Push origin* klicken.
+3. Auf github.com im Projekt unter *Actions* läuft „Prüfen und veröffentlichen“: erst gelb (läuft),
+   nach ein paar Minuten ein grünes ✓.
+4. Bis zu 10 Minuten später ist die neue Version unter dem Link zu sehen. Falls nicht: hart neu
+   laden mit Cmd + Shift + R (Safari: Cmd + Option + R).
+
+Schlägt eine Typprüfung, ein Test oder der Bau fehl, erscheint ein rotes ✗, und GitHub schickt eine
+E-Mail. Dann wird nichts veröffentlicht, und die alte Version bleibt online. Die Anleitung für den
+Roboter steht in `.github/workflows/deploy.yml`.
+
 ## Data
 
 - **What is stored:** Highscore (eine Zahl) und die Einstellung „Ton an/aus“.
