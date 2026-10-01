@@ -447,3 +447,472 @@ wörtlich, nur „Claude“ wird im neuen Spiel zu „Claudia“.
 - Boss-Draufspringen: großzügiger (< 30 px statt 16 px), danach 0,3 s unverwundbar. Ausgespuckte Bugs
   fliegen mit 80 px/s seitlich und 400 px/s nach oben.
 - Highscore wird bei Game Over und beim Sieg gespeichert.
+
+---
+
+## 8. Zeichen-Code für Slice 3 (wörtlich aus game.html)
+
+### Gemeinsame Grundlagen
+
+Konstanten: Kachelgröße T, Canvas-Größe VW/VH, Bodenhöhe FLOOR, Physik (game.html, Zeilen 29–30):
+
+```js
+const T = 32, ROWS = 17, VW = 960, VH = 544, STEP = 1 / 60, FLOOR = 15 * T;
+const GRAV = 2100, JUMP = 780, SPEED = 270, ACC = 2600, FRICTION = 2400, MAXFALL = 950;
+```
+
+Schriftart FONT, die alle Texte benutzen (game.html, Zeile 31):
+
+```js
+const FONT = "'Courier New', ui-monospace, monospace";
+```
+
+hash(): Pseudo-Zufall, der u. a. im Hintergrund genutzt wird; pick() für zufällige Sprüche (game.html, Zeilen 150–151):
+
+```js
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const hash = n => { const s = Math.sin(n * 12.9898) * 43758.5453; return s - Math.floor(s); };
+```
+
+Globaler Zustand: gt (Spielzeit, treibt alle Animationen), shake (Wackeln), state/stateT (game.html, Zeile 302):
+
+```js
+let state = 'title', stateT = 0, gt = 0, shake = 0;
+```
+
+Kamera: die Welt wird um -cam verschoben, bevor Objekte gezeichnet werden (game.html, Zeilen 1129–1131):
+
+```js
+function drawWorld() {
+  ctx.save();
+  ctx.translate(-Math.round(cam), 0);
+```
+
+rr(): Hilfsfunktion für abgerundete Rechtecke (genutzt von Roboter, HUD, Boss usw.) (game.html, Zeilen 836–840):
+
+```js
+function rr(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+```
+
+### 1. Bug zeichnen (lebend/laufend und plattgedrückt)
+
+Bug-Objekt beim Laden des Levels: Größe 24×18, startet mit vx = -60 (läuft nach links), squash = 0 (game.html, Zeile 325):
+
+```js
+    bugs: (L.bugs || []).map(([c, r]) => ({ x: c * T + 4, y: (r + 1) * T - 18, w: 24, h: 18, vx: -60, vy: 0, alive: true, squash: 0 })),
+```
+
+Farbpaletten (BUG_COLORS für normale Bugs; BOSS_COLORS/FLASH_COLORS stehen direkt daneben) und bugShape(): Käferform mit Beinanimation (legPhase), Kopf links, Ursprung Mitte unten (game.html, Zeilen 1002–1021):
+
+```js
+const BUG_COLORS = { leg: '#2a0a1a', body: '#c2185b', line: '#7a0f3a', spot: '#ff6fa5', head: '#3a0a24' };
+const BOSS_COLORS = { leg: '#2a2218', body: '#6b5b4b', line: '#3a3028', spot: '#9aff9a', head: '#3a3028' };
+const FLASH_COLORS = { leg: '#fff', body: '#fff', line: '#ddd', spot: '#fff', head: '#fff' };
+// Käfer-Form, Kopf links, Ursprung = Mitte unten
+function bugShape(col, legPhase, angry) {
+  const leg = Math.sin(legPhase) * 2;
+  ctx.strokeStyle = col.leg; ctx.lineWidth = 2;
+  for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.moveTo(k * 6, -6); ctx.lineTo(k * 7 + (k ? leg : -leg), 0); ctx.stroke(); }
+  ctx.fillStyle = col.body; ctx.beginPath(); ctx.ellipse(2, -9, 11, 8, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = col.line; ctx.beginPath(); ctx.moveTo(2, -17); ctx.lineTo(2, -1); ctx.stroke();
+  ctx.fillStyle = col.spot; ctx.beginPath(); ctx.arc(-1, -12, 2, 0, 7); ctx.arc(6, -8, 2, 0, 7); ctx.fill();
+  ctx.fillStyle = col.head; ctx.beginPath(); ctx.arc(-10, -8, 5, 0, 7); ctx.fill();
+  ctx.fillStyle = angry ? '#ff3030' : '#fff'; ctx.fillRect(-13, -10, 3, 3);
+  ctx.strokeStyle = col.head; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(-12, -12); ctx.lineTo(-16, -18); ctx.moveTo(-9, -12); ctx.lineTo(-10, -19); ctx.stroke();
+  if (angry) {
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(-15, -12.5); ctx.lineTo(-10, -10.5); ctx.stroke();
+  }
+}
+```
+
+drawBug(): Blickrichtung über ctx.scale(-1/1) je nach vx, Beinphase gt * 18 + b.x, Plattdrücken über vertikale Skalierung squash (min. 0.15), nach 0.6 s unsichtbar (game.html, Zeilen 1023–1031):
+
+```js
+function drawBug(b) {
+  const squash = b.alive ? 1 : Math.max(0.15, 1 - b.squash * 4);
+  if (!b.alive && b.squash > 0.6) return;
+  ctx.save();
+  ctx.translate(b.x + b.w / 2, b.y + b.h);
+  ctx.scale(b.vx > 0 ? -1 : 1, squash);
+  bugShape(BUG_COLORS, gt * 18 + b.x, false);
+  ctx.restore();
+}
+```
+
+Update: tote Bugs zählen b.squash hoch (treibt die Plattdrück-Animation), lebende laufen (game.html, Zeilen 619–624):
+
+```js
+  // Bugs
+  for (const b of ents.bugs) {
+    if (!b.alive) { b.squash += dt; continue; }
+    walk(b, dt);
+    if (interactive && overlap(p, b)) stompOrHurt(b, BUG_MSGS, 100);
+  }
+```
+
+walk(): Laufen bis Wand/Kante, dann vx umdrehen (ändert damit die Blickrichtung) (game.html, Zeilen 705–716):
+
+```js
+// Laufen bis zur Wand oder Kante, dann umdrehen
+function walk(b, dt) {
+  b.vy = Math.min(b.vy + GRAV * dt, MAXFALL);
+  if (moveX(b, b.vx * dt)) b.vx = -b.vx;
+  const h = moveY(b, b.vy * dt);
+  if (h) b.vy = 0;
+  if (h === 'down') {
+    const ahead = b.vx > 0 ? Math.floor((b.x + b.w + 1) / T) : Math.floor((b.x - 1) / T);
+    if (!solidAt(ahead, Math.floor((b.y + b.h + 2) / T))) b.vx = -b.vx;
+  }
+  if (b.y > VH + 50) b.alive = false;
+}
+```
+
+stompOrHurt(): Draufspringen setzt alive = false und startet so das Plattdrücken (game.html, Zeilen 718–726):
+
+```js
+function stompOrHurt(e, msgs, pts) {
+  if (p.vy > 0 && p.y + p.h - e.y < 16) {
+    e.alive = false; score += pts; SND.stomp();
+    p.vy = held.jump ? -JUMP * 0.85 : -JUMP * 0.55;
+    p.usedDouble = false;
+    burst(e.x + e.w / 2, e.y + e.h / 2, '#ff5a8a', 14);
+    say(e.x, e.y - 14, pick(msgs), '#fff');
+  } else hurt();
+}
+```
+
+Aufruf in drawWorld() (game.html, Zeile 1232):
+
+```js
+  for (const b of ents.bugs) drawBug(b);
+```
+
+### 2. Token zeichnen
+
+Token-Objekte beim Laden: Mittelpunkt in der Kachelmitte (game.html, Zeile 343):
+
+```js
+  for (const [c, r, n] of [...(L.tokens || []), ...(L.fakeTokens || [])]) for (let k = 0; k < n; k++) ents.tokens.push({ x: (c + k) * T + 16, y: r * T + 16, taken: false });
+```
+
+Tokens: Sechseck in theme.accent mit dunklem "T", Schweben (bob, Sinus) und Drehen (horizontale Skalierung 0.35–1 über |cos|) (game.html, Zeilen 1169–1179):
+
+```js
+  // Tokens
+  for (const t of ents.tokens) {
+    if (t.taken) continue;
+    const bob = Math.sin(gt * 4 + t.x * 0.05) * 3, sw = Math.abs(Math.cos(gt * 3 + t.x * 0.02));
+    ctx.save(); ctx.translate(t.x, t.y + bob); ctx.scale(0.35 + sw * 0.65, 1);
+    ctx.fillStyle = theme.accent;
+    ctx.beginPath(); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3 + Math.PI / 6; ctx.lineTo(Math.cos(a) * 9, Math.sin(a) * 9); } ctx.fill();
+    ctx.fillStyle = '#0008'; ctx.font = `bold 11px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText('T', 0, 4);
+    ctx.restore();
+  }
+  ctx.textAlign = 'left';
+```
+
+### 3. Checkpoint / Diskette zeichnen
+
+Checkpoint-Objekte beim Laden: auf Bodenreihe 14 (game.html, Zeile 333):
+
+```js
+    saves: (L.saves || []).map(c => ({ x: c * T, y: 14 * T, active: false })),
+```
+
+Disketten: gelb (#ffd84a) wenn aktiv, sonst blaugrau (#4a5a7a), mit Metallschieber und Etikett (game.html, Zeilen 1146–1153):
+
+```js
+  // Checkpoints (Disketten)
+  for (const s of ents.saves) {
+    const x = s.x + 6, y = s.y + 8;
+    ctx.fillStyle = s.active ? '#ffd84a' : '#4a5a7a'; ctx.fillRect(x, y, 20, 22);
+    ctx.fillStyle = '#ddd'; ctx.fillRect(x + 4, y, 12, 7);
+    ctx.fillStyle = '#222'; ctx.fillRect(x + 11, y + 1, 3, 5);
+    ctx.fillStyle = '#fff'; ctx.fillRect(x + 3, y + 11, 14, 9);
+  }
+```
+
+### 4. Partikel und schwebende Texte
+
+burst(): erzeugt Partikel; say(): erzeugt schwebenden Text (game.html, Zeilen 384–390):
+
+```js
+function burst(x, y, color, n = 12, spd = 220) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2, s = spd * (0.3 + Math.random());
+    ents.particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 80, life: 0.5 + Math.random() * 0.4, color, size: 2 + Math.random() * 3 });
+  }
+}
+function say(x, y, text, color = '#fff') { ents.texts.push({ x, y, text, color, t: 0 }); }
+```
+
+Update: Partikel fallen mit Schwerkraft 600 und laufen aus; Texte leben 1.3 s (game.html, Zeilen 692–696):
+
+```js
+  // Partikel & Texte
+  for (const q of ents.particles) { q.life -= dt; q.vy += 600 * dt; q.x += q.vx * dt; q.y += q.vy * dt; }
+  ents.particles = ents.particles.filter(q => q.life > 0);
+  for (const t of ents.texts) t.t += dt;
+  ents.texts = ents.texts.filter(t => t.t < 1.3);
+```
+
+Zeichnen am Ende von drawWorld(): Partikel als Quadrate mit Ausblenden, Texte mit schwarzem Schatten (+1 px), steigen 40 px/s und blenden aus (game.html, Zeilen 1275–1285):
+
+```js
+  for (const q of ents.particles) { ctx.globalAlpha = Math.min(1, q.life * 2); ctx.fillStyle = q.color; ctx.fillRect(q.x, q.y, q.size, q.size); }
+  ctx.globalAlpha = 1;
+  ctx.font = `bold 15px ${FONT}`;
+  for (const t of ents.texts) {
+    ctx.globalAlpha = 1 - t.t / 1.3;
+    ctx.fillStyle = '#000'; ctx.fillText(t.text, t.x + 1, t.y - t.t * 40 + 1);
+    ctx.fillStyle = t.color; ctx.fillText(t.text, t.x, t.y - t.t * 40);
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+```
+
+### 5. Bildschirmwackeln
+
+shake wird um 1 pro Sekunde heruntergezählt (in update()) (game.html, Zeile 395):
+
+```js
+  shake = Math.max(0, shake - dt);
+```
+
+Beispiel, wo shake gesetzt wird: beim Tod 0.3 (weitere Stellen: Zeile 641 = 0.2, 735 = 0.15, 755 = 0.35, 796 = 0.3) (game.html, Zeilen 588–594):
+
+```js
+function die(msg) {
+  if (state !== 'play') return;
+  lives--; deathMsg = msg || pick(DEATH_MSGS); SND.hurt(); shake = 0.3;
+  feedback = null; invertT = 0;
+  burst(p.x + p.w / 2, Math.min(p.y + p.h / 2, VH - 10), '#D97757', 30, 320);
+  setState('dead');
+}
+```
+
+Anwendung in render(): zufälliger Versatz bis ±6 px (bei shake 0.3), gilt nur für Hintergrund und Welt, nicht für HUD/Overlays (game.html, Zeilen 1342–1347):
+
+```js
+function render() {
+  ctx.save();
+  if (shake > 0) ctx.translate((Math.random() - 0.5) * 12 * shake / 0.3, (Math.random() - 0.5) * 12 * shake / 0.3);
+  drawBackground();
+  drawWorld();
+  ctx.restore();
+```
+
+### 6. Blinken beim Unverwundbar-Sein
+
+p.inv wird heruntergezählt (in updatePlayer()) (game.html, Zeile 515):
+
+```js
+  if (p.inv > 0) p.inv -= dt;
+```
+
+hurt(): Firewall fängt Treffer ab und setzt p.inv = 1.4 (game.html, Zeilen 579–587):
+
+```js
+function hurt() {
+  if (p.inv > 0 || state !== 'play') return;
+  if (p.shield) {
+    p.shield = false; p.inv = 1.4; SND.shield();
+    say(p.x, p.y - 16, 'Firewall hat\'s abgefangen!', '#7cf');
+    burst(p.x + p.w / 2, p.y + p.h / 2, '#7cf', 16);
+    p.vy = -JUMP * 0.5;
+  } else die();
+}
+```
+
+respawn(): setzt p.inv = 1.5 (game.html, Zeilen 595–600):
+
+```js
+function respawn() {
+  p.x = p.spawnX; p.y = p.spawnY; p.vx = p.vy = 0; p.inv = 1.5; p.shield = false; p.riding = null;
+  ents.projs = []; ents.waves = []; ents.shots = [];
+  rate = { credits: 5, lock: 0, idle: 0 }; banner = null;
+  setState('play');
+}
+```
+
+Spieler zeichnen: bei p.inv > 0 wird der Roboter in jedem zweiten 1/15-s-Takt ausgelassen (Blinken); dazu der Firewall-Schildring (game.html, Zeilen 1266–1273):
+
+```js
+  // Spieler
+  if (state !== 'title' && state !== 'dead' && !(p.inv > 0 && Math.floor(gt * 15) % 2)) {
+    drawRobot(p.x, p.y, p.face, p.onGround && Math.abs(p.vx) > 20 ? p.runT : 0);
+    if (p.shield) {
+      ctx.strokeStyle = `rgba(120,200,255,${0.5 + 0.3 * Math.sin(gt * 6)})`; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(p.x + p.w / 2, p.y + p.h / 2, 22, 0, 7); ctx.stroke();
+    }
+  }
+```
+
+### 7. HUD zeichnen (inklusive Roboter-Icon)
+
+drawRobot(): der Roboter, im HUD mit scale 0.85 als Icon benutzt (Antennenfarbe hängt von hasDouble ab) (game.html, Zeilen 967–1000):
+
+```js
+function drawRobot(x, y, face, run, scale = 1) {
+  ctx.save();
+  ctx.translate(x + 11 * scale, y);
+  ctx.scale(scale * face, scale);
+  ctx.translate(-11, 0);
+  const step = run ? Math.sin(run / 7) * 2.5 : 0;
+  // Beine
+  ctx.fillStyle = '#8f4a33';
+  ctx.fillRect(5, 22 + Math.max(0, step), 4, 6 - Math.max(0, step));
+  ctx.fillRect(13, 22 + Math.max(0, -step), 4, 6 - Math.max(0, -step));
+  // Antenne
+  ctx.strokeStyle = '#8f4a33'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(11, 5); ctx.quadraticCurveTo(11 - step, 1, 13, -2); ctx.stroke();
+  ctx.fillStyle = hasDouble ? `rgba(214,140,255,${0.6 + 0.4 * Math.sin(gt * 6)})` : `rgba(255,220,120,${0.6 + 0.4 * Math.sin(gt * 6)})`;
+  ctx.beginPath(); ctx.arc(13, -3, 3, 0, 7); ctx.fill();
+  // Körper
+  ctx.fillStyle = '#D97757'; rr(0, 4, 22, 20, 6); ctx.fill();
+  ctx.fillStyle = '#e8937a'; rr(2, 5, 18, 4, 2); ctx.fill();
+  // Arm
+  ctx.fillStyle = '#c4654a'; rr(-3, 14 - step * 0.5, 4, 7, 2); ctx.fill();
+  // Gesicht
+  ctx.fillStyle = '#2b1d16'; rr(4, 8, 16, 9, 3); ctx.fill();
+  const blink = (gt % 3.2) < 0.12;
+  ctx.fillStyle = '#9ff';
+  ctx.fillRect(8, blink ? 12 : 10, 3, blink ? 1 : 4);
+  ctx.fillRect(15, blink ? 12 : 10, 3, blink ? 1 : 4);
+  // Funke auf der Brust
+  ctx.strokeStyle = '#fff8'; ctx.lineWidth = 1.2;
+  for (let k = 0; k < 4; k++) {
+    const a = k * Math.PI / 4 + gt;
+    ctx.beginPath(); ctx.moveTo(11 - Math.cos(a) * 2.5, 20 - Math.sin(a) * 2.5); ctx.lineTo(11 + Math.cos(a) * 2.5, 20 + Math.sin(a) * 2.5); ctx.stroke();
+  }
+  ctx.restore();
+}
+```
+
+Hilfsfunktionen text() (fett, mit Schatten +2 px), panel() (Abdunklung) und blinkCol() (blinkendes Weiß) (game.html, Zeilen 1287–1294):
+
+```js
+function text(str, x, y, size, color = '#fff', align = 'center') {
+  ctx.font = `bold ${size}px ${FONT}`; ctx.textAlign = align;
+  ctx.fillStyle = '#000a'; ctx.fillText(str, x + 2, y + 2);
+  ctx.fillStyle = color; ctx.fillText(str, x, y);
+  ctx.textAlign = 'left';
+}
+function panel(alpha = 0.6) { ctx.fillStyle = `rgba(0,0,0,${alpha})`; ctx.fillRect(0, 0, VW, VH); }
+const blinkCol = () => gt % 1 < 0.6 ? '#fff' : '#fff6';
+```
+
+drawHUD(): Leiste mit Roboter-Icon, Leben, Tokens, Score, FW/2x, Levelname, API-Credits, Prompt-Injection-Hinweis, Banner und Boss-Lebensbalken (game.html, Zeilen 1296–1340):
+
+```js
+function drawHUD() {
+  ctx.fillStyle = '#0008'; rr(10, 10, 440, 34, 8); ctx.fill();
+  drawRobot(20, 14, 1, 0, 0.85);
+  text(`x${lives}`, 44, 34, 16, '#fff', 'left');
+  text(`Tokens ${tokens}`, 90, 34, 16, theme.accent, 'left');
+  text(`Score ${score}`, 230, 34, 16, '#ffd84a', 'left');
+  if (p.shield) text('FW', 385, 34, 14, '#7cf', 'left');
+  if (hasDouble) text('2x', 415, 34, 14, '#d68cff', 'left');
+  text(L.name.split(': ')[1], VW - 20, 34, 15, '#fffa', 'right');
+  if (muted) text('Ton aus (M)', VW - 20, 58, 12, '#fff8', 'right');
+  // API-Credits der Prompt-Kanone
+  ctx.fillStyle = '#0008'; rr(10, 48, 150, 20, 6); ctx.fill();
+  if (rate.lock > 0) text('429 RATE LIMIT', 85, 63, 12, Math.floor(gt * 6) % 2 ? '#ff6b6b' : '#fff', 'center');
+  else {
+    text('API', 16, 63, 11, '#ffe9a8', 'left');
+    for (let k = 0; k < 5; k++) {
+      const fill = Math.max(0, Math.min(1, rate.credits - k));
+      ctx.fillStyle = '#333'; ctx.fillRect(46 + k * 22, 53, 18, 10);
+      ctx.fillStyle = fill >= 1 ? '#ffe9a8' : '#a08a50'; ctx.fillRect(46 + k * 22, 53, 18 * fill, 10);
+    }
+  }
+  // Prompt Injection aktiv
+  if (invertT > 0 && state === 'play') {
+    ctx.fillStyle = `rgba(155,77,255,${0.08 + 0.05 * Math.sin(gt * 10)})`; ctx.fillRect(0, 0, VW, VH);
+    text(`⚠ PROMPT INJECTION: Steuerung vertauscht (${invertT.toFixed(1)}s)`, VW / 2, 110, 18, Math.floor(gt * 4) % 2 ? '#d68cff' : '#fff');
+  }
+  if (banner) {
+    ctx.globalAlpha = Math.min(1, banner.t * 3);
+    ctx.font = `bold 17px ${FONT}`;
+    const w = ctx.measureText(banner.text).width + 30;
+    ctx.fillStyle = '#000c'; rr(VW / 2 - w / 2, 128, w, 32, 8); ctx.fill();
+    text(banner.text, VW / 2, 150, 17, banner.color);
+    ctx.globalAlpha = 1;
+  }
+  const b = ents.boss;
+  if (b && !(b.dead && b.deadT > 1.8)) {
+    const bw = 320, bx = VW / 2 - bw / 2, by = 64;
+    text('LEGACY_BUG.exe', VW / 2, by - 6, 14, '#9aff9a');
+    ctx.fillStyle = '#000a'; ctx.fillRect(bx, by, bw, 14);
+    for (let k = 0; k < b.maxHp; k++) {
+      ctx.fillStyle = k < b.hp ? (b.inv > 0 ? '#fff' : '#ff4f6a') : '#333';
+      ctx.fillRect(bx + 3 + k * (bw - 6) / b.maxHp, by + 3, (bw - 6) / b.maxHp - 4, 8);
+    }
+  }
+}
+```
+
+Aufruf in render() (nach der Welt, ohne Wackeln) (game.html, Zeile 1360):
+
+```js
+  drawHUD();
+```
+
+### 8. Overlays: Todesbalken, Game Over, Level geschafft
+
+Todesmeldungen (zufällig ausgewählt, falls die()-Aufruf keine eigene Meldung mitgibt) (game.html, Zeilen 132–133):
+
+```js
+const DEATH_MSGS = ['Segmentation fault!', 'Stack Overflow!', 'Kernel Panic!', '404: Claude nicht gefunden',
+  'Out of Memory!', 'Halluzination erkannt!', 'Unerwartetes Token...', 'Strg+Z! Strg+Z!', 'Null Pointer Exception!'];
+```
+
+Todesbalken (state dead): dunkelroter Balken über die volle Breite, Meldung, Leben, Feedback-Frage (game.html, Zeilen 1372–1384):
+
+```js
+  } else if (state === 'dead') {
+    ctx.fillStyle = '#300c'; ctx.fillRect(0, VH / 2 - 70, VW, 170);
+    text(deathMsg, VW / 2, VH / 2 - 25, 34, '#ff6b6b');
+    text(lives > 0 ? `Noch ${lives} Leben` : 'Keine Leben mehr...', VW / 2, VH / 2 + 5, 16, '#fff');
+    if (stateT > 0.7) {
+      if (!feedback) {
+        text('War diese Antwort hilfreich?', VW / 2, VH / 2 + 45, 18, '#ffd84a');
+        text('←  👍        👎  →', VW / 2, VH / 2 + 78, 22, '#fff');
+      } else {
+        text(feedback.up ? '👍' : '👎', VW / 2, VH / 2 + 50, 26, '#fff');
+        text(feedback.text, VW / 2, VH / 2 + 82, 16, '#ccc');
+      }
+    }
+```
+
+Level geschafft (state levelDone) (game.html, Zeilen 1385–1389):
+
+```js
+  } else if (state === 'levelDone') {
+    panel(0.5);
+    text('Task erfolgreich abgeschlossen ✓', VW / 2, VH / 2 - 40, 32, theme.accent);
+    text(`Zeitbonus: +${ents.goal.bonus}   Score: ${score}`, VW / 2, VH / 2, 18, '#ffd84a');
+    if (stateT > 1.2) text(levelIdx + 1 < LEVELS.length ? 'ENTER: nächster Task' : 'ENTER: Abschluss', VW / 2, VH / 2 + 50, 18, blinkCol());
+```
+
+Game Over (state gameover) (game.html, Zeilen 1390–1398):
+
+```js
+  } else if (state === 'gameover') {
+    panel(0.75);
+    text('KONTEXTFENSTER VOLL', VW / 2, VH / 2 - 60, 40, '#ff6b6b');
+    text('Game Over – die Session ist abgelaufen.', VW / 2, VH / 2 - 20, 18, '#fff');
+    text(`Score: ${score}   Highscore: ${highscore}`, VW / 2, VH / 2 + 15, 18, '#ffd84a');
+    if (stateT > 1.2) {
+      text('ENTER: Level nochmal versuchen (Score halbiert)', VW / 2, VH / 2 + 65, 17, blinkCol());
+      text('ESC: zurück zum Hauptmenü', VW / 2, VH / 2 + 92, 15, '#ccc');
+    }
+```
+
