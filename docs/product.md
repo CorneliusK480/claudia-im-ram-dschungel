@@ -47,6 +47,10 @@ sein, dass man es verstehen, prüfen und erweitern kann.
 - Highscore und „Ton an/aus“ bleiben im Browser gespeichert
 - Der Boss ist klar erkennbar und fair besiegbar (siehe Slice 9). Im Prototyp ist unklar, wie man
   ihn schlägt.
+- Nach einem Tod wird das Level wie bei Super Mario zurückgesetzt: Alle Gegner (auch besiegte)
+  stehen wieder an ihren Startplätzen, und alle Tokens sind wieder da. Score, Token-Zähler, Leben
+  und Checkpoint bleiben. Das weicht bewusst vom Prototyp ab (dort blieben besiegte Gegner und
+  gesammelte Tokens weg) und gilt für alle späteren Gegner und Level (entschieden in Slice 3).
 - Kostenlos online per Link spielbar
 - Spielsprache Deutsch, alle Texte an einer zentralen Stelle
 
@@ -67,7 +71,7 @@ Build order. Each slice is something you can see and click when it's done. `/afs
 2. **Online spielbar** (done) — das Spiel ist im Netz erreichbar.
    Done when: Ein Link öffnet das Spiel, und nach jeder Änderung ist dort automatisch die neue
    Version zu sehen.
-3. **Tokens, Bugs, Leben** — das Grundspiel.
+3. **Tokens, Bugs, Leben** (done) — das Grundspiel.
    Done when: Man sammelt Tokens, besiegt Bugs durch Draufspringen und verliert bei Berührung ein
    Leben (mit Todesspruch wie „Segmentation fault!“). Man steigt an Checkpoints wieder ein, und oben
    zeigt die Leiste Leben, Tokens und Score.

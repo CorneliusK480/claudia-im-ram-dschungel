@@ -18,18 +18,21 @@ export interface Player {
   coyote: number;
   /** Time left in which an early jump press is still remembered. */
   jumpBuffer: number;
+  /** Time left in which bugs cannot hurt Claudia (after respawning). */
+  invulnerable: number;
 }
 
-export function createPlayer(world: World): Player {
+export function createPlayer(world: World, at = world.startPos): Player {
   return {
-    x: world.startPos.x,
-    y: world.startPos.y,
+    x: at.x,
+    y: at.y,
     vx: 0,
     vy: 0,
     onGround: true,
     facing: 1,
     coyote: 0,
     jumpBuffer: 0,
+    invulnerable: 0,
   };
 }
 
@@ -50,6 +53,7 @@ export function stepPlayer(player: Player, input: InputState, world: World, dt: 
   // 2. Timers for coyote time and jump buffer
   p.coyote = p.onGround ? COYOTE : p.coyote - dt;
   p.jumpBuffer = input.jumpPressed ? JUMP_BUFFER : p.jumpBuffer - dt;
+  p.invulnerable = Math.max(0, p.invulnerable - dt);
 
   // 3. Jump
   if (p.jumpBuffer > EPS && p.coyote > EPS) {

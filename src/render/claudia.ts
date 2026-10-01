@@ -1,4 +1,4 @@
-import { PLAYER_W } from '../config';
+import { EPS, PLAYER_W } from '../config';
 import type { Player } from '../logic/player';
 
 const BODY = '#e8e4da';
@@ -6,14 +6,23 @@ const SHADE = '#b9b4a8';
 const VISOR = '#10241a';
 const EYE = '#3cff9a';
 
-/** Claudia as a small robot around the 22 × 28 hitbox, mirrored by `facing`. */
-export function drawClaudia(ctx: CanvasRenderingContext2D, player: Player, camX: number): void {
-  const px = Math.round(player.x - camX);
-  const py = Math.round(player.y);
+/** Leg position: standing, jumping (legs pulled up) or running (`run` = x position for the step change). */
+export type Pose = 'stand' | 'jump' | { run: number };
 
+/** Claudia in the game, around her 22 × 28 hitbox. Blinks while invulnerable. */
+export function drawClaudia(ctx: CanvasRenderingContext2D, player: Player, camX: number, time: number): void {
+  if (player.invulnerable > EPS && Math.floor(time * 15) % 2 === 1) return;
+  const pose: Pose = !player.onGround ? 'jump' : Math.abs(player.vx) > 1 ? { run: player.x } : 'stand';
+  drawRobot(ctx, Math.round(player.x - camX), Math.round(player.y), player.facing, pose);
+}
+
+/** The robot with its top left corner at (x, y), mirrored by `facing`, scaled around that corner. */
+export function drawRobot(
+  ctx: CanvasRenderingContext2D, x: number, y: number, facing: 1 | -1, pose: Pose, scale = 1,
+): void {
   ctx.save();
-  ctx.translate(px + PLAYER_W / 2, py);
-  ctx.scale(player.facing, 1);
+  ctx.translate(x + (PLAYER_W / 2) * scale, y);
+  ctx.scale(facing * scale, scale);
   ctx.translate(-PLAYER_W / 2, 0);
 
   // antenna
@@ -44,11 +53,11 @@ export function drawClaudia(ctx: CanvasRenderingContext2D, player: Player, camX:
 
   // legs: standing, walking (alternating) or jumping (pulled up)
   ctx.fillStyle = SHADE;
-  if (!player.onGround) {
+  if (pose === 'jump') {
     ctx.fillRect(5, 23, 4, 3);
     ctx.fillRect(13, 23, 4, 3);
-  } else if (Math.abs(player.vx) > 1) {
-    const step = Math.floor(player.x / 8) % 2 === 0;
+  } else if (pose !== 'stand') {
+    const step = Math.floor(pose.run / 8) % 2 === 0;
     ctx.fillRect(step ? 4 : 6, 23, 4, step ? 5 : 4);
     ctx.fillRect(step ? 14 : 12, 23, 4, step ? 4 : 5);
   } else {

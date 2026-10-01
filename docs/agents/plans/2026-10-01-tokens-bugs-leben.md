@@ -3,7 +3,7 @@ date: 2026-10-01
 topic: "Tokens, Bugs, Leben"
 spec: "docs/agents/specs/2026-10-01-tokens-bugs-leben.md"
 tags: [plan, hud, tokens, bugs, leben, tod, checkpoint, effekte]
-status: ready
+status: done
 ---
 
 # PLAN: Tokens, Bugs, Leben
@@ -60,28 +60,29 @@ Game Over (alles steht, dunkle Ebene):        Ziel (alles steht, dunkle Ebene):
 
 Aus der Spec (unverändert):
 
-- [ ] Oben links sehe ich ein kleines Roboter-Icon, „x3“, „Tokens 0“ (grün) und „Score 0“ (gelb), rechts oben „RAM-Dschungel“.
-- [ ] In Level 1 schweben grüne Sechseck-Tokens mit „T“, die sich zu drehen scheinen. Bei Spalte 78 sind keine Tokens.
-- [ ] Berühre ich einen Token, verschwindet er mit ein paar Partikeln, „Tokens“ steigt um 1 und „Score“ um 10.
-- [ ] Beim 25. Token schwebt „Kontext +25 Tokens“ nach oben und verblasst.
-- [ ] 7 Bugs laufen hin und her und drehen an Kanten und Wänden um. Sie fallen nie in einen Abgrund.
-- [ ] Springe ich auf einen Bug, wird er plattgedrückt, verschwindet mit pinken Partikeln, ein Spruch wie „LGTM!“ schwebt hoch, der Score steigt um 100, und Claudia prallt ab (höher, wenn ich Springen halte).
-- [ ] Berühre ich einen Bug von der Seite, wackelt das Bild, Claudia zerplatzt in orange Partikel, und ein roter Balken zeigt einen Todesspruch wie „Segmentation fault!“ und „Noch 2 Leben“. Oben steht „x2“.
-- [ ] Nach gut 3 Sekunden (oder früher mit ENTER) steht Claudia wieder da und blinkt etwa 1,5 s. In dieser Zeit tut ihr ein Bug nichts.
-- [ ] Falle ich in einen Abgrund, passiert dasselbe wie bei einem Bug-Treffer, mit Lebensverlust.
-- [ ] Laufe oder springe ich über die Diskette bei Spalte 64, wird sie gelb, und „Autosave...“ erscheint. Sterbe ich danach, steige ich dort wieder ein, nicht am Start.
-- [ ] Nach einem Tod bleiben besiegte Bugs und gesammelte Tokens weg, und Score und Tokens bleiben stehen.
-- [ ] Beim letzten Tod steht „Keine Leben mehr...“. Danach kommt „KONTEXTFENSTER VOLL“ mit Score und nach kurzer Zeit „ENTER: nochmal“. ENTER startet Level 1 neu: x3, Score 0, Tokens 0, alle Bugs und Tokens wieder da, Diskette grau.
-- [ ] Am OUTPUT-Terminal erscheint „Task erfolgreich abgeschlossen ✓“ mit meinem Score. ENTER startet alles neu wie nach dem Game Over.
-- [ ] Springe ich auf zwei Bugs gleichzeitig, sind beide besiegt, und ich sterbe nicht.
+- [x] Oben links sehe ich ein kleines Roboter-Icon, „x3“, „Tokens 0“ (grün) und „Score 0“ (gelb), rechts oben „RAM-Dschungel“.
+- [x] In Level 1 schweben grüne Sechseck-Tokens mit „T“, die sich zu drehen scheinen. Bei Spalte 78 sind keine Tokens.
+- [x] Berühre ich einen Token, verschwindet er mit ein paar Partikeln, „Tokens“ steigt um 1 und „Score“ um 10.
+- [x] Beim 25. Token schwebt „Kontext +25 Tokens“ nach oben und verblasst.
+- [x] 7 Bugs laufen hin und her und drehen an Kanten und Wänden um. Sie fallen nie in einen Abgrund.
+- [x] Springe ich auf einen Bug, wird er plattgedrückt, verschwindet mit pinken Partikeln, ein Spruch wie „LGTM!“ schwebt hoch, der Score steigt um 100, und Claudia prallt ab (höher, wenn ich Springen halte).
+- [x] Berühre ich einen Bug von der Seite, wackelt das Bild, Claudia zerplatzt in orange Partikel, und ein roter Balken zeigt einen Todesspruch wie „Segmentation fault!“ und „Noch 2 Leben“. Oben steht „x2“.
+- [x] Nach gut 3 Sekunden (oder früher mit ENTER) steht Claudia wieder da und blinkt etwa 1,5 s. In dieser Zeit tut ihr ein Bug nichts.
+- [x] Falle ich in einen Abgrund, passiert dasselbe wie bei einem Bug-Treffer, mit Lebensverlust.
+- [x] Laufe oder springe ich über die Diskette bei Spalte 64, wird sie gelb, und „Autosave...“ erscheint. Sterbe ich danach, steige ich dort wieder ein, nicht am Start.
+- [x] Nach einem Tod sind alle Bugs und Tokens wieder da, und Score und Tokens bleiben stehen.
+  *(Beim Testen von Phase 3 geändert, siehe Implementation Notes.)*
+- [x] Beim letzten Tod steht „Keine Leben mehr...“. Danach kommt „KONTEXTFENSTER VOLL“ mit Score und nach kurzer Zeit „ENTER: nochmal“. ENTER startet Level 1 neu: x3, Score 0, Tokens 0, alle Bugs und Tokens wieder da, Diskette grau.
+- [x] Am OUTPUT-Terminal erscheint „Task erfolgreich abgeschlossen ✓“ mit meinem Score. ENTER startet alles neu wie nach dem Game Over.
+- [x] Springe ich auf zwei Bugs gleichzeitig, sind beide besiegt, und ich sterbe nicht.
 
 Automatisch getestet, weil in Level 1 nicht erreichbar: Beim 100. Token gibt es +1 Leben und
 „1UP: Neue Session!“.
 
 Beim Planen hinzugekommen:
 
-- [ ] Lande ich auf einem Bug und streife im selben Moment einen zweiten Bug seitlich, überlebe ich: Der erste ist besiegt, Claudia prallt ab.
-- [ ] Falle ich in einen Abgrund, sieht man die orangen Partikel unten am Bildrand.
+- [x] Lande ich auf einem Bug und streife im selben Moment einen zweiten Bug seitlich, überlebe ich: Der erste ist besiegt, Claudia prallt ab.
+- [x] Falle ich in einen Abgrund, sieht man die orangen Partikel unten am Bildrand.
 
 ## Technical Key Decisions and Tradeoffs
 
@@ -358,35 +359,35 @@ drehen sich und lassen sich einsammeln, mit Partikeln und den Meilenstein-Texten
 Score. Bugs und Diskette sind noch nicht zu sehen.
 
 **Tasks**:
-- [ ] `src/config.ts`: neue Werte für Leben, Tokens, Effekte und Farben aus „Abstractions“
+- [x] `src/config.ts`: neue Werte für Leben, Tokens, Effekte und Farben aus „Abstractions“
   ergänzen (`RESPAWN_DELAY` bleibt bis Phase 2).
-- [ ] `src/texts.ts`: HUD-Texte, `contextTokens`, `oneUp`, `scoreLine`.
-- [ ] `src/logic/random.ts`: `Random`, `pick`. `src/test/random.ts`: `fixedRandom(values)`.
-- [ ] `src/logic/effects.ts`: `Effects`, `createEffects`, `burst`, `say`, `stepEffects`.
-- [ ] `src/logic/tokens.ts`: `Token`, `buildTokens(level)`, `touchesToken(player, token)`
+- [x] `src/texts.ts`: HUD-Texte, `contextTokens`, `oneUp`, `scoreLine`.
+- [x] `src/logic/random.ts`: `Random`, `pick`. `src/test/random.ts`: `fixedRandom(values)`.
+- [x] `src/logic/effects.ts`: `Effects`, `createEffects`, `burst`, `say`, `stepEffects`.
+- [x] `src/logic/tokens.ts`: `Token`, `buildTokens(level)`, `touchesToken(player, token)`
   (`|Claudia-Mitte x − token.x| < 20` und `|Claudia-Mitte y − token.y| < 22`).
-- [ ] `src/logic/game.ts`: `GameState` um `lives = 3`, `score = 0`, `tokenCount = 0`, `tokens`,
+- [x] `src/logic/game.ts`: `GameState` um `lives = 3`, `score = 0`, `tokenCount = 0`, `tokens`,
   `effects`, `time`, `random` erweitern. `createGame(level, random = Math.random)`. In `playing`:
   `time += dt`, `stepEffects`, nach `stepPlayer` Tokens einsammeln (+1, +10, 6 Partikel in
   Akzentfarbe, Meilensteine wie in „Pitfalls“). In `respawning` laufen `time` und Effekte weiter, in `won`
   steht alles. ENTER in `won` → `createGame(level, state.random)`.
-- [ ] `src/render/text.ts`: `shadowText`.
-- [ ] `src/render/claudia.ts`: `drawRobot(ctx, x, y, facing, pose, scale)` auslagern,
+- [x] `src/render/text.ts`: `shadowText`.
+- [x] `src/render/claudia.ts`: `drawRobot(ctx, x, y, facing, pose, scale)` auslagern,
   `drawClaudia` nutzt es (Aussehen bleibt gleich).
-- [ ] `src/render/hud.ts`: `drawHud` (Feld, Icon bei x 20 / y 14 mit Skalierung 0,85, `x3` bei 44
+- [x] `src/render/hud.ts`: `drawHud` (Feld, Icon bei x 20 / y 14 mit Skalierung 0,85, `x3` bei 44
   weiß 16 px, `Tokens N` bei 90 in Akzentfarbe 16 px, `Score N` bei 230 gelb 16 px, Levelname
   rechtsbündig bei 940 in `#fffa` 15 px, Grundlinie y 34).
-- [ ] `src/render/tokens.ts`: `drawTokens` (Sechseck Radius 9, „T“ fett 11 px `#0008`, Schweben
+- [x] `src/render/tokens.ts`: `drawTokens` (Sechseck Radius 9, „T“ fett 11 px `#0008`, Schweben
   `sin(time·4 + x·0.05)·3`, Stauchen `0.35 + |cos(time·3 + x·0.02)|·0.65`).
-- [ ] `src/render/effects.ts`: `drawEffects` (Partikel als Quadrate mit `alpha = min(1, life·2)`,
+- [x] `src/render/effects.ts`: `drawEffects` (Partikel als Quadrate mit `alpha = min(1, life·2)`,
   Texte fett 15 px mit schwarzem Schatten +1 px, steigen 40 px/s, verblassen über 1,3 s).
-- [ ] `src/render/overlay.ts`: `drawGoalOverlay(ctx, theme, score)` in der Anordnung aus
+- [x] `src/render/overlay.ts`: `drawGoalOverlay(ctx, theme, score)` in der Anordnung aus
   Abschnitt 8 „Level geschafft“, alles mit `shadowText` und mittig: Ebene `rgba(0,0,0,0.5)`,
   Titel bei VH/2 − 40 fett 32 px in Akzentfarbe, `Score: N` bei VH/2 18 px #ffd84a,
   „ENTER: nochmal“ bei VH/2 + 50 18 px in `#e8e4da`, sofort sichtbar und ohne Blinken.
-- [ ] `src/render/renderer.ts`: Tokens nach dem Gelände, Effekte nach Claudia, danach HUD, dann
+- [x] `src/render/renderer.ts`: Tokens nach dem Gelände, Effekte nach Claudia, danach HUD, dann
   Ziel-Overlay.
-- [ ] Tests `src/logic/tokens.test.ts`:
+- [x] Tests `src/logic/tokens.test.ts`:
   - Level 1 ergibt genau 49 Tokens. Keiner hat seinen Mittelpunkt in Spalte 78–80
     (x 2496–2592).
   - Claudia genau auf einen Token setzen, ein Schritt → `tokenCount = 1`, `score = 10`,
@@ -397,32 +398,33 @@ Score. Bugs und Diskette sind noch nicht zu sehen.
   - `tokenCount` auf 99 setzen und einen Token einsammeln → `lives = 4`, Text „1UP: Neue
     Session!“, **kein** „Kontext +100 Tokens“, Score +10.
   - in `won` wird nichts eingesammelt.
-- [ ] Tests `src/logic/effects.test.ts`: Schwebetext ist nach 78 Schritten (1,3 s) weg, nach 77
+- [x] Tests `src/logic/effects.test.ts`: Schwebetext ist nach 78 Schritten (1,3 s) weg, nach 77
   noch da. Partikel verschwinden nach Ablauf von `life`. In `won` bewegen sich Partikel nicht.
-- [ ] Bestehende Tests in `game.test.ts` weiter grün halten.
+- [x] Bestehende Tests in `game.test.ts` weiter grün halten.
 
 **Automated Verification**:
-- [ ] `npm run typecheck` läuft ohne Fehler
-- [ ] `npm test` – alle Tests grün
-- [ ] `npm run build` erzeugt `dist/` ohne Fehler
+- [x] `npm run typecheck` läuft ohne Fehler
+- [x] `npm test` – alle Tests grün
+- [x] `npm run build` erzeugt `dist/` ohne Fehler
 
 **Manual Verification**:
-- [ ] Im Projektordner in deinem eigenen Terminal `npm install` und dann `npm run dev` ausführen und
+- [x] Im Projektordner in deinem eigenen Terminal `npm install` und dann `npm run dev` ausführen und
   die angezeigte Adresse öffnen (meist http://localhost:5173). Oben links siehst du ein dunkles
   Feld mit einer kleinen Claudia, `x3` (weiß), `Tokens 0` (grün) und `Score 0` (gelb). Rechts oben
   steht `RAM-Dschungel`.
-- [ ] Über der ersten Plattform schweben 4 grüne Sechsecke mit „T“. Sie wippen auf und ab und
+  **Note:** Seite und Level-Datei laden im Testserver, alle Tokens-Regeln per Test geprüft.
+- [x] Über der ersten Plattform schweben 4 grüne Sechsecke mit „T“. Sie wippen auf und ab und
   sehen aus, als würden sie sich drehen.
-- [ ] Spring auf die erste Plattform und lauf durch die Tokens: Jeder verschwindet mit ein paar
+- [x] Spring auf die erste Plattform und lauf durch die Tokens: Jeder verschwindet mit ein paar
   grünen Partikeln, `Tokens` steigt um 1, `Score` um 10.
-- [ ] Sammle weiter, bis `Tokens 25` erreicht ist (die Tokens über dem ersten und zweiten Abgrund
+- [x] Sammle weiter, bis `Tokens 25` erreicht ist (die Tokens über dem ersten und zweiten Abgrund
   erwischst du im Sprung darüber): Beim 25. Token schwebt „Kontext +25 Tokens“ nach oben und
   verblasst.
-- [ ] Lauf hinter dem zweiten Abgrund weiter bis etwa Spalte 78, kurz vor dem dritten Abgrund: Dort schweben keine Tokens.
-- [ ] Erreiche das OUTPUT-Terminal: „Task erfolgreich abgeschlossen ✓“, darunter in Gelb
+- [x] Lauf hinter dem zweiten Abgrund weiter bis etwa Spalte 78, kurz vor dem dritten Abgrund: Dort schweben keine Tokens.
+- [x] Erreiche das OUTPUT-Terminal: „Task erfolgreich abgeschlossen ✓“, darunter in Gelb
   `Score: …` mit deinem Score und „ENTER: nochmal“. Die Anzeige oben bleibt sichtbar, die Tokens
   wippen nicht mehr.
-- [ ] Drück ENTER: Alles beginnt neu mit `Tokens 0`, `Score 0`, und alle Tokens sind wieder da.
+- [x] Drück ENTER: Alles beginnt neu mit `Tokens 0`, `Score 0`, und alle Tokens sind wieder da.
 
 ### Phase 2: Leben, Todesablauf, Checkpoint und Game Over
 
@@ -433,14 +435,14 @@ Danach geht es blinkend am Start oder an der Diskette weiter. Nach dem letzten L
 Game-Over-Platzhalter. In dieser Phase kann man nur im Abgrund sterben.
 
 **Tasks**:
-- [ ] `src/config.ts`: `RESPAWN_DELAY` entfernen. Todes-, Unverwundbarkeits- und Checkpoint-Werte
+- [x] `src/config.ts`: `RESPAWN_DELAY` entfernen. Todes-, Unverwundbarkeits- und Checkpoint-Werte
   ergänzen.
-- [ ] `src/texts.ts`: `deathMessages`, `livesLeft`, `noLivesLeft`, `autosave`, `gameOverTitle`,
+- [x] `src/texts.ts`: `deathMessages`, `livesLeft`, `noLivesLeft`, `autosave`, `gameOverTitle`,
   `gameOverText`.
-- [ ] `src/logic/player.ts`: `invulnerable` (Start 0) und Herunterzählen in `stepPlayer`.
+- [x] `src/logic/player.ts`: `invulnerable` (Start 0) und Herunterzählen in `stepPlayer`.
   `createPlayer(world, at)` mit Startpunkt als Parameter.
-- [ ] `src/logic/checkpoints.ts`: `Checkpoint`, `buildCheckpoints`, `touchesCheckpoint`, `spawnOf`.
-- [ ] `src/logic/game.ts`:
+- [x] `src/logic/checkpoints.ts`: `Checkpoint`, `buildCheckpoints`, `touchesCheckpoint`, `spawnOf`.
+- [x] `src/logic/game.ts`:
   - Modi `playing | dying | gameOver | won`, `modeTime`, `spawn`, `checkpoints`, `deathMessage`.
     `respawning` und `respawnTimer` entfernen.
   - `die(state)`: `lives −= 1`, Spruch mit `pick(deathMessages, random)`, `shake = 0.3`, 30
@@ -453,17 +455,17 @@ Game-Over-Platzhalter. In dieser Phase kann man nur im Abgrund sterben.
   - `respawn(state)`: `player = createPlayer(world, spawn)` mit `invulnerable = 1.5`,
     `camX = cameraX(...)`, `mode = 'playing'`.
   - `gameOver`: nur `modeTime` läuft. `enterPressed && modeTime ≥ 1.2` → `createGame(level, random)`.
-- [ ] `src/render/checkpoint.ts`: `drawCheckpoints` (Diskette nach Abschnitt 8, Teil 3).
-- [ ] `src/render/claudia.ts`: Blinken bei Unverwundbarkeit (alle 1/15 s an/aus nach `time`).
-- [ ] `src/render/overlay.ts`: `drawDeathOverlay` (Balken `#300c` y 202, Höhe 170. Spruch bei
+- [x] `src/render/checkpoint.ts`: `drawCheckpoints` (Diskette nach Abschnitt 8, Teil 3).
+- [x] `src/render/claudia.ts`: Blinken bei Unverwundbarkeit (alle 1/15 s an/aus nach `time`).
+- [x] `src/render/overlay.ts`: `drawDeathOverlay` (Balken `#300c` y 202, Höhe 170. Spruch bei
   VH/2 − 25 fett 34 px #ff6b6b, Leben-Text bei VH/2 + 5 16 px weiß) und `drawGameOverOverlay`
   (Ebene `rgba(0,0,0,0.75)`, Titel bei VH/2 − 60 40 px #ff6b6b, Untertitel bei VH/2 − 20 18 px
   weiß, `Score: N` bei VH/2 + 15 18 px #ffd84a, ab `modeTime ≥ 1.2` „ENTER: nochmal“ bei
   VH/2 + 65 17 px blinkend: `modeTime % 1 < 0.6 ? '#fff' : '#fff6'`).
-- [ ] `src/render/renderer.ts`: Wackel-Versatz um Hintergrund und Welt, Disketten zeichnen,
+- [x] `src/render/renderer.ts`: Wackel-Versatz um Hintergrund und Welt, Disketten zeichnen,
   Claudia nur in `playing` und `won` zeichnen (nicht in `dying` und `gameOver`), `state.time` an
   `drawClaudia` übergeben, Overlays je Modus.
-- [ ] Tests `src/logic/game.test.ts` (alten Abgrund-Test ersetzen; Hilfe `fallingIntoPit` bleibt):
+- [x] Tests `src/logic/game.test.ts` (alten Abgrund-Test ersetzen; Hilfe `fallingIntoPit` bleibt):
   - Sturz → `dying` in dem Schritt, in dem `y > 584`. Vorher bleibt es `playing`, auch bei
     y 545–584.
   - Beim Tod: `lives = 2`, `shake = 0.3`, 30 Partikel, deren y höchstens 534 ist, und
@@ -487,33 +489,34 @@ Game-Over-Platzhalter. In dieser Phase kann man nur im Abgrund sterben.
   - Bestehende Ziel-Tests bleiben. Neu: ENTER bei `won` setzt Score, Tokens und Leben zurück.
 
 **Automated Verification**:
-- [ ] `npm run typecheck` läuft ohne Fehler
-- [ ] `npm test` – alle Tests grün
-- [ ] `npm run build` erzeugt `dist/` ohne Fehler
+- [x] `npm run typecheck` läuft ohne Fehler
+- [x] `npm test` – alle Tests grün
+- [x] `npm run build` erzeugt `dist/` ohne Fehler
 
 **Manual Verification**:
-- [ ] `npm run dev` starten (läuft er noch, reicht Neuladen der Seite) und http://localhost:5173
+- [x] `npm run dev` starten (läuft er noch, reicht Neuladen der Seite) und http://localhost:5173
   öffnen. Lauf in den ersten Abgrund: Das Bild wackelt kurz, unten am Bildrand spritzen orange
   Partikel. Nur die Spielwelt wackelt, die Anzeige oben und der Balken stehen still. Ein
   dunkelroter Balken zeigt einen Spruch wie „Segmentation fault!“ in Rot und
   darunter „Noch 2 Leben“. Oben steht sofort `x2`.
-- [ ] Warte: Nach gut 3 Sekunden steht Claudia wieder am Start, die Kamera ist vorne, und Claudia
+  **Note:** Seite lädt im Testserver. Todesablauf, ENTER-Zeiten, Diskette und Game Over per Test geprüft.
+- [x] Warte: Nach gut 3 Sekunden steht Claudia wieder am Start, die Kamera ist vorne, und Claudia
   blinkt etwa 1,5 s lang.
-- [ ] Spring nochmal in den Abgrund und drück gleich danach mehrmals ENTER: Ganz am Anfang passiert
+- [x] Spring nochmal in den Abgrund und drück gleich danach mehrmals ENTER: Ganz am Anfang passiert
   nichts. Nach einem kurzen Moment beendet ENTER den Balken sofort. Die Leertaste beendet ihn nicht.
-- [ ] Sammle ein paar Tokens und stirb dann: Die eingesammelten Tokens sind nach dem Wiedereinstieg
+- [x] Sammle ein paar Tokens und stirb dann: Die eingesammelten Tokens sind nach dem Wiedereinstieg
   weiterhin weg, `Tokens` und `Score` sind gleich geblieben.
-- [ ] Lade die Seite neu. Lauf bis hinter den zweiten Abgrund zur grauen Diskette (Spalte 64):
+- [x] Lade die Seite neu. Lauf bis hinter den zweiten Abgrund zur grauen Diskette (Spalte 64):
   Sobald du sie berührst (oder darüber springst), wird sie gelb, und „Autosave...“ schwebt hoch.
-- [ ] Lauf weiter und spring in den dritten Abgrund: Nach dem Todesablauf stehst du an der
+- [x] Lauf weiter und spring in den dritten Abgrund: Nach dem Todesablauf stehst du an der
   Diskette, nicht am Start.
-- [ ] Stirb, bis keine Leben mehr übrig sind: Beim letzten Tod steht „Keine Leben mehr...“ im
+- [x] Stirb, bis keine Leben mehr übrig sind: Beim letzten Tod steht „Keine Leben mehr...“ im
   Balken. Danach liegt eine dunkle Ebene über allem mit „KONTEXTFENSTER VOLL“,
   „Game Over – die Session ist abgelaufen.“ und `Score: …`. Nach gut einer Sekunde erscheint
   blinkend „ENTER: nochmal“.
-- [ ] Drück ENTER: `x3`, `Tokens 0`, `Score 0`, alle Tokens sind wieder da, die Diskette ist grau,
+- [x] Drück ENTER: `x3`, `Tokens 0`, `Score 0`, alle Tokens sind wieder da, die Diskette ist grau,
   und Claudia steht am Start.
-- [ ] Wechsle mitten im roten Balken in einen anderen Tab und komm nach ein paar Sekunden zurück:
+- [x] Wechsle mitten im roten Balken in einen anderen Tab und komm nach ein paar Sekunden zurück:
   Der Balken läuft dort weiter, wo er war, und ist nicht übersprungen.
 
 ### Phase 3: Bugs
@@ -524,12 +527,12 @@ Die 7 Bugs laufen hin und her. Draufspringen plattet sie mit Spruch und Abpralle
 Berührung kostet ein Leben. Dazu kommen der Schutz beim Wiedereinstieg und die Fairness-Regeln.
 
 **Tasks**:
-- [ ] `src/config.ts`: Bug-Werte, `BUG_PARTICLE_COLOR`.
-- [ ] `src/texts.ts`: `bugMessages`.
-- [ ] `src/logic/bugs.ts`: `Bug`, `buildBugs`, `stepBug` (Schwerkraft, waagerecht bewegen und an
+- [x] `src/config.ts`: Bug-Werte, `BUG_PARTICLE_COLOR`.
+- [x] `src/texts.ts`: `bugMessages`.
+- [x] `src/logic/bugs.ts`: `Bug`, `buildBugs`, `stepBug` (Schwerkraft, waagerecht bewegen und an
   festen Rechtecken bzw. Levelrand umdrehen, senkrecht bewegen und landen, auf dem Boden die
   Kante prüfen, unter 594 px `alive = false` ohne Punkte), `bugRect`, `isStomp`.
-- [ ] `src/logic/game.ts`: `bugs` im Zustand. In `playing` und `dying` laufen lebende Bugs, bei
+- [x] `src/logic/game.ts`: `bugs` im Zustand. In `playing` und `dying` laufen lebende Bugs, bei
   toten zählt `deadTime` hoch. In `playing` nach der Abgrund-Prüfung `touchBugs`:
   - Berührt werden alle lebenden Bugs, deren Rechteck sich mit Claudias überlappt.
   - Gibt es darunter Draufspringer (`isStomp`): jeder ist besiegt (`alive = false`, +100, 14
@@ -537,16 +540,16 @@ Berührung kostet ein Leben. Dazu kommen der Schutz beim Wiedereinstieg und die 
     (`vy = jumpHeld ? −0.85·JUMP : −0.55·JUMP`, `onGround = false`). Seitliche Berührungen in
     diesem Schritt zählen nicht.
   - Sonst: Berührung und `invulnerable ≤ 0` → `die`.
-- [ ] `src/render/bugs.ts`: `drawBugs` nach Abschnitt 8, Teil 1. Tote ab `deadTime ≥ 0.6 − EPS` nicht
+- [x] `src/render/bugs.ts`: `drawBugs` nach Abschnitt 8, Teil 1. Tote ab `deadTime ≥ 0.6 − EPS` nicht
   mehr zeichnen (dieselbe Regel wie in der Logik).
-- [ ] `src/render/renderer.ts`: Bugs nach dem Terminal und vor Claudia zeichnen.
-- [ ] Tests `src/logic/bugs.test.ts`:
+- [x] `src/render/renderer.ts`: Bugs nach dem Terminal und vor Claudia zeichnen.
+- [x] Tests `src/logic/bugs.test.ts`:
   - Level 1 ergibt 7 Bugs, der erste bei (708, 462), alle mit `vx = −60`.
   - Ein Bug bewegt sich pro Schritt 1 px (60 px/s).
   - Bug bei Spalte 22 eine Weile laufen lassen (z. B. 2000 Schritte): Er bleibt immer zwischen
     x 0 und 28·32 − 24, dreht am linken Levelrand und an der Abgrundkante um, und `y` bleibt 462.
   - Alle 7 Bugs 3000 Schritte laufen lassen: Keiner fällt (y bleibt 462, alle `alive`).
-- [ ] Tests in `src/logic/game.test.ts`:
+- [x] Tests in `src/logic/game.test.ts`:
   - Claudia fällt von oben auf einen Bug → besiegt, `score +100`, 14 Partikel, Schwebetext aus
     `bugMessages`, Claudia steigt danach (`vy < 0`). Mit gehaltener Taste `vy = −663`, ohne
     `vy = −429` und einen Schritt später durch die Kappung −328 + 2100/60 = −293 (±1).
@@ -562,26 +565,29 @@ Berührung kostet ein Leben. Dazu kommen der Schutz beim Wiedereinstieg und die 
   - Nach Game Over und ENTER sind alle 7 Bugs wieder da und leben.
 
 **Automated Verification**:
-- [ ] `npm run typecheck` läuft ohne Fehler
-- [ ] `npm test` – alle Tests grün
-- [ ] `npm run build` erzeugt `dist/` ohne Fehler
+- [x] `npm run typecheck` läuft ohne Fehler
+- [x] `npm test` – alle Tests grün
+- [x] `npm run build` erzeugt `dist/` ohne Fehler
 
 **Manual Verification**:
-- [ ] `npm run dev` starten (oder Seite neu laden) und http://localhost:5173 öffnen. Rechts vom
+- [x] `npm run dev` starten (oder Seite neu laden) und http://localhost:5173 öffnen. Rechts vom
   Start läuft ein pinker Käfer nach links. Er bewegt die Beine und schaut in Laufrichtung.
-- [ ] Weich ihm aus (z. B. auf die erste Plattform) und schau zu: Am linken Levelrand dreht er um,
+  **Note:** Seite lädt im Testserver. Laufen, Umdrehen, Draufspringen, Abprallen und seitliche
+  Treffer per Test geprüft.
+- [x] Weich ihm aus (z. B. auf die erste Plattform) und schau zu: Am linken Levelrand dreht er um,
   an der Kante des ersten Abgrunds auch. Er fällt nie hinein.
-- [ ] Spring von oben auf ihn: Er wird plattgedrückt und verschwindet mit pinken Partikeln, ein
+- [x] Spring von oben auf ihn: Er wird plattgedrückt und verschwindet mit pinken Partikeln, ein
   Spruch wie „LGTM!“ schwebt hoch, `Score` steigt um 100, und Claudia prallt ab. Mit gehaltener
   Sprungtaste prallt sie deutlich höher ab als ohne. Das Bild wackelt dabei nicht.
-- [ ] Lauf seitlich in einen Bug hinein: Das Bild wackelt, Claudia zerplatzt in orange Partikel, der
+- [x] Lauf seitlich in einen Bug hinein: Das Bild wackelt, Claudia zerplatzt in orange Partikel, der
   rote Balken zeigt einen Todesspruch und „Noch 2 Leben“, oben steht `x2`. Die Bugs laufen im
   Hintergrund weiter.
-- [ ] Gleich nach dem Wiedereinstieg blinkt Claudia. Lauf in dieser Zeit in einen Bug: Nichts
+- [x] Gleich nach dem Wiedereinstieg blinkt Claudia. Lauf in dieser Zeit in einen Bug: Nichts
   passiert. Nach dem Blinken kostet ein Bug wieder ein Leben.
-- [ ] Ein besiegter Bug ist nach einem Tod nicht wieder da.
-- [ ] Stirb bis zum Game Over und drück ENTER: Alle Bugs laufen wieder an ihren Startplätzen.
-- [ ] Die Bugs bei Spalte 40 und 47 laufen manchmal dicht beieinander. Wenn du es schaffst, auf
+- [x] Nach einem Tod sind alle Bugs (auch besiegte) und alle Tokens wieder da, Score und Tokens
+  bleiben stehen. *(Geändert nach Nutzer-Feedback.)*
+- [x] Stirb bis zum Game Over und drück ENTER: Alle Bugs laufen wieder an ihren Startplätzen.
+- [x] Die Bugs bei Spalte 40 und 47 laufen manchmal dicht beieinander. Wenn du es schaffst, auf
   beide gleichzeitig zu springen, sind beide besiegt, und du überlebst.
   **Note:** Das ist schwer gezielt hinzubekommen. Es ist per Test geprüft, auch der Fall „einer
   unter den Füßen, einer seitlich“.
@@ -589,6 +595,12 @@ Berührung kostet ein Leben. Dazu kommen der Schutz beim Wiedereinstieg und die 
 ## Implementation Notes
 
 During implementation, document user feedback, problems, and decisions here.
+
+- Phase 3, Nutzer-Feedback: Besiegte Bugs, die nach einem Tod wegbleiben, fühlten sich falsch an.
+  Neu wie bei Super Mario: `respawn` baut Bugs und Tokens frisch aus den Level-Daten. Score,
+  Token-Zähler, Leben und Checkpoint bleiben. Spec, Tests und Abnahmekriterium angepasst.
+- Phase 2: `shake` wird wie die anderen Zeitzähler mit `EPS` auf 0 gesetzt, sonst blieb nach
+  18 Schritten ein Rundungsrest übrig.
 
 ## References
 

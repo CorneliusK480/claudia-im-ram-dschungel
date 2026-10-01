@@ -133,8 +133,9 @@ Alle Maße, Farben und Texte stehen in `docs/prototype-reference.md`, Abschnitt 
 - **Wiedereinstieg** — Claudia steht sofort am Start (Spalte 2) oder, falls aktiviert, am
   Checkpoint (5 px rechts vom linken Rand der Checkpoint-Spalte, auf dem Boden). Sie steht still.
   Die Kamera springt sofort dorthin. 1,5 s unverwundbar, sichtbar durch Blinken.
-- **Nach einem Tod** — Besiegte Bugs und gesammelte Tokens kommen **nicht** zurück. Score,
-  Token-Zähler und Checkpoint bleiben. Lebende Bugs bleiben dort, wo sie gerade sind.
+- **Nach einem Tod** — Wie bei Super Mario kommen alle Bugs (auch besiegte) und alle Tokens
+  zurück, die Bugs an ihren Startplätzen. Score, Token-Zähler und Checkpoint bleiben.
+  *(Beim Testen geändert, siehe „Decisions already made“.)*
 - **Checkpoint** — wird aktiviert, sobald Claudia waagerecht die Spalte 64 berührt, in jeder Höhe,
   auch im Sprung darüber. Nur einmal. Ist er aktiv, gilt er bis zum Neustart des Levels.
 - **Game Over** — nach dem Todesablauf des letzten Lebens. Das Spiel steht. ENTER wirkt erst nach
@@ -183,24 +184,26 @@ Settled during the interview — the plan must not ask these again.
   bewusst weggelassen.
 - **Zwei Bugs gleichzeitig** — Beide sind besiegt. Die Prototyp-Eigenheit, dass der zweite tötet,
   wurde als unfair abgelehnt.
-- **Besiegte Bugs und Tokens bleiben weg** — nach einem Tod, wie im Prototyp.
+- **Bugs und Tokens kommen nach einem Tod zurück** — beim Testen von Slice 3 geändert (vorher:
+  bleiben weg, wie im Prototyp). Orientierung an Super Mario: Das Level wird zurückgesetzt, Score
+  und Token-Zähler bleiben. Punkte-Farmen begrenzt sich selbst, weil jeder Tod ein Leben kostet.
 
 ## Acceptance criteria
 
-- [ ] Oben links sehe ich ein kleines Roboter-Icon, „x3“, „Tokens 0“ (grün) und „Score 0“ (gelb), rechts oben „RAM-Dschungel“.
-- [ ] In Level 1 schweben grüne Sechseck-Tokens mit „T“, die sich zu drehen scheinen. Bei Spalte 78 sind keine Tokens.
-- [ ] Berühre ich einen Token, verschwindet er mit ein paar Partikeln, „Tokens“ steigt um 1 und „Score“ um 10.
-- [ ] Beim 25. Token schwebt „Kontext +25 Tokens“ nach oben und verblasst.
-- [ ] 7 Bugs laufen hin und her und drehen an Kanten und Wänden um. Sie fallen nie in einen Abgrund.
-- [ ] Springe ich auf einen Bug, wird er plattgedrückt, verschwindet mit pinken Partikeln, ein Spruch wie „LGTM!“ schwebt hoch, der Score steigt um 100, und Claudia prallt ab (höher, wenn ich Springen halte).
-- [ ] Berühre ich einen Bug von der Seite, wackelt das Bild, Claudia zerplatzt in orange Partikel, und ein roter Balken zeigt einen Todesspruch wie „Segmentation fault!“ und „Noch 2 Leben“. Oben steht „x2“.
-- [ ] Nach gut 3 Sekunden (oder früher mit ENTER) steht Claudia wieder da und blinkt etwa 1,5 s. In dieser Zeit tut ihr ein Bug nichts.
-- [ ] Falle ich in einen Abgrund, passiert dasselbe wie bei einem Bug-Treffer, mit Lebensverlust.
-- [ ] Laufe oder springe ich über die Diskette bei Spalte 64, wird sie gelb, und „Autosave...“ erscheint. Sterbe ich danach, steige ich dort wieder ein, nicht am Start.
-- [ ] Nach einem Tod bleiben besiegte Bugs und gesammelte Tokens weg, und Score und Tokens bleiben stehen.
-- [ ] Beim letzten Tod steht „Keine Leben mehr...“. Danach kommt „KONTEXTFENSTER VOLL“ mit Score und nach kurzer Zeit „ENTER: nochmal“. ENTER startet Level 1 neu: x3, Score 0, Tokens 0, alle Bugs und Tokens wieder da, Diskette grau.
-- [ ] Am OUTPUT-Terminal erscheint „Task erfolgreich abgeschlossen ✓“ mit meinem Score. ENTER startet alles neu wie nach dem Game Over.
-- [ ] Springe ich auf zwei Bugs gleichzeitig, sind beide besiegt, und ich sterbe nicht.
+- [x] Oben links sehe ich ein kleines Roboter-Icon, „x3“, „Tokens 0“ (grün) und „Score 0“ (gelb), rechts oben „RAM-Dschungel“.
+- [x] In Level 1 schweben grüne Sechseck-Tokens mit „T“, die sich zu drehen scheinen. Bei Spalte 78 sind keine Tokens.
+- [x] Berühre ich einen Token, verschwindet er mit ein paar Partikeln, „Tokens“ steigt um 1 und „Score“ um 10.
+- [x] Beim 25. Token schwebt „Kontext +25 Tokens“ nach oben und verblasst.
+- [x] 7 Bugs laufen hin und her und drehen an Kanten und Wänden um. Sie fallen nie in einen Abgrund.
+- [x] Springe ich auf einen Bug, wird er plattgedrückt, verschwindet mit pinken Partikeln, ein Spruch wie „LGTM!“ schwebt hoch, der Score steigt um 100, und Claudia prallt ab (höher, wenn ich Springen halte).
+- [x] Berühre ich einen Bug von der Seite, wackelt das Bild, Claudia zerplatzt in orange Partikel, und ein roter Balken zeigt einen Todesspruch wie „Segmentation fault!“ und „Noch 2 Leben“. Oben steht „x2“.
+- [x] Nach gut 3 Sekunden (oder früher mit ENTER) steht Claudia wieder da und blinkt etwa 1,5 s. In dieser Zeit tut ihr ein Bug nichts.
+- [x] Falle ich in einen Abgrund, passiert dasselbe wie bei einem Bug-Treffer, mit Lebensverlust.
+- [x] Laufe oder springe ich über die Diskette bei Spalte 64, wird sie gelb, und „Autosave...“ erscheint. Sterbe ich danach, steige ich dort wieder ein, nicht am Start.
+- [x] Nach einem Tod sind alle Bugs und Tokens wieder da, und Score und Tokens bleiben stehen.
+- [x] Beim letzten Tod steht „Keine Leben mehr...“. Danach kommt „KONTEXTFENSTER VOLL“ mit Score und nach kurzer Zeit „ENTER: nochmal“. ENTER startet Level 1 neu: x3, Score 0, Tokens 0, alle Bugs und Tokens wieder da, Diskette grau.
+- [x] Am OUTPUT-Terminal erscheint „Task erfolgreich abgeschlossen ✓“ mit meinem Score. ENTER startet alles neu wie nach dem Game Over.
+- [x] Springe ich auf zwei Bugs gleichzeitig, sind beide besiegt, und ich sterbe nicht.
 
 Automatisch getestet, weil in Level 1 nicht erreichbar: Beim 100. Token gibt es +1 Leben und
 „1UP: Neue Session!“.

@@ -6,6 +6,35 @@ export const texts = {
   goalHint: 'ENTER: nochmal',
   terminalLabel: 'OUTPUT',
   moreErrors: (n: number) => `… und ${n} weitere`,
+  scoreLine: (n: number) => `Score: ${n}`,
+
+  // HUD
+  hudLives: (n: number) => `x${n}`,
+  hudTokens: (n: number) => `Tokens ${n}`,
+  hudScore: (n: number) => `Score ${n}`,
+
+  // Floating texts
+  contextTokens: (n: number) => `Kontext +${n} Tokens`,
+  oneUp: '1UP: Neue Session!',
+  autosave: 'Autosave...',
+  bugMessages: ['Bug gefixt!', 'Patch deployed!', 'Ticket geschlossen!', 'Works on my machine!', 'LGTM!'],
+
+  // Death & game over
+  deathMessages: [
+    'Segmentation fault!',
+    'Stack Overflow!',
+    'Kernel Panic!',
+    '404: Claudia nicht gefunden',
+    'Out of Memory!',
+    'Halluzination erkannt!',
+    'Unerwartetes Token...',
+    'Strg+Z! Strg+Z!',
+    'Null Pointer Exception!',
+  ],
+  livesLeft: (n: number) => `Noch ${n} Leben`,
+  noLivesLeft: 'Keine Leben mehr...',
+  gameOverTitle: 'KONTEXTFENSTER VOLL',
+  gameOverText: 'Game Over – die Session ist abgelaufen.',
 
   // Loading
   fileNotFound: (status: number) => `Datei nicht gefunden (${status})`,
