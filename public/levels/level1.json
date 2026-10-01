@@ -2,7 +2,7 @@
   "name": "Level 1: RAM-Dschungel",
   "sub": "Spring auf Bugs, um sie zu fixen. Sammle Tokens!",
   "theme": {
-    "sky": ["#03140c", "#0b3a22"],
+    "sky": ["#3a0b4a", "#0b3a22"],
     "far": "#1aff8c",
     "ground": "#123d27",
     "top": "#2fbf6a",

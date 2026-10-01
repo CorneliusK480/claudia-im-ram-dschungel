@@ -454,12 +454,12 @@ Der Veröffentlichungs-Roboter kommt dazu. Danach ist das Spiel unter dem Link e
 - [x] Kurze Anleitung „So veröffentlichst du eine Änderung“ in `docs/architecture.md` unter
       *Technology* ergänzen, mit Link-Muster, dem Ablauf „Commit → Push → ✓ → bis 10 Min. →
       Cmd + Shift + R“ und dem Hinweis auf ✗ und E-Mail.
-- [-] Nutzerin bzw. Nutzer: In GitHub Desktop erscheint `.github/workflows/deploy.yml` (und
+- [x] Nutzerin bzw. Nutzer: In GitHub Desktop erscheint `.github/workflows/deploy.yml` (und
       `docs/architecture.md`). Summary „Veröffentlichung einrichten“ → *Commit to main* → oben
       *Push origin*.
 - [x] Der Agent trägt den echten Link `https://<dein-github-name>.github.io/claudia-im-ram-dschungel/`
       unter *Implementation Notes* in diesem Plan ein (in der Spec bleibt der Platzhalter).
-- [ ] **Sichtbare Änderung (Agent):** In `public/levels/level1.json` die erste `sky`-Farbe
+- [-] **Sichtbare Änderung (Agent):** In `public/levels/level1.json` die erste `sky`-Farbe
       vorübergehend von `#03140c` auf `#3a0b4a` (lila) ändern. Die Nutzerin bzw. der Nutzer
       committet „Test: Himmel lila“ und pusht.
 - [ ] **Kaputter Test (Agent):** Die Farbe zurück auf `#03140c` setzen **und** in
@@ -479,17 +479,17 @@ Der Veröffentlichungs-Roboter kommt dazu. Danach ist das Spiel unter dem Link e
 Hart neu laden heißt hier: Cmd + Shift + R in Chrome und Firefox, **Cmd + Option + R in Safari**
 (in Safari öffnet Cmd + Shift + R die Leseansicht).
 
-- [ ] Nach dem Push „Veröffentlichung einrichten“: Auf github.com im Projekt oben auf *Actions*
+- [x] Nach dem Push „Veröffentlichung einrichten“: Auf github.com im Projekt oben auf *Actions*
       klicken. Ein Lauf „Prüfen und veröffentlichen“ erscheint, gelb (läuft), nach ein paar Minuten
       ein **grünes ✓**. Auf der Startseite des Projekts steht das ✓ auch neben dem letzten Commit.
-- [ ] Den Link `https://<dein-github-name>.github.io/claudia-im-ram-dschungel/` am Mac öffnen
+- [x] Den Link `https://<dein-github-name>.github.io/claudia-im-ram-dschungel/` am Mac öffnen
       (steht auch unter *Settings → Pages*, „Your site is live at …“): Level 1 erscheint, der
       Tab heißt „Claudia im RAM-Dschungel“, und Claudia läuft mit ← → und springt mit der
       Leertaste.
-- [ ] Den Link auf dem Handy öffnen (z. B. per Nachricht an dich selbst schicken): Das Spiel ist
+- [x] Den Link auf dem Handy öffnen (z. B. per Nachricht an dich selbst schicken): Das Spiel ist
       vollständig zu sehen und passt auf den Bildschirm, im Hoch- und im Querformat. Steuern geht
       noch nicht, das ist richtig so (Slice 10).
-- [ ] Einen falschen Link testen, z. B. `…github.io/claudia-im-ram-dschungel/gibtsnicht`: Die
+- [x] Einen falschen Link testen, z. B. `…github.io/claudia-im-ram-dschungel/gibtsnicht`: Die
       normale GitHub-„404“-Seite erscheint.
 - [ ] Nach dem Push „Test: Himmel lila“: Bei *Actions* ein grünes ✓. Den Link mit
       Cmd + Shift + R neu laden (eventuell bis zu 10 Minuten warten): Der Himmel ist oben **lila**.
