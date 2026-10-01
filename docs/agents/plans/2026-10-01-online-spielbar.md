@@ -459,10 +459,10 @@ Der Veröffentlichungs-Roboter kommt dazu. Danach ist das Spiel unter dem Link e
       *Push origin*.
 - [x] Der Agent trägt den echten Link `https://<dein-github-name>.github.io/claudia-im-ram-dschungel/`
       unter *Implementation Notes* in diesem Plan ein (in der Spec bleibt der Platzhalter).
-- [-] **Sichtbare Änderung (Agent):** In `public/levels/level1.json` die erste `sky`-Farbe
+- [x] **Sichtbare Änderung (Agent):** In `public/levels/level1.json` die erste `sky`-Farbe
       vorübergehend von `#03140c` auf `#3a0b4a` (lila) ändern. Die Nutzerin bzw. der Nutzer
       committet „Test: Himmel lila“ und pusht.
-- [ ] **Kaputter Test (Agent):** Die Farbe zurück auf `#03140c` setzen **und** in
+- [-] **Kaputter Test (Agent):** Die Farbe zurück auf `#03140c` setzen **und** in
       `src/logic/camera.test.ts` einen absichtlich falschen Test ergänzen:
       `it('ist absichtlich kaputt (Slice-2-Prüfung)', () => { expect(1).toBe(2); });`.
       Die Nutzerin bzw. der Nutzer committet „Test: absichtlich kaputt“ und pusht.
@@ -491,7 +491,7 @@ Hart neu laden heißt hier: Cmd + Shift + R in Chrome und Firefox, **Cmd + Optio
       noch nicht, das ist richtig so (Slice 10).
 - [x] Einen falschen Link testen, z. B. `…github.io/claudia-im-ram-dschungel/gibtsnicht`: Die
       normale GitHub-„404“-Seite erscheint.
-- [ ] Nach dem Push „Test: Himmel lila“: Bei *Actions* ein grünes ✓. Den Link mit
+- [x] Nach dem Push „Test: Himmel lila“: Bei *Actions* ein grünes ✓. Den Link mit
       Cmd + Shift + R neu laden (eventuell bis zu 10 Minuten warten): Der Himmel ist oben **lila**.
 - [ ] Nach dem Push „Test: absichtlich kaputt“: Bei *Actions* ein **rotes ✗**. Klickt man den Lauf
       an, ist beim Schritt `npm test` der Test „ist absichtlich kaputt“ rot, und `deploy` wurde
