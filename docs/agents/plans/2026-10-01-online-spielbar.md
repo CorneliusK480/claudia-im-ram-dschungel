@@ -3,7 +3,7 @@ date: 2026-10-01
 topic: "Online spielbar"
 spec: "docs/agents/specs/2026-10-01-online-spielbar.md"
 tags: [plan, veroeffentlichen, github, github-pages, github-actions, umbenennung]
-status: in-progress
+status: done
 ---
 
 # PLAN: Online spielbar
@@ -35,20 +35,20 @@ Dein Mac                         GitHub (öffentlich)                        Fre
 
 Aus der Spec (unverändert, inklusive des beim Planen ergänzten Kriteriums):
 
-- [ ] Wenn ich den Link am Mac öffne, sehe ich Level 1, kann Claudia mit der Tastatur laufen und
+- [x] Wenn ich den Link am Mac öffne, sehe ich Level 1, kann Claudia mit der Tastatur laufen und
       springen lassen, und im Tab steht „Claudia im RAM-Dschungel“.
-- [ ] Wenn ich den Link auf dem Handy öffne, sehe ich das Spiel passend auf dem Bildschirm (ohne
+- [x] Wenn ich den Link auf dem Handy öffne, sehe ich das Spiel passend auf dem Bildschirm (ohne
       Steuerung).
-- [ ] Wenn ich etwas Sichtbares ändere und hochlade, sehe ich bei GitHub nach ein paar Minuten ein
+- [x] Wenn ich etwas Sichtbares ändere und hochlade, sehe ich bei GitHub nach ein paar Minuten ein
       grünes ✓, und spätestens nach 10 Minuten (plus Cmd + Shift + R) sehe ich die Änderung unter
       dem Link.
-- [ ] Wenn ich absichtlich einen kaputten Test hochlade, sehe ich bei GitHub ein rotes ✗, bekomme
+- [x] Wenn ich absichtlich einen kaputten Test hochlade, sehe ich bei GitHub ein rotes ✗, bekomme
       eine E-Mail, und unter dem Link läuft weiter die alte Version.
-- [ ] Wenn ich mein Projekt auf github.com öffne, sehe ich keine `.DS_Store`, keinen `dist`- und
+- [x] Wenn ich mein Projekt auf github.com öffne, sehe ich keine `.DS_Store`, keinen `dist`- und
       keinen `node_modules`-Ordner.
-- [ ] Wenn ich mein Projekt auf github.com öffne, sehe ich keine Kurs-Werkzeuge (`.agents`,
+- [x] Wenn ich mein Projekt auf github.com öffne, sehe ich keine Kurs-Werkzeuge (`.agents`,
       `.claude/skills`, `skills-lock.json`). (beim Planen hinzugekommen)
-- [ ] Wenn ich mich bei GitHub einlogge, fragt GitHub nach dem Code vom Handy, und in den
+- [x] Wenn ich mich bei GitHub einlogge, fragt GitHub nach dem Code vom Handy, und in den
       GitHub-E-Mail-Einstellungen ist „Block command line pushes that expose my email“ eingeschaltet.
 
 ## Technical Key Decisions and Tradeoffs
@@ -466,13 +466,13 @@ Der Veröffentlichungs-Roboter kommt dazu. Danach ist das Spiel unter dem Link e
       `src/logic/camera.test.ts` einen absichtlich falschen Test ergänzen:
       `it('ist absichtlich kaputt (Slice-2-Prüfung)', () => { expect(1).toBe(2); });`.
       Die Nutzerin bzw. der Nutzer committet „Test: absichtlich kaputt“ und pusht.
-- [-] **Aufräumen (Agent):** Den absichtlich kaputten Test wieder entfernen. Die Nutzerin bzw. der
+- [x] **Aufräumen (Agent):** Den absichtlich kaputten Test wieder entfernen. Die Nutzerin bzw. der
       Nutzer committet „Kaputten Test entfernt“ und pusht.
 
 **Automated Verification**:
-- [ ] Nach `npm ci` in der Sandbox: `npm run typecheck`, `npm test` und `npm run build` sind fehlerfrei (vor dem kaputten Test
+- [x] Nach `npm ci` in der Sandbox: `npm run typecheck`, `npm test` und `npm run build` sind fehlerfrei (vor dem kaputten Test
       und nach dem Aufräumen. Dazwischen ist `npm test` absichtlich rot.)
-- [ ] `git status` ist nach dem letzten Push sauber, und `git log --format='%ae'` zeigt nur die
+- [x] `git status` ist nach dem letzten Push sauber, und `git log --format='%ae'` zeigt nur die
       Ersatz-E-Mail.
 
 **Manual Verification**:
@@ -498,7 +498,7 @@ Hart neu laden heißt hier: Cmd + Shift + R in Chrome und Firefox, **Cmd + Optio
       nicht ausgeführt. Im Postfach der GitHub-Kontoadresse liegt eine E-Mail über den
       fehlgeschlagenen Lauf. Den Link mit Cmd + Shift + R neu laden: Der Himmel ist **immer noch
       lila**, also läuft die alte Version weiter.
-- [ ] Nach dem Push „Kaputten Test entfernt“: grünes ✓, und nach Cmd + Shift + R ist der Himmel
+- [x] Nach dem Push „Kaputten Test entfernt“: grünes ✓, und nach Cmd + Shift + R ist der Himmel
       wieder **grün** wie gewohnt.
 
 ## Implementation Notes

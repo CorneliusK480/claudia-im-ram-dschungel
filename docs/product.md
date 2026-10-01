@@ -64,7 +64,7 @@ Build order. Each slice is something you can see and click when it's done. `/afs
    Done when: Im Browser läuft und springt Claudia mit der Tastatur durch das Gelände von Level 1
    (Boden, Plattformen, Abgründe, Hintergrund). Die Kamera folgt. Wer in einen Abgrund fällt, startet
    neu. Am OUTPUT-Terminal erscheint „Task erfolgreich abgeschlossen ✓“.
-2. **Online spielbar** — das Spiel ist im Netz erreichbar.
+2. **Online spielbar** (done) — das Spiel ist im Netz erreichbar.
    Done when: Ein Link öffnet das Spiel, und nach jeder Änderung ist dort automatisch die neue
    Version zu sehen.
 3. **Tokens, Bugs, Leben** — das Grundspiel.

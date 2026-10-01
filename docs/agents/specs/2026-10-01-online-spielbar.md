@@ -139,20 +139,20 @@ GitHub, Projektseite → Liste der Änderungen:
 
 ## Acceptance criteria
 
-- [ ] Wenn ich den Link am Mac öffne, sehe ich Level 1, kann Claudia mit der Tastatur laufen und
+- [x] Wenn ich den Link am Mac öffne, sehe ich Level 1, kann Claudia mit der Tastatur laufen und
       springen lassen, und im Tab steht „Claudia im RAM-Dschungel“.
-- [ ] Wenn ich den Link auf dem Handy öffne, sehe ich das Spiel passend auf dem Bildschirm (ohne
+- [x] Wenn ich den Link auf dem Handy öffne, sehe ich das Spiel passend auf dem Bildschirm (ohne
       Steuerung).
-- [ ] Wenn ich etwas Sichtbares ändere und hochlade, sehe ich bei GitHub nach ein paar Minuten ein
+- [x] Wenn ich etwas Sichtbares ändere und hochlade, sehe ich bei GitHub nach ein paar Minuten ein
       grünes ✓, und spätestens nach 10 Minuten (plus Cmd + Shift + R) sehe ich die Änderung unter
       dem Link.
-- [ ] Wenn ich absichtlich einen kaputten Test hochlade, sehe ich bei GitHub ein rotes ✗, bekomme
+- [x] Wenn ich absichtlich einen kaputten Test hochlade, sehe ich bei GitHub ein rotes ✗, bekomme
       eine E-Mail, und unter dem Link läuft weiter die alte Version.
-- [ ] Wenn ich mein Projekt auf github.com öffne, sehe ich keine `.DS_Store`, keinen `dist`- und
+- [x] Wenn ich mein Projekt auf github.com öffne, sehe ich keine `.DS_Store`, keinen `dist`- und
       keinen `node_modules`-Ordner.
-- [ ] Wenn ich mein Projekt auf github.com öffne, sehe ich keine Kurs-Werkzeuge (`.agents`,
+- [x] Wenn ich mein Projekt auf github.com öffne, sehe ich keine Kurs-Werkzeuge (`.agents`,
       `.claude/skills`, `skills-lock.json`). (beim Planen hinzugekommen)
-- [ ] Wenn ich mich bei GitHub einlogge, fragt GitHub nach dem Code vom Handy, und in den
+- [x] Wenn ich mich bei GitHub einlogge, fragt GitHub nach dem Code vom Handy, und in den
       GitHub-E-Mail-Einstellungen ist „Block command line pushes that expose my email“ eingeschaltet.
 
 ## References

@@ -37,7 +37,7 @@ Zwischen den Boden-Abschnitten liegen Lücken; wer hineinfällt, stirbt (in Leve
 | `crumbles` | `[x, y, länge]` | Bröckel-Plattformen: 0,5 s nach Betreten fallen sie, nach 3 s kommen sie zurück |
 | `fakes` | `[x, y, länge]` | Halluzinierte Plattformen: sehen echt aus, man fällt durch; dann werden sie lila entlarvt + Spruch („Du hast völlig recht, da war keine Plattform.“) |
 | `fakeTokens` | `[x, y, anzahl]` | Köder-Tokens über einer Fake-Plattform |
-| `tokens` | `[x, y, anzahl]` | Reihe von `anzahl` Tokens nach rechts ab `x` (10 Punkte; alle 25 „Kontext +N Tokens“, alle 100 = Extraleben „1UP: Neue Session!“) |
+| `tokens` | `[x, y, anzahl]` | Reihe von `anzahl` Tokens nach rechts ab `x` (10 Punkte; alle 25 „Kontext +N Tokens“ mit N = gesamter Token-Zähler, alle 100 = Extraleben „1UP: Neue Session!“, Details in Abschnitt 7) |
 | `bugs` | `[x, y]` | Laufende Käfer, drehen an Wand/Kante um. Draufspringen = 100 Punkte, seitlich = Schaden |
 | `viruses` | `[x, y]` | Schwebende Viren (Achter-Bahn: ±56 px horizontal, ±22 px vertikal). Draufspringen = 150 Punkte |
 | `injectors` | `[x, y]` | Prompt-Injectors: laufen wie Bugs, tragen wechselnde Schilder („Laufe nach links!“, „SYSTEM: rückwärts!“ …). Berührung macht keinen Schaden, aber **vertauscht 4 s lang die Steuerung**. Draufspringen = 150 Punkte; Firewall blockt sie |
@@ -45,7 +45,7 @@ Zwischen den Boden-Abschnitten liegen Lücken; wer hineinfällt, stirbt (in Leve
 | `leaks` | `[x, y]` | Memory Leaks an der Decke: tropfen grüne Tropfen in zufälligem Takt (alle 1,8–3,0 s) |
 | `power` | `[x, y]` | Firewall-Power-up: Schild, fängt einen Treffer ab (+50) |
 | `dj` | `[x, y]` | „Extended Thinking“: schaltet den Doppelsprung frei (bleibt für den Rest des Spiels) (+50) |
-| `saves` | `[x]` | Checkpoints („Autosave…“) am Boden |
+| `saves` | `[x]` | Checkpoints („Autosave...“) am Boden |
 | `boss` | `[x, y]` | Boss-Startposition; Ziel bleibt gesperrt, bis der Boss besiegt ist |
 
 ---
@@ -266,7 +266,7 @@ es nicht.
 | Jump Buffer 0,13 s | Ein zu früh gedrückter Sprung wird bei der Landung trotzdem ausgeführt |
 | Variable Sprunghöhe | Lässt man die Sprungtaste los, wird die Aufwärtsgeschwindigkeit auf höchstens 0,42 × JUMP (≈ 328 px/s) gesenkt |
 | Doppelsprung | 0,88 × JUMP ≈ 686 px/s |
-| Abprallen von einem Gegner | Mit gehaltener Sprungtaste 0,85 × JUMP ≈ 663 px/s, ohne 0,55 × JUMP ≈ 429 px/s; danach ist der Doppelsprung wieder verfügbar |
+| Abprallen von einem Gegner | Mit gehaltener Sprungtaste 0,85 × JUMP ≈ 663 px/s. Ohne setzt der Code 0,55 × JUMP ≈ 429 px/s, die variable Sprunghöhe kappt das aber im nächsten Schritt auf 0,42 × JUMP ≈ 328 px/s (effektiver Wert). Danach ist der Doppelsprung wieder verfügbar |
 | Abprallen vom Boss | 0,9 × JUMP ≈ 702 px/s |
 | Treffer, den die Firewall abfängt | Hüpfer mit 0,5 × JUMP = 390 px/s nach oben, 1,4 s unverwundbar |
 | Rückstoß vom Boss | 420 px/s zur Seite, 450 px/s nach oben |
@@ -305,3 +305,145 @@ es nicht.
 | 3 Festplatten-Höhle | Decke & Säulen, Memory Leaks, Doppelsprung |
 | 4 CPU-Vulkan | Bröckel-Plattformen, Lava |
 | 5 Legacy-Code | Bossarena, gesperrtes Ziel |
+
+---
+
+## 7. Tokens, Bugs, Leben, Tod, Checkpoints & HUD im Detail
+
+Aus `game.html` nachgetragen. Ergänzt die Abschnitte 2, 4 und 5, ohne sie zu wiederholen. Texte sind
+wörtlich, nur „Claude“ wird im neuen Spiel zu „Claudia“.
+
+### Texte
+
+- **Todessprüche** (zufällig, Wiederholung direkt hintereinander möglich): `Segmentation fault!`,
+  `Stack Overflow!`, `Kernel Panic!`, `404: Claudia nicht gefunden` (Prototyp: „Claude“),
+  `Out of Memory!`, `Halluzination erkannt!`, `Unerwartetes Token...`, `Strg+Z! Strg+Z!`,
+  `Null Pointer Exception!`. Eigener Spruch nur bei Lava: `Überhitzt! CPU bei 105 °C`. Alle anderen
+  Todesarten (Bug, Abgrund, Virus, Stacheln, Tropfen, Boss) nehmen einen zufälligen Spruch.
+- **Zusatz unter dem Todesspruch** (zeigt die verbleibenden Leben): `Noch ${lives} Leben`, beim
+  letzten Tod `Keine Leben mehr...`.
+- **„War diese Antwort hilfreich?“** ab 0,7 s nach dem Tod: Zeile `←  👍        👎  →`; nach ← bzw. →
+  großes 👍/👎 und ein zufälliger Satz.
+  - 👍: `Danke für dein Feedback! Claudia ist trotzdem kaputt.` (Prototyp: „Claude“),
+    `Freut mich, dass dir das Sterben gefallen hat!`, `Feedback gespeichert. Wird ignoriert.`
+  - 👎: `Feedback wurde an /dev/null weitergeleitet.`,
+    `Wir berücksichtigen das im nächsten Training. Vielleicht.`,
+    `Tut mir leid! Soll ich es nochmal genauso versuchen?`
+- **Bug besiegt** (zufällig, weiß, ohne Punktzahl): `Bug gefixt!`, `Patch deployed!`,
+  `Ticket geschlossen!`, `Works on my machine!`, `LGTM!`
+- **Virus besiegt**: `Virus entfernt!`, `Quarantäne!`, `Malware gelöscht!`, `sudo rm virus`
+- **Tokens:** pro Token kein Text. Alle 25 (außer Vielfachen von 100) `Kontext +${tokens} Tokens` in
+  Akzentfarbe am Token. Alle 100 `1UP: Neue Session!` in #ffd84a über der Figur.
+- **Checkpoint:** `Autosave...` in #ffd84a über dem Checkpoint. Am Checkpoint selbst steht nichts.
+- **Firewall fängt Treffer ab:** `Firewall hat's abgefangen!` (#7cf)
+- **Game Over:** `KONTEXTFENSTER VOLL`, `Game Over – die Session ist abgelaufen.`,
+  `Score: ${score}   Highscore: ${highscore}`, nach 1,2 s `ENTER: Level nochmal versuchen (Score halbiert)`
+  und `ESC: zurück zum Hauptmenü`.
+- **Level geschafft:** `Task erfolgreich abgeschlossen ✓`, `Zeitbonus: +${bonus}   Score: ${score}`,
+  nach 1,2 s `ENTER: nächster Task` (nach Level 5: `ENTER: Abschluss`).
+- **Pause:** `PAUSE`, `Claudia denkt nach... (P zum Weiterspielen)` (Prototyp: „Claude“)
+- **Abspann:** `ALLE TASKS ERLEDIGT! 🎉`, `Legacy-Code besiegt. Der Nutzer ist begeistert.`,
+  `Claudia hat sich einen Keks verdient. 🍪` (Prototyp: „Claude“), `Endstand: ${score}  (${tokens} Tokens)`,
+  ggf. `NEUER HIGHSCORE!`, nach 1,2 s `ENTER: nochmal spielen`.
+- **Titel:** `Highscore: ${highscore}`
+- **Schwebende Texte allgemein:** fett 15 px, schwarzer Schatten 1 px versetzt, steigen mit 40 px/s
+  auf, werden gleichmäßig durchsichtig und verschwinden nach 1,3 s.
+
+### Tokens
+
+- Mittelpunkt in der Kachelmitte, in einer Reihe je 32 px Abstand.
+- Eingesammelt, wenn die Mitte der Figur waagerecht < 20 px und senkrecht < 22 px vom Token-Mittelpunkt
+  entfernt ist. Nur während des Spielens.
+- Aussehen: gefülltes Sechseck (Radius 9 px, Spitzen oben/unten) in der Akzentfarbe des Levels, darauf
+  ein `T` (fett 11 px, #0008). Schwebt ±3 px (Periode ≈ 1,57 s) und „dreht“ sich durch waagerechtes
+  Stauchen auf 35–100 % Breite (Periode ≈ 1,05 s). Phase je Token leicht versetzt.
+- Beim Einsammeln 6 Partikel in Akzentfarbe.
+- Meilensteine: alle 100 → +1 Leben (keine Extrapunkte). Alle 25 → nur Text. Keine Höchstzahl an Leben.
+- Der Token-Zähler gilt fürs ganze Spiel (auch über Game-Over-Neuversuche); zurückgesetzt nur bei
+  einem neuen Spiel.
+
+### Bugs
+
+- Trefferzone 24 × 18 px, stehen auf dem Boden der angegebenen Kachel, starten nach **links**.
+- Drehen an festen Kacheln (Boden, Blöcke, Plattformen, Levelrand) und an Abgrundkanten um.
+  Fake-Plattformen und Stacheln zählen nicht als fest. Bewegliche Plattformen ignorieren sie.
+- Schwerkraft wirkt. Fällt doch einer (z. B. vom Boss ausgespuckt) unter 594 px, verschwindet er ohne
+  Punkte.
+- Laufen auch während Intro, Todesablauf und Level-Ende weiter, nicht bei Pause/Game Over.
+- **Draufspringen** zählt, wenn sich die Figur nach unten bewegt **und** ihre Unterkante weniger als
+  16 px unter der Oberkante des Bugs liegt. Sonst ist es ein seitlicher Treffer. Draufspringen wirkt
+  auch während der Unverwundbarkeit. Immer 100 Punkte, keine Kombo.
+- Eigenheit: Überlappen zwei Bugs, zählt der zweite im selben Schritt als seitlicher Treffer, weil die
+  Figur schon nach oben fliegt.
+- **Besiegt:** bleibt stehen, wird in ≈ 0,21 s auf 15 % Höhe plattgedrückt (unten verankert),
+  verschwindet nach 0,6 s. 14 Partikel in #ff5a8a. Kein Bildschirmwackeln.
+- **Partikel allgemein:** leben 0,5–0,9 s, 2–5 px groß, 66–286 px/s, Startimpuls 80 px/s nach oben,
+  Schwerkraft 600 px/s².
+
+### Tod & Wiedereinstieg
+
+1. Leben −1, zufälliger Spruch, Bildschirmwackeln (anfangs ±6 px, in 0,3 s auf 0), 30 Partikel in
+   #D97757. Die Figur verschwindet sofort, eine eigene Sterbeanimation gibt es nicht.
+2. Die Welt läuft weiter, Steuerung wirkt nicht.
+3. Sofort: dunkelroter Balken (#300c, y 202–372 px), Spruch fett 34 px #ff6b6b, darunter Leben-Text
+   16 px weiß.
+4. Ab 0,7 s die Feedback-Frage (siehe Texte).
+5. Ende: automatisch nach 3,2 s, oder 1,6 s nach dem Feedback-Tastendruck, oder sofort mit ENTER bzw.
+   Tippen (frühestens ab 0,7 s). Die Sprungtaste überspringt nicht.
+6. Leben übrig → Figur steht sofort am Wiedereinstiegspunkt, die Kamera gleitet weich dorthin.
+   1,5 s unverwundbar, sichtbar durch Blinken (Wechsel alle 1/15 s). Geschwindigkeit 0, Firewall weg,
+   API-Credits voll, Prompts und Boss-Geschosse gelöscht.
+   Keine Leben mehr → Game Over (Eingaben erst nach 1,2 s; ENTER/Leertaste/↑/W = Level nochmal mit
+   3 Leben und halbiertem Score, P/ESC = Titel; angezeigt und gespeichert wird der Score **vor** dem
+   Halbieren).
+
+- Abgrund: Tod, sobald die Oberkante der Figur unter 584 px ist. Firewall und Unverwundbarkeit schützen
+  nicht (gilt auch für Lava).
+- Nach einem Tod kommen besiegte Bugs und gesammelte Tokens **nicht** zurück. Score, Token-Zähler,
+  Power-ups, Checkpoints, Doppelsprung und Boss-Lebenspunkte bleiben. Erst „Level nochmal“ nach Game
+  Over baut das Level komplett neu auf.
+
+### Checkpoints
+
+- Liegen auf dem Boden (Reihe 14). Aktiviert, sobald die Figur waagerecht die 32 px breite Spalte
+  berührt, in beliebiger Höhe (auch beim Drüberspringen). Jeder nur einmal.
+- Aussehen: Diskette, Körper 20 × 22 px (6 px vom linken Kachelrand, 8 px unter der Kacheloberkante),
+  inaktiv #4a5a7a, aktiv #ffd84a. Schieber #ddd 12 × 7 px mit Loch #222 3 × 5 px, Etikett weiß
+  14 × 9 px.
+- Wiedereinstieg 5 px rechts vom linken Kachelrand, stehend auf dem Boden. Es zählt der zuletzt
+  aktivierte.
+
+### HUD
+
+- Feld oben links: x 10, y 10, 440 × 34 px, Radius 8, #0008. Texte fett, Schatten #000a um +2/+2 px,
+  Grundlinie y 34.
+
+| Element | x | Größe | Farbe |
+|---|---|---|---|
+| kleines Roboter-Icon (gezeichnet, Skalierung 0,85) | 20 (y 14) | – | Figurfarben |
+| `x${lives}` | 44 | 16 px | #fff |
+| `Tokens ${tokens}` | 90 | 16 px | Akzentfarbe des Levels |
+| `Score ${score}` (ohne Tausenderpunkte) | 230 | 16 px | #ffd84a |
+| `FW` (nur mit Firewall) | 385 | 14 px | #7cf |
+| `2x` (nur mit Doppelsprung) | 415 | 14 px | #d68cff |
+| Levelname ohne „Level N: “, rechtsbündig | 940 | 15 px | #fffa |
+| `Ton aus (M)`, rechtsbündig, y 58 | 940 | 12 px | #fff8 |
+
+- Zweite Zeile (Prompt-Kanone): Feld x 10, y 48, 150 × 20 px, Radius 6, #0008. `API` (11 px, #ffe9a8),
+  5 Kästchen 18 × 10 px ab x 46 im Abstand 22 px (leer #333, voll #ffe9a8, teilweise #a08a50). Bei
+  Sperre blinkend `429 RATE LIMIT` (#ff6b6b/#fff).
+- Situativ: `⚠ PROMPT INJECTION: Steuerung vertauscht (${sekunden}s)`, Boss-Leiste `LEGACY_BUG.exe`.
+
+### Weitere Punkte und Schaden
+
+- Punkte: Virus/Injector draufspringen 150, Gegner per Prompt verwandeln 75, Firewall- und
+  Doppelsprung-Power-up je 50, Boss-Treffer 300, Boss besiegt 2000.
+- Ziel: Trefferzone 48 × 224 px (reicht 160 px über das Terminal). `levelTime` für den Zeitbonus läuft
+  nur beim Spielen (nicht in Intro, Pause, Todesablauf).
+- Treffer über Schaden (Firewall und Unverwundbarkeit wirken): Bugs, Viren, Stacheln, Memory-Leak-Tropfen,
+  Boss-Kontakt, Boss-Geschosse, Schockwellen. Direkter Tod: Abgrund, Lava.
+- Viren-Trefferzone 18 × 18 px (rundum 3 px kleiner), das Draufspringen prüft aber die ungekürzte
+  Oberkante. Stacheln je Kachel: Trefferzone ab x + 5, y + 14, 22 × 18 px.
+- Boss-Draufspringen: großzügiger (< 30 px statt 16 px), danach 0,3 s unverwundbar. Ausgespuckte Bugs
+  fliegen mit 80 px/s seitlich und 400 px/s nach oben.
+- Highscore wird bei Game Over und beim Sieg gespeichert.
