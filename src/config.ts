@@ -47,6 +47,33 @@ export const BOUNCE = 0.55;
 /** A defeated bug is shown squashed for this long. */
 export const SQUASH_TIME = 0.6;
 
+// Prompt cannon (slice 6)
+/** Flight speed of a prompt in px/s. */
+export const PROMPT_SPEED = 560;
+/** A prompt vanishes after this many seconds (about 420 px). */
+export const PROMPT_LIFE = 0.75;
+export const PROMPT_W = 16;
+export const PROMPT_H = 14;
+/** A prompt starts this far below Claudia's top edge (chest height). */
+export const PROMPT_Y = 6;
+export const PROMPT_POINTS = 75;
+/** White particles when a bug is turned into a pet. */
+export const POOF_PARTICLES = 14;
+/** The butterfly rises this fast, in px/s. */
+export const PET_FLY_SPEED = 90;
+/** Gift, duck and cookie hop up this fast and drift sideways this fast, in px/s. */
+export const PET_HOP = 420;
+export const PET_SIDE = 60;
+/** Gravity for hopping pets in px/s². */
+export const PET_GRAV = 1200;
+/** Spin of hopping pets in rad/s. */
+export const PET_SPIN = 8;
+/** API credits: one per shot, refilled evenly one every CREDIT_TIME seconds. */
+export const CREDITS_MAX = 5;
+export const CREDIT_TIME = 1.5;
+/** Shooting without a credit locks the cannon for this long ("429 Too Many Requests"). */
+export const RATE_LOCK_TIME = 2;
+
 // Death & respawn
 export const DEATH_TIME = 3.2;
 /** ENTER ends the death sequence only after this time. */
@@ -87,6 +114,8 @@ export const DEATH_SHAKE = 0.3;
 export const SHAKE_PX = 6;
 export const TEXT_LIFE = 1.3;
 export const TEXT_RISE = 40;
+/** Bug sayings and prompt commands stay longer, so they can be read. They rise as far, only slower. */
+export const SAYING_LIFE = 2.5;
 export const PARTICLE_GRAV = 600;
 
 // Game loop
@@ -103,6 +132,8 @@ export const SCORE_COLOR = '#ffd84a';
 export const DEATH_COLOR = '#D97757';
 export const TITLE_COLOR = '#D97757';
 export const BUG_PARTICLE_COLOR = '#ff5a8a';
+/** Prompt commands, pet sayings and the API bar. */
+export const PROMPT_COLOR = '#ffe9a8';
 export const FONT = '"Courier New", monospace';
 
 // Sky colours of level 1, drawn before the level file has arrived.

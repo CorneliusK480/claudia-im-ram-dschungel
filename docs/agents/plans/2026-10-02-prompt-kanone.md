@@ -3,7 +3,7 @@ date: 2026-10-02
 topic: "Prompt-Kanone"
 spec: "docs/agents/specs/2026-10-02-prompt-kanone.md"
 tags: [plan, prompt-kanone, haustiere, api-credits, rate-limit, banner, hud]
-status: ready
+status: done
 ---
 
 # PLAN: Prompt-Kanone
@@ -54,21 +54,21 @@ API-Leiste im Detail (Kästchen 18 × 10 px ab x 46, Abstand 22 px)
 
 Aus der Spec, unverändert:
 
-- [ ] Ich drücke X oder F: Eine weiße Sprechblase mit einem Befehl darüber fliegt in Blickrichtung los, und es macht „Piu“. Das klappt im Stehen, beim Laufen und im Sprung, nach links und nach rechts.
-- [ ] Ich halte X gedrückt: Es kommt nur ein Schuss.
-- [ ] Ein Prompt trifft einen Bug: Es macht „Puff“ mit weißen Partikeln. Der Bug wird zu Feature-Geschenk, Schmetterling, Gummiente oder Cookie, sein Spruch schwebt hoch, und der Score steigt um 75.
-- [ ] Bei „Sei ein Feature!“ wird es ein Geschenk, bei „Werde ein Schmetterling!“ ein Schmetterling usw. Bei einer Niete wie „Bitte fix das.“ wird es ein zufälliges Haustier.
-- [ ] Das Haustier verschwindet: Der Schmetterling flattert nach oben weg, die anderen hüpfen hoch und fallen aus dem Bild.
-- [ ] Ein Prompt verwandelt nur einen Bug. Er verpufft an Wänden und Plattformen und nach etwa einem halben Bildschirm.
-- [ ] Bei jedem Schuss leert sich in der API-Leiste ein Kästchen. Die Kästchen laden gleichmäßig wieder auf (eins alle 1,5 s), auch während ich schieße, und man sieht das Füllen.
-- [ ] Ich schieße ohne Credits: Es klingt „Bäp-bäp“, in der Leiste blinkt „429 RATE LIMIT“, und oben steht „429 Too Many Requests – bitte warte kurz“. 2 s lang tut X nichts, danach geht es wieder.
-- [ ] Nach einem Tod und nach dem Neustart eines Levels sind die Credits voll, und verwandelte Bugs sind wieder da.
-- [ ] In der Pause steht die Leiste still. Im Intro, im Todesbalken, bei „Level geschafft“ und im Game Over passiert bei X nichts.
-- [ ] Mit „Ton aus (M)“ machen Schuss, Puff und 429 kein Geräusch.
+- [x] Ich drücke X oder F: Eine weiße Sprechblase mit einem Befehl darüber fliegt in Blickrichtung los, und es macht „Piu“. Das klappt im Stehen, beim Laufen und im Sprung, nach links und nach rechts.
+- [x] Ich halte X gedrückt: Es kommt nur ein Schuss.
+- [x] Ein Prompt trifft einen Bug: Es macht „Puff“ mit weißen Partikeln. Der Bug wird zu Feature-Geschenk, Schmetterling, Gummiente oder Cookie, sein Spruch schwebt hoch, und der Score steigt um 75.
+- [x] Bei „Sei ein Feature!“ wird es ein Geschenk, bei „Werde ein Schmetterling!“ ein Schmetterling usw. Bei einer Niete wie „Bitte fix das.“ wird es ein zufälliges Haustier.
+- [x] Das Haustier verschwindet: Der Schmetterling flattert nach oben weg, die anderen hüpfen hoch und fallen aus dem Bild.
+- [x] Ein Prompt verwandelt nur einen Bug. Er verpufft an Wänden und Plattformen und nach etwa einem halben Bildschirm.
+- [x] Bei jedem Schuss leert sich in der API-Leiste ein Kästchen. Die Kästchen laden gleichmäßig wieder auf (eins alle 1,5 s), auch während ich schieße, und man sieht das Füllen.
+- [x] Ich schieße ohne Credits: Es klingt „Bäp-bäp“, in der Leiste blinkt „429 RATE LIMIT“, und oben steht „429 Too Many Requests – bitte warte kurz“. 2 s lang tut X nichts, danach geht es wieder.
+- [x] Nach einem Tod und nach dem Neustart eines Levels sind die Credits voll, und verwandelte Bugs sind wieder da.
+- [x] In der Pause steht die Leiste still. Im Intro, im Todesbalken, bei „Level geschafft“ und im Game Over passiert bei X nichts.
+- [x] Mit „Ton aus (M)“ machen Schuss, Puff und 429 kein Geräusch.
 
 Neu beim Planen:
 
-- [ ] Sterbe ich, während ein Prompt fliegt, fliegt er im Todesbalken weiter und kann noch einen Bug verwandeln (+75). Beim Wiedereinstieg ist er weg.
+- [x] Sterbe ich, während ein Prompt fliegt, fliegt er im Todesbalken weiter und kann noch einen Bug verwandeln (+75). Beim Wiedereinstieg ist er weg.
 
 ## Technical Key Decisions and Tradeoffs
 
@@ -240,11 +240,11 @@ Plattformen und nach 0,75 s. Nach dem Tod ist alles zurückgesetzt. In dieser Ph
 keine Credit-Grenze: Jeder Druck ist ein Schuss.
 
 **Tasks**:
-- [ ] `config.ts`: Abschnitt `// Prompt cannon (slice 6)` mit `PROMPT_SPEED`, `PROMPT_LIFE`,
+- [x] `config.ts`: Abschnitt `// Prompt cannon (slice 6)` mit `PROMPT_SPEED`, `PROMPT_LIFE`,
   `PROMPT_W`, `PROMPT_H`, `PROMPT_Y`, `PROMPT_POINTS`, `POOF_PARTICLES`, `PET_FLY_SPEED`,
   `PET_HOP`, `PET_SIDE`, `PET_GRAV`, `PET_SPIN`, `PROMPT_COLOR` (Werte siehe „Abstractions“,
   mit kurzem Kommentar und Einheit).
-- [ ] `texts.ts`: Abschnitt `// Prompt cannon`:
+- [x] `texts.ts`: Abschnitt `// Prompt cannon`:
   ```ts
   petSayings: {
     gift: "It's not a bug, it's a feature!",
@@ -266,7 +266,7 @@ keine Credit-Grenze: Jeder Druck ist ein Schuss.
   ```
   Typen so wählen, dass `pet` nur `'gift' | 'butterfly' | 'duck' | 'cookie' | null` sein kann
   (z. B. `as const`).
-- [ ] `logic/pets.ts` (neu):
+- [x] `logic/pets.ts` (neu):
   - `export type PetKind = keyof typeof texts.petSayings` und `PET_KINDS: PetKind[]`.
   - `Pet { kind, x, y, vx, vy, angle, facing: 1 | -1, t }` (`t` = Sekunden seit Entstehen, für
     Flügelschlag und Pendeln).
@@ -275,7 +275,7 @@ keine Credit-Grenze: Jeder Druck ist ein Schuss.
   - `stepPets(pets, camX, dt)` → neue Liste: Schmetterling steigt gleichmäßig, die anderen mit
     `PET_GRAV` und `angle += facing · PET_SPIN · dt`. Entfernt, wenn `y < −40`, `y > PIT_Y` oder
     `x` mehr als 40 px links/rechts außerhalb von `[camX, camX + VIEW_W]`.
-- [ ] `logic/prompts.ts` (neu):
+- [x] `logic/prompts.ts` (neu):
   - `Prompt { x, y, dir: 1 | -1, text, pet: PetKind | null, life }`.
   - `promptRect(p)`, `createPrompt(player, command)`: Start vor Claudia (siehe Key Decision 9),
     `life = PROMPT_LIFE`.
@@ -284,15 +284,15 @@ keine Credit-Grenze: Jeder Druck ist ein Schuss.
     Überlappung mit `world.solids` (→ `wallHits`); sonst der **erste** lebende Bug, der überlappt
     und in diesem Schritt noch nicht getroffen wurde (→ `hits`, Prompt weg). Die Funktion ändert
     keine Bugs, das macht `game.ts`.
-- [ ] `logic/events.ts`: `GameEvent` um `'shoot' | 'poof'` ergänzen.
-- [ ] `audio/sounds.ts`: `shoot: [tone(1200, 600, 0.08, 'square', 0.035)]`,
+- [x] `logic/events.ts`: `GameEvent` um `'shoot' | 'poof'` ergänzen.
+- [x] `audio/sounds.ts`: `shoot: [tone(1200, 600, 0.08, 'square', 0.035)]`,
   `poof: [tone(400, 1400, 0.15, 'triangle', 0.07), tone(1400, 1800, 0.08, 'square', 0.03, 0.12)]`.
-- [ ] `logic/input.ts`: `shootPressed: boolean` (Doku: X/F neu gedrückt seit dem letzten Schritt),
+- [x] `logic/input.ts`: `shootPressed: boolean` (Doku: X/F neu gedrückt seit dem letzten Schritt),
   in `NO_INPUT` `false`.
-- [ ] `input/keyboard.ts`: `let shootPressed = false`. In `keydown` (nach der `e.repeat`-Prüfung)
+- [x] `input/keyboard.ts`: `let shootPressed = false`. In `keydown` (nach der `e.repeat`-Prüfung)
   `if (SHOOT.has(e.code)) shootPressed = true`. In `blur` und `consume()` zurücksetzen, in
   `read()` zurückgeben. Kommentar bei `SHOOT` anpassen.
-- [ ] `logic/game.ts`:
+- [x] `logic/game.ts`:
   - `GameState` um `prompts: Prompt[]` und `pets: Pet[]` ergänzen, in `createGame` leer.
   - `shoot(state)`: Befehl mit `pick(texts.promptCommands, state.random)`, Prompt anlegen, Event
     `'shoot'`.
@@ -307,27 +307,27 @@ keine Credit-Grenze: Jeder Druck ist ein Schuss.
   - `won`: nach `stepBugs` `stepPets`.
   - `reachGoal`: `state.prompts = []`.
   - `respawn`: `state.prompts = []`, `state.pets = []`.
-- [ ] `render/prompts.ts` (neu): `drawPrompts(ctx, state, camX)`: weiße Sprechblase 16 × 14 px
+- [x] `render/prompts.ts` (neu): `drawPrompts(ctx, state, camX)`: weiße Sprechblase 16 × 14 px
   (abgerundetes Rechteck, kleine Spitze nach hinten unten, dünner dunkler Rand), darüber der
   Befehl mit `shadowText` in 10 px, `PROMPT_COLOR`, mittig. Prompts außerhalb des Bildes
   überspringen.
-- [ ] `render/pets.ts` (neu): `drawPets(ctx, state, camX)`, je etwa Bug-Größe (24 × 18), um die
+- [x] `render/pets.ts` (neu): `drawPets(ctx, state, camX)`, je etwa Bug-Größe (24 × 18), um die
   Mitte gedreht (`angle`), gespiegelt nach `facing`:
   - Geschenk: rotes Paket (#e53935) mit gelber Schleife (#ffd84a), Band kreuzförmig.
   - Schmetterling: zwei Flügelpaare in Pink/Violett/Gelb, Flügel schlagen
     (`scaleX = |sin(t · 20)|`), Körper dunkel, seitliches Pendeln `x + sin(t · 6) · 8`.
   - Gummiente: gelber Körper (#ffd84a), Kopf, orangener Schnabel, schwarzes Auge.
   - Cookie: brauner Kreis (#c68642) mit 4–5 dunklen Schokostückchen.
-- [ ] `render/renderer.ts`: nach `drawBugs` erst `drawPets`, dann `drawPrompts` (vor Claudia und
+- [x] `render/renderer.ts`: nach `drawBugs` erst `drawPets`, dann `drawPrompts` (vor Claudia und
   den Effekten).
-- [ ] `logic/prompts.test.ts` (neu), mit kleiner Test-Welt bzw. `loadLevel1()`:
+- [x] `logic/prompts.test.ts` (neu), mit kleiner Test-Welt bzw. `loadLevel1()`:
   - fliegt 560 px/s in `dir`-Richtung, verschwindet nach 45 Schritten (0,75 s), nicht davor.
   - verschwindet an einem Festkörper und meldet einen `wallHit`.
   - trifft genau einen von zwei übereinanderliegenden Bugs.
   - fliegt durch einen Bug mit `alive = false`.
-- [ ] `logic/pets.test.ts` (neu): Schmetterling steigt und ist nach `y < −40` weg; Ente hüpft
+- [x] `logic/pets.test.ts` (neu): Schmetterling steigt und ist nach `y < −40` weg; Ente hüpft
   erst hoch, fällt dann und ist nach `y > 584` weg; dreht sich in Blickrichtung des Bugs.
-- [ ] `logic/game.test.ts`, neuer Block `prompt cannon`:
+- [x] `logic/game.test.ts`, neuer Block `prompt cannon`:
   - `shootPressed` im Spiel legt einen Prompt vor Claudia in Blickrichtung an und meldet
     `'shoot'`; nach links (`facing −1`) startet er links von ihr; geht auch im Sprung.
   - Befehl aus `fixedRandom`: `'Sei ein Feature!'` → Treffer ergibt `gift`; Niete
@@ -343,47 +343,48 @@ keine Credit-Grenze: Jeder Druck ist ein Schuss.
   - Pause: Prompt und Haustier bewegen sich 60 Schritte lang nicht.
 
 **Automated Verification**:
-- [ ] `npm run typecheck` ist fehlerfrei
-- [ ] `npm test` ist grün
-- [ ] `npm run build` läuft durch
+- [x] `npm run typecheck` ist fehlerfrei
+- [x] `npm test` ist grün
+- [x] `npm run build` läuft durch
 
 **Manual Verification**:
-- [ ] Im eigenen Terminal (Mac: Cmd + Leertaste → „Terminal“) in den Projektordner wechseln
+- [x] Im eigenen Terminal (Mac: Cmd + Leertaste → „Terminal“) in den Projektordner wechseln
   (`cd ~/Documents/0_Work/1_other_stuff/little_game_real`), `npm install` und danach
   `npm run dev` ausführen. Die angezeigte Adresse öffnen (meist http://localhost:5173). Ton
   anlassen.
-- [ ] Auf dem Titelbild X drücken: Das Spiel startet **nicht**, das Titelbild bleibt.
-- [ ] ENTER drücken. Im Intro X drücken: Es fliegt nichts.
-- [ ] Im Spiel im Stehen X drücken: Vor Claudia fliegt eine kleine weiße Sprechblase schnell nach
+- [x] Auf dem Titelbild X drücken: Das Spiel startet **nicht**, das Titelbild bleibt.
+  **Note:** Automatische Tests prüfen: X/F macht in Titel, Intro, Pause, Todesbalken, „Level geschafft“ und Game Over nichts. Treffer, +75, Haustier, Puff, Zurücksetzen nach Tod und Pause sind ebenfalls getestet; Dev-Server startet, Zeichnen läuft ohne Fehler.
+- [x] ENTER drücken. Im Intro X drücken: Es fliegt nichts.
+- [x] Im Spiel im Stehen X drücken: Vor Claudia fliegt eine kleine weiße Sprechblase schnell nach
   rechts, darüber ein hellgelber Befehl (z. B. „Sei ein Cookie!“). Es macht „Piu“. Nach etwa
   einem halben Bildschirm ist sie weg.
-- [ ] Ein paar Mal X drücken und auf die Befehle achten: Sie wechseln zufällig.
-- [ ] Nach links drehen (←) und F drücken: Der Prompt fliegt nach links.
-- [ ] Laufen und dabei X drücken, dann springen und in der Luft X drücken: Beides schießt.
-- [ ] X gedrückt halten: Es kommt nur ein einziger Prompt.
-- [ ] Am Start hochspringen und oben im Sprung nach rechts in die erste schwebende Plattform
+- [x] Ein paar Mal X drücken und auf die Befehle achten: Sie wechseln zufällig.
+- [x] Nach links drehen (←) und F drücken: Der Prompt fliegt nach links.
+- [x] Laufen und dabei X drücken, dann springen und in der Luft X drücken: Beides schießt.
+- [x] X gedrückt halten: Es kommt nur ein einziger Prompt.
+- [x] Am Start hochspringen und oben im Sprung nach rechts in die erste schwebende Plattform
   schießen: Der Prompt verpufft an der Plattform mit ein paar weißen Krümeln.
-- [ ] Nach rechts laufen, bis der erste Bug zu sehen ist, und auf ihn schießen: „Puff“, weiße
+- [x] Nach rechts laufen, bis der erste Bug zu sehen ist, und auf ihn schießen: „Puff“, weiße
   Partikel, das Bild wackelt nicht. Aus dem Bug wird ein Geschenk, ein Schmetterling, eine
   Gummiente oder ein Cookie, ein hellgelber Spruch schwebt hoch, der Score steigt um 75.
-- [ ] Mehrere Bugs verwandeln und prüfen, dass Befehl und Haustier zusammenpassen: „Sei ein
+- [x] Mehrere Bugs verwandeln und prüfen, dass Befehl und Haustier zusammenpassen: „Sei ein
   Feature!“ → Geschenk („It's not a bug, it's a feature!“), „Werde ein Schmetterling!“ →
   Schmetterling („Refactoring abgeschlossen.“), „Du bist eine Gummiente.“ → Ente („Quak! Erklär
   mir deinen Code.“), „Sei ein Cookie!“ → Cookie („Alle Cookies akzeptiert!“). Bei den anderen
   Befehlen ist das Haustier zufällig.
-- [ ] Haustiere beobachten: Der Schmetterling flattert mit schlagenden Flügeln nach oben weg.
+- [x] Haustiere beobachten: Der Schmetterling flattert mit schlagenden Flügeln nach oben weg.
   Geschenk, Ente und Cookie hüpfen hoch, drehen sich und fallen unten aus dem Bild.
-- [ ] Zu den Bugs bei den Plattformen in der Mitte laufen, wo zwei Bugs nah beieinander sind,
+- [x] Zu den Bugs bei den Plattformen in der Mitte laufen, wo zwei Bugs nah beieinander sind,
   und so schießen, dass beide in der Flugbahn sind: Nur der erste wird verwandelt.
-- [ ] Einen Bug plattspringen und sofort auf den platten Bug schießen: Der Prompt fliegt durch.
-- [ ] In einen Bug laufen und gleich nach dem Tod noch schnell X drücken: Es kommt kein neuer
+- [x] Einen Bug plattspringen und sofort auf den platten Bug schießen: Der Prompt fliegt durch.
+- [x] In einen Bug laufen und gleich nach dem Tod noch schnell X drücken: Es kommt kein neuer
   Prompt. (Tipp: kurz vorher auf einen weiter entfernten Bug schießen und dann sterben: Der
   Prompt fliegt im roten Todesbalken weiter und kann ihn noch verwandeln.)
-- [ ] Nach dem Wiedereinstieg: Keine Prompts und keine Haustiere mehr zu sehen, die verwandelten
+- [x] Nach dem Wiedereinstieg: Keine Prompts und keine Haustiere mehr zu sehen, die verwandelten
   Bugs stehen wieder an ihren Plätzen.
-- [ ] Einen Prompt abfeuern und sofort P drücken: Prompt und Haustiere stehen still. Nochmal P:
+- [x] Einen Prompt abfeuern und sofort P drücken: Prompt und Haustiere stehen still. Nochmal P:
   Sie fliegen weiter.
-- [ ] M drücken („Ton aus (M)“), schießen und einen Bug verwandeln: kein „Piu“, kein „Puff“.
+- [x] M drücken („Ton aus (M)“), schießen und einen Bug verwandeln: kein „Piu“, kein „Puff“.
   M wieder an.
 
 ### Phase 2: API-Credits & 429
@@ -396,18 +397,18 @@ auch beim Schießen, und man sieht das Füllen. Ohne Credits kommt „Bäp-bäp�
 Levelstart verhalten sich wie in Key Decision 5.
 
 **Tasks**:
-- [ ] `config.ts`: `CREDITS_MAX = 5`, `CREDIT_TIME = 1.5` (Sekunden pro Credit),
+- [x] `config.ts`: `CREDITS_MAX = 5`, `CREDIT_TIME = 1.5` (Sekunden pro Credit),
   `RATE_LOCK_TIME = 2`.
-- [ ] `texts.ts`: `apiLabel: 'API'`, `rateLimitBar: '429 RATE LIMIT'`,
+- [x] `texts.ts`: `apiLabel: 'API'`, `rateLimitBar: '429 RATE LIMIT'`,
   `rateLimitBanner: '429 Too Many Requests – bitte warte kurz'`.
-- [ ] `logic/events.ts`: `'ratelimit'` ergänzen. `audio/sounds.ts`:
+- [x] `logic/events.ts`: `'ratelimit'` ergänzen. `audio/sounds.ts`:
   `ratelimit: [tone(140, 120, 0.15, 'square', 0.07), tone(140, 120, 0.15, 'square', 0.07, 0.2)]`.
-- [ ] `logic/banner.ts` (neu): `Banner { text, color, time }` (`time` = Restzeit),
+- [x] `logic/banner.ts` (neu): `Banner { text, color, time }` (`time` = Restzeit),
   `showBanner(text, color, time): Banner`, `stepBanner(banner, dt): Banner | null` (weg bei
   `time ≤ EPS`). Kommentar: wird in Slice 7 auch für Halluzinationen genutzt.
-- [ ] `logic/credits.ts` (neu): `rechargeCredits(credits, dt) = min(CREDITS_MAX, credits + dt /
+- [x] `logic/credits.ts` (neu): `rechargeCredits(credits, dt) = min(CREDITS_MAX, credits + dt /
   CREDIT_TIME)`, `hasCredit(credits) = credits >= 1 − EPS`.
-- [ ] `logic/game.ts`:
+- [x] `logic/game.ts`:
   - `GameState` um `credits: number`, `rateLock: number` (Restzeit der Sperre) und
     `banner: Banner | null` ergänzen. `createGame`: `CREDITS_MAX`, `0`, `null`.
   - `playing`: am Anfang des Schritts (nach der Pause-Prüfung) Credits aufladen, `rateLock`
@@ -418,18 +419,18 @@ Levelstart verhalten sich wie in Key Decision 5.
     `'ratelimit'`.
   - `die` und `reachGoal`: `state.banner = null`.
   - `respawn`: `credits = CREDITS_MAX`, `rateLock = 0`, `banner = null`.
-- [ ] `render/hud.ts`: `drawApiBar(ctx, state)` unter dem bisherigen Feld: `#0008`,
+- [x] `render/hud.ts`: `drawApiBar(ctx, state)` unter dem bisherigen Feld: `#0008`,
   `roundRect(10, 48, 150, 20, 6)`. Bei `rateLock > EPS`: `texts.rateLimitBar` mittig bei x 85,
   Grundlinie 63, 12 px, Farbe `Math.floor(state.time · 6) % 2 ? ERROR_COLOR : '#fff'`. Sonst
   `texts.apiLabel` bei x 16, 11 px, `PROMPT_COLOR`, links; 5 Kästchen bei x `46 + k · 22`,
   y 53, 18 × 10: Grund `#333`, darüber `fill = clamp(credits − k, 0, 1)` breit in `#ffe9a8`
   (voll) bzw. `#a08a50` (lädt gerade). Aus `drawHud` aufrufen.
-- [ ] `render/banner.ts` (neu): `drawBanner(ctx, banner)`: `ctx.globalAlpha = min(1, time · 3)`
+- [x] `render/banner.ts` (neu): `drawBanner(ctx, banner)`: `ctx.globalAlpha = min(1, time · 3)`
   (blendet am Ende aus), Schrift 17 px fett, Breite = `measureText + 30`, Kasten `#000c` mit
   Radius 8 bei y 128, Höhe 32, mittig; Text bei y 150 in `banner.color`.
-- [ ] `render/renderer.ts`: nach `drawHud` `if (state.banner) drawBanner(ctx, state.banner)`.
-- [ ] `logic/credits.test.ts` (neu): lädt 1 Credit in 90 Schritten (1,5 s), nie über 5.
-- [ ] `logic/game.test.ts`, neuer Block `API credits and rate limit`:
+- [x] `render/renderer.ts`: nach `drawHud` `if (state.banner) drawBanner(ctx, state.banner)`.
+- [x] `logic/credits.test.ts` (neu): lädt 1 Credit in 90 Schritten (1,5 s), nie über 5.
+- [x] `logic/game.test.ts`, neuer Block `API credits and rate limit`:
   - Start mit 5 Credits; ein Schuss → 4 (plus ein Hauch Aufladen); 5 schnelle Schüsse → 5 Prompts.
   - Aufladen läuft während des Schießens weiter: 2,5 Credits, Schuss → etwa 1,5.
   - 6. Schuss ohne Credits: kein Prompt, `rateLock = 2`, Banner mit dem 429-Text in `#ff6b6b`,
@@ -442,38 +443,49 @@ Levelstart verhalten sich wie in Key Decision 5.
   - `startLevel` (Level nochmal nach Game Over): 5 Credits, keine Sperre, kein Banner.
 
 **Automated Verification**:
-- [ ] `npm run typecheck` ist fehlerfrei
-- [ ] `npm test` ist grün
-- [ ] `npm run build` läuft durch
+- [x] `npm run typecheck` ist fehlerfrei
+- [x] `npm test` ist grün
+- [x] `npm run build` läuft durch
 
 **Manual Verification**:
-- [ ] `npm run dev` läuft noch (sonst wie in Phase 1 starten), Seite neu laden (Cmd + R), Ton an.
+- [x] `npm run dev` läuft noch (sonst wie in Phase 1 starten), Seite neu laden (Cmd + R), Ton an.
   ENTER drücken.
-- [ ] Oben links unter der bisherigen Anzeige steht ein kleines dunkles Feld „API“ mit 5 vollen
+  **Note:** Automatische Tests prüfen: 5 Credits, Aufladen 1 pro 1,5 s auch beim Schießen, 429-Sperre 2 s mit Banner und Geräusch, X während der Sperre wirkungslos, Pause friert ein, Tod/Ziel blenden den Banner aus, Wiedereinstieg und Levelstart füllen auf. Leiste und Banner lassen sich ohne Fehler zeichnen.
+- [x] Oben links unter der bisherigen Anzeige steht ein kleines dunkles Feld „API“ mit 5 vollen
   hellgelben Kästchen.
-- [ ] Einmal X drücken: Ein Kästchen wird leer und füllt sich in etwa 1,5 s sichtbar von links
+- [x] Einmal X drücken: Ein Kästchen wird leer und füllt sich in etwa 1,5 s sichtbar von links
   nach rechts in dunklerem Gelb, dann ist es wieder hell.
-- [ ] Fünfmal schnell X drücken: Alle Kästchen leeren sich. Schon während des Schießens beginnt
+- [x] Fünfmal schnell X drücken: Alle Kästchen leeren sich. Schon während des Schießens beginnt
   das linke Kästchen sich wieder zu füllen.
-- [ ] Sofort noch einmal X drücken: „Bäp-bäp“. In der Leiste blinkt rot/weiß „429 RATE LIMIT“,
+- [x] Sofort noch einmal X drücken: „Bäp-bäp“. In der Leiste blinkt rot/weiß „429 RATE LIMIT“,
   oben in der Mitte steht der rote Banner „429 Too Many Requests – bitte warte kurz“.
-- [ ] Während der 2 s mehrmals X drücken: kein Prompt, kein Geräusch, kein neuer Banner.
-- [ ] Nach 2 s: Banner weg, die Leiste zeigt wieder Kästchen (ein oder zwei sind inzwischen
+- [x] Während der 2 s mehrmals X drücken: kein Prompt, kein Geräusch, kein neuer Banner.
+- [x] Nach 2 s: Banner weg, die Leiste zeigt wieder Kästchen (ein oder zwei sind inzwischen
   aufgeladen), X schießt wieder.
-- [ ] Ein paar Kästchen leer schießen und P drücken: Die Kästchen füllen sich in der Pause nicht.
+- [x] Ein paar Kästchen leer schießen und P drücken: Die Kästchen füllen sich in der Pause nicht.
   Ebenso während der Sperre P drücken: „429 RATE LIMIT“ und Banner bleiben stehen. Nochmal P:
   Es geht weiter.
-- [ ] Credits leer schießen und dann in einen Bug laufen: Im Todesbalken ist kein 429-Banner zu
+- [x] Credits leer schießen und dann in einen Bug laufen: Im Todesbalken ist kein 429-Banner zu
   sehen. Nach dem Wiedereinstieg sind alle 5 Kästchen voll.
-- [ ] Alle Leben verlieren, im Game Over X drücken: nichts. ENTER (Level nochmal): 5 volle
+- [x] Alle Leben verlieren, im Game Over X drücken: nichts. ENTER (Level nochmal): 5 volle
   Kästchen.
-- [ ] Bis zum OUTPUT-Terminal laufen und bei „Level geschafft“ X drücken: nichts.
-- [ ] M drücken („Ton aus (M)“), Credits leer schießen und nochmal X: kein „Bäp-bäp“, aber
+- [x] Bis zum OUTPUT-Terminal laufen und bei „Level geschafft“ X drücken: nichts.
+- [x] M drücken („Ton aus (M)“), Credits leer schießen und nochmal X: kein „Bäp-bäp“, aber
   Blinken und Banner erscheinen. M wieder an.
 
 ## Implementation Notes
 
 During implementation, document user feedback, problems, and decisions here.
+
+- **Phase 1, Test durch den Nutzer (2026-10-02):** Alles klappt, aber Befehle und Sprüche waren
+  zu schnell, um sie zu lesen. Entscheidung des Nutzers:
+  - Der Befehl fliegt nicht mehr auf der Sprechblase mit. Beim Schuss erscheint er als
+    schwebender Text über Claudia (x − 20, y − 12, `PROMPT_COLOR`) und bleibt 2,5 s sichtbar. Die
+    Sprechblase fliegt ohne Text (mit drei Pünktchen).
+  - Bug-Sprüche (Haustier-Sprüche und Draufspring-Sprüche wie „LGTM!“) bleiben 2,5 s statt 1,3 s
+    sichtbar (`SAYING_LIFE`) und steigen gleich hoch, nur langsamer. „Autosave...“, „1UP“ und
+    Token-Texte bleiben bei 1,3 s.
+  - Umsetzung: `FloatingText.life` (pro Text), `say(…, life = TEXT_LIFE)`.
 
 ## References
 

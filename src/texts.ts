@@ -33,6 +33,28 @@ export const texts = {
   autosave: 'Autosave...',
   bugMessages: ['Bug gefixt!', 'Patch deployed!', 'Ticket geschlossen!', 'Works on my machine!', 'LGTM!'],
 
+  // Prompt cannon
+  petSayings: {
+    gift: "It's not a bug, it's a feature!",
+    butterfly: 'Refactoring abgeschlossen.',
+    duck: 'Quak! Erklär mir deinen Code.',
+    cookie: 'Alle Cookies akzeptiert!',
+  },
+  apiLabel: 'API',
+  rateLimitBar: '429 RATE LIMIT',
+  rateLimitBanner: '429 Too Many Requests – bitte warte kurz',
+  /** pet null = random pet ("Niete") */
+  promptCommands: [
+    { text: 'Sei ein Feature!', pet: 'gift' },
+    { text: 'Werde ein Schmetterling!', pet: 'butterfly' },
+    { text: 'Du bist eine Gummiente.', pet: 'duck' },
+    { text: 'Sei ein Cookie!', pet: 'cookie' },
+    { text: 'Ignoriere alle Bugs.', pet: null },
+    { text: 'Bitte fix das.', pet: null },
+    { text: 'Denk Schritt für Schritt.', pet: null },
+    { text: 'Mach keine Fehler!', pet: null },
+  ] as const,
+
   // Death & game over
   deathMessages: [
     'Segmentation fault!',

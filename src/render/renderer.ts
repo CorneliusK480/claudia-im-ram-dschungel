@@ -1,5 +1,6 @@
 import { DEATH_SHAKE, SHAKE_PX } from '../config';
 import type { GameState } from '../logic/game';
+import { drawBanner } from './banner';
 import { drawBackground } from './background';
 import { drawBugs } from './bugs';
 import { drawCheckpoints } from './checkpoint';
@@ -7,6 +8,8 @@ import { drawClaudia } from './claudia';
 import { drawEffects } from './effects';
 import { drawHud } from './hud';
 import { drawDeathOverlay, drawGameOverOverlay, drawGoalOverlay, drawIntroOverlay, drawPauseOverlay } from './overlay';
+import { drawPets } from './pets';
+import { drawPrompts } from './prompts';
 import { drawTerminal } from './terminal';
 import { drawTerrain } from './terrain';
 import { drawTitle } from './title';
@@ -31,6 +34,8 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, soundOff
   drawTokens(ctx, state, camX);
   drawTerminal(ctx, state.world, theme, camX, state.mode === 'won');
   drawBugs(ctx, state, camX);
+  drawPets(ctx, state, camX);
+  drawPrompts(ctx, state, camX);
   const { mode } = state;
   if (mode === 'intro' || mode === 'playing' || mode === 'paused' || mode === 'won') {
     drawClaudia(ctx, state.player, camX, state.time);
@@ -44,6 +49,7 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, soundOff
     return;
   }
   drawHud(ctx, state, soundOff);
+  if (state.banner) drawBanner(ctx, state.banner);
   if (mode === 'intro') drawIntroOverlay(ctx, state.level, theme, state.modeTime);
   else if (mode === 'paused') drawPauseOverlay(ctx);
   else if (mode === 'dying') drawDeathOverlay(ctx, state.deathMessage, state.lives);

@@ -27,5 +27,8 @@ export const SOUNDS: Record<GameEvent, ToneSpec[]> = {
   hurt: [tone(300, 40, 0.5, 'sawtooth', 0.07)],
   save: arpeggio([660, 880], 0.1, 'triangle', 0.07, 0.1),
   win: arpeggio([523, 659, 784, 1047, 784, 1047], 0.14, 'square', 0.05, 0.11),
+  shoot: [tone(1200, 600, 0.08, 'square', 0.035)],
+  poof: [tone(400, 1400, 0.15, 'triangle', 0.07), tone(1400, 1800, 0.08, 'square', 0.03, 0.12)],
+  ratelimit: [tone(140, 120, 0.15, 'square', 0.07), tone(140, 120, 0.15, 'square', 0.07, 0.2)],
   over: arpeggio([392, 330, 262, 196], 0.22, 'triangle', 0.08, 0.2, 0.98),
 };

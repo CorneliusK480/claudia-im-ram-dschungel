@@ -20,6 +20,15 @@ describe('floating texts', () => {
     state = steps(state, 1);
     expect(state.effects.texts).toHaveLength(0);
   });
+
+  it('with a longer life of 2.5 s are gone after 150 steps, not before', () => {
+    const effects = createEffects();
+    say(effects, 100, 300, 'Hallo', '#fff', 2.5);
+    for (let i = 0; i < 149; i++) stepEffects(effects, STEP);
+    expect(effects.texts).toHaveLength(1);
+    stepEffects(effects, STEP);
+    expect(effects.texts).toHaveLength(0);
+  });
 });
 
 describe('particles', () => {

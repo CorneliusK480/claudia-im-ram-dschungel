@@ -3,7 +3,7 @@ date: 2026-10-02
 topic: "Prompt-Kanone"
 slice: 6
 tags: [spec]
-status: ready
+status: done
 ---
 
 # SPEC: Prompt-Kanone
@@ -26,8 +26,8 @@ Credits einteilen muss.
 1. Ich spiele Level 1. Oben links, unter der bisherigen Anzeige, steht die API-Leiste mit 5 vollen
    hellgelben Kästchen.
 2. Ich drücke X oder F. Vor Claudia erscheint eine kleine weiße Sprechblase und fliegt schnell
-   geradeaus in Blickrichtung. Über ihr steht ein zufälliger Befehl, z. B. „Sei ein Cookie!“. Es
-   macht „Piu“, und in der Leiste wird ein Kästchen leer.
+   geradeaus in Blickrichtung. Über Claudia erscheint ein zufälliger Befehl, z. B. „Sei ein
+   Cookie!“, und bleibt dort lesbar stehen. Es macht „Piu“, und in der Leiste wird ein Kästchen leer.
 3. Der Prompt trifft einen Bug. Es macht „Puff“, weiße Partikel sprühen, und der Bug wird zu dem
    Haustier, das der Befehl verlangt. Sein Spruch schwebt hellgelb hoch, z. B. „Alle Cookies
    akzeptiert!“, und der Score steigt um 75. Der Prompt ist danach weg.
@@ -77,15 +77,17 @@ Rate Limit
 - **429-Banner** — oben in der Mitte, rote Schrift (#ff6b6b) auf dunklem, halbtransparentem
   Balken, 2 s sichtbar. Es ist das erste „Banner“ im Spiel. Spätere Slices (z. B. Halluzinationen
   in Slice 7) nutzen dieselbe Art Banner.
-- **Prompt** — kleine weiße Sprechblase, etwa 16 × 14 px, mit Spitze. Darüber steht der Befehl in
-  kleiner hellgelber Schrift (#ffe9a8). Sie startet vor Claudia auf Brusthöhe.
+- **Prompt** — kleine weiße Sprechblase, etwa 16 × 14 px, mit Spitze. Sie startet vor Claudia auf
+  Brusthöhe. Der Befehl fliegt nicht mit (zu schnell zum Lesen, geändert beim Testen): Er erscheint
+  beim Schuss als schwebender hellgelber Text (#ffe9a8) über Claudia und ist 2,5 s sichtbar.
 - **Haustiere** — etwa so groß wie ein Bug und im Code gezeichnet:
   - 🎁 **Feature-Geschenk**: rotes Paket mit gelber Schleife
   - 🦋 **Schmetterling**: bunte Flügel, die schlagen
   - 🦆 **Gummiente**: gelbe Ente
   - 🍪 **Cookie**: brauner Keks mit Schokostückchen
 - **Puff** — weiße Partikel an der Stelle des Bugs. Das Bild wackelt nicht.
-- **Spruch** — schwebt hellgelb (#ffe9a8) hoch und blendet aus wie die anderen schwebenden Texte.
+- **Spruch** — schwebt hellgelb (#ffe9a8) hoch und blendet aus. Bug-Sprüche (Haustier und
+  Draufspringen) sind 2,5 s statt 1,3 s sichtbar und steigen langsamer (geändert beim Testen).
 
 ## Rules & edge cases
 
@@ -163,17 +165,17 @@ Settled during the interview — the plan must not ask these again.
 
 ## Acceptance criteria
 
-- [ ] Ich drücke X oder F: Eine weiße Sprechblase mit einem Befehl darüber fliegt in Blickrichtung los, und es macht „Piu“. Das klappt im Stehen, beim Laufen und im Sprung, nach links und nach rechts.
-- [ ] Ich halte X gedrückt: Es kommt nur ein Schuss.
-- [ ] Ein Prompt trifft einen Bug: Es macht „Puff“ mit weißen Partikeln. Der Bug wird zu Feature-Geschenk, Schmetterling, Gummiente oder Cookie, sein Spruch schwebt hoch, und der Score steigt um 75.
-- [ ] Bei „Sei ein Feature!“ wird es ein Geschenk, bei „Werde ein Schmetterling!“ ein Schmetterling usw. Bei einer Niete wie „Bitte fix das.“ wird es ein zufälliges Haustier.
-- [ ] Das Haustier verschwindet: Der Schmetterling flattert nach oben weg, die anderen hüpfen hoch und fallen aus dem Bild.
-- [ ] Ein Prompt verwandelt nur einen Bug. Er verpufft an Wänden und Plattformen und nach etwa einem halben Bildschirm.
-- [ ] Bei jedem Schuss leert sich in der API-Leiste ein Kästchen. Die Kästchen laden gleichmäßig wieder auf (eins alle 1,5 s), auch während ich schieße, und man sieht das Füllen.
-- [ ] Ich schieße ohne Credits: Es klingt „Bäp-bäp“, in der Leiste blinkt „429 RATE LIMIT“, und oben steht „429 Too Many Requests – bitte warte kurz“. 2 s lang tut X nichts, danach geht es wieder.
-- [ ] Nach einem Tod und nach dem Neustart eines Levels sind die Credits voll, und verwandelte Bugs sind wieder da.
-- [ ] In der Pause steht die Leiste still. Im Intro, im Todesbalken, bei „Level geschafft“ und im Game Over passiert bei X nichts.
-- [ ] Mit „Ton aus (M)“ machen Schuss, Puff und 429 kein Geräusch.
+- [x] Ich drücke X oder F: Eine weiße Sprechblase fliegt in Blickrichtung los, über Claudia steht lesbar der Befehl, und es macht „Piu“. Das klappt im Stehen, beim Laufen und im Sprung, nach links und nach rechts.
+- [x] Ich halte X gedrückt: Es kommt nur ein Schuss.
+- [x] Ein Prompt trifft einen Bug: Es macht „Puff“ mit weißen Partikeln. Der Bug wird zu Feature-Geschenk, Schmetterling, Gummiente oder Cookie, sein Spruch schwebt hoch, und der Score steigt um 75.
+- [x] Bei „Sei ein Feature!“ wird es ein Geschenk, bei „Werde ein Schmetterling!“ ein Schmetterling usw. Bei einer Niete wie „Bitte fix das.“ wird es ein zufälliges Haustier.
+- [x] Das Haustier verschwindet: Der Schmetterling flattert nach oben weg, die anderen hüpfen hoch und fallen aus dem Bild.
+- [x] Ein Prompt verwandelt nur einen Bug. Er verpufft an Wänden und Plattformen und nach etwa einem halben Bildschirm.
+- [x] Bei jedem Schuss leert sich in der API-Leiste ein Kästchen. Die Kästchen laden gleichmäßig wieder auf (eins alle 1,5 s), auch während ich schieße, und man sieht das Füllen.
+- [x] Ich schieße ohne Credits: Es klingt „Bäp-bäp“, in der Leiste blinkt „429 RATE LIMIT“, und oben steht „429 Too Many Requests – bitte warte kurz“. 2 s lang tut X nichts, danach geht es wieder.
+- [x] Nach einem Tod und nach dem Neustart eines Levels sind die Credits voll, und verwandelte Bugs sind wieder da.
+- [x] In der Pause steht die Leiste still. Im Intro, im Todesbalken, bei „Level geschafft“ und im Game Over passiert bei X nichts.
+- [x] Mit „Ton aus (M)“ machen Schuss, Puff und 429 kein Geräusch.
 
 ## References
 

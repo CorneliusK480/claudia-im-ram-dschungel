@@ -6,7 +6,7 @@ const JUMP = new Set(['ArrowUp', 'KeyW', 'Space']);
 const ENTER = new Set(['Enter', 'NumpadEnter']);
 const PAUSE = new Set(['KeyP', 'Escape']);
 const MUTE = new Set(['KeyM']);
-/** The prompt cannon (slice 6). For now these keys only start the sound. */
+/** The prompt cannon: one shot per press, holding does not fire again. */
 const SHOOT = new Set(['KeyX', 'KeyF']);
 const GAME_KEYS = new Set([...LEFT, ...RIGHT, ...JUMP, ...ENTER, ...PAUSE, ...MUTE, ...SHOOT]);
 
@@ -33,6 +33,7 @@ export function createKeyboard(target: Window, callbacks: KeyboardCallbacks): Ke
   let jumpPressed = false;
   let enterPressed = false;
   let pausePressed = false;
+  let shootPressed = false;
 
   target.addEventListener('keydown', (e) => {
     if (!GAME_KEYS.has(e.code)) return;
@@ -46,6 +47,7 @@ export function createKeyboard(target: Window, callbacks: KeyboardCallbacks): Ke
     if (JUMP.has(e.code)) jumpPressed = true;
     if (ENTER.has(e.code)) enterPressed = true;
     if (PAUSE.has(e.code)) pausePressed = true;
+    if (SHOOT.has(e.code)) shootPressed = true;
   });
 
   target.addEventListener('keyup', (e) => {
@@ -60,6 +62,7 @@ export function createKeyboard(target: Window, callbacks: KeyboardCallbacks): Ke
     jumpPressed = false;
     enterPressed = false;
     pausePressed = false;
+    shootPressed = false;
   });
 
   const anyHeld = (keys: Set<string>) => [...keys].some((k) => held.has(k));
@@ -72,11 +75,13 @@ export function createKeyboard(target: Window, callbacks: KeyboardCallbacks): Ke
       jumpPressed,
       enterPressed,
       pausePressed,
+      shootPressed,
     }),
     consume: () => {
       jumpPressed = false;
       enterPressed = false;
       pausePressed = false;
+      shootPressed = false;
     },
   };
 }

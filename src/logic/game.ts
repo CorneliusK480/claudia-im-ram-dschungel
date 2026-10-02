@@ -1,18 +1,24 @@
 import {
-  BONUS_PER_SECOND, BONUS_TIME_LIMIT, BOUNCE, BOUNCE_HELD, BUG_H, BUG_PARTICLE_COLOR, BUG_POINTS, BUG_W, DEATH_COLOR, DEATH_SHAKE, DEATH_SKIP_AFTER, DEATH_TIME, EPS, GAMEOVER_INPUT_AFTER,
-  GOAL_INPUT_AFTER, GOAL_POINTS,  INTRO_SKIP_AFTER, INTRO_TIME, INVULNERABLE_TIME, JUMP, PIT_Y, PLAYER_W, SCORE_COLOR, START_LIVES, TILE, TOKEN_LIFE_EVERY,
-  TOKEN_POINTS, TOKEN_TEXT_EVERY, VIEW_H,
+  BONUS_PER_SECOND, BONUS_TIME_LIMIT, BOUNCE, BOUNCE_HELD, BUG_H, BUG_PARTICLE_COLOR, BUG_POINTS, BUG_W,
+  CREDITS_MAX, DEATH_COLOR, DEATH_SHAKE, DEATH_SKIP_AFTER, DEATH_TIME, EPS, ERROR_COLOR,
+  GAMEOVER_INPUT_AFTER, GOAL_INPUT_AFTER, GOAL_POINTS, INTRO_SKIP_AFTER, INTRO_TIME, INVULNERABLE_TIME, JUMP,
+  PIT_Y, PLAYER_W, POOF_PARTICLES, PROMPT_COLOR, PROMPT_POINTS, RATE_LOCK_TIME, SAYING_LIFE, SCORE_COLOR,
+  START_LIVES, TILE, TOKEN_LIFE_EVERY, TOKEN_POINTS, TOKEN_TEXT_EVERY, VIEW_H,
 } from '../config';
 import type { LevelData } from '../level/types';
 import { texts } from '../texts';
+import { showBanner, stepBanner, type Banner } from './banner';
 import { bugRect, buildBugs, isStomp, stepBug, type Bug } from './bugs';
 import { cameraX, titleCameraX } from './camera';
 import { buildCheckpoints, spawnOf, touchesCheckpoint, type Checkpoint } from './checkpoints';
+import { hasCredit, rechargeCredits } from './credits';
 import { burst, createEffects, say, stepEffects, type Effects } from './effects';
 import type { GameEvent } from './events';
 import type { InputState } from './input';
+import { createPet, PET_KINDS, stepPets, type Pet } from './pets';
 import { createPlayer, rectOf, stepPlayer, type Player } from './player';
 import { pick, type Random } from './random';
+import { createPrompt, stepPrompts, type Prompt } from './prompts';
 import { overlaps } from './rect';
 import { buildTokens, touchesToken, type Token } from './tokens';
 import { buildWorld, type World } from './world';
@@ -35,6 +41,16 @@ export interface GameState {
   tokens: Token[];
   bugs: Bug[];
   checkpoints: Checkpoint[];
+  /** Prompts in flight. */
+  prompts: Prompt[];
+  /** Bugs turned into pets, on their way out of the picture. */
+  pets: Pet[];
+  /** API credits, 0 to CREDITS_MAX. Grows continuously; a shot needs a full one. */
+  credits: number;
+  /** Seconds left in which the cannon is locked after a "429". */
+  rateLock: number;
+  /** Message at the top in the middle, or none. */
+  banner: Banner | null;
   effects: Effects;
   deathMessage: string;
   /** Seconds spent playing this level. Stands still in the intro, the pause and the death sequence. */
@@ -68,6 +84,11 @@ export function createGame(level: LevelData, random: Random = Math.random, highs
     tokens: buildTokens(level),
     bugs: buildBugs(level),
     checkpoints: buildCheckpoints(level),
+    prompts: [],
+    pets: [],
+    credits: CREDITS_MAX,
+    rateLock: 0,
+    banner: null,
     effects: createEffects(),
     deathMessage: '',
     levelTime: 0,
@@ -124,13 +145,20 @@ export function stepGame(state: GameState, input: InputState, dt: number): GameS
       }
       state.levelTime += dt;
       state.time += dt;
+      state.credits = rechargeCredits(state.credits, dt);
+      state.rateLock = state.rateLock - dt > EPS ? state.rateLock - dt : 0;
+      state.banner = stepBanner(state.banner, dt);
       stepEffects(state.effects, dt);
       if (stepPlayer(state.player, input, state.world, dt)) state.events.push('jump');
       if (state.player.y > PIT_Y) {
         die(state);
         return state;
       }
+      if (input.shootPressed) tryShoot(state);
       stepBugs(state, dt);
+      // Before the touches: a bug turned into a pet in this step cannot hurt Claudia any more.
+      convertBugs(state, dt);
+      state.pets = stepPets(state.pets, state.camX, dt);
       if (touchBugs(state, input)) return state;
       collectTokens(state);
       checkCheckpoints(state);
@@ -145,10 +173,12 @@ export function stepGame(state: GameState, input: InputState, dt: number): GameS
       return state;
 
     case 'dying': {
-      // The world goes on, Claudia is gone, the camera stands still.
+      // The world goes on, Claudia is gone, the camera stands still. Prompts in flight still hit.
       state.time += dt;
       stepEffects(state.effects, dt);
       stepBugs(state, dt);
+      convertBugs(state, dt);
+      state.pets = stepPets(state.pets, state.camX, dt);
       const skip = input.enterPressed && state.modeTime >= DEATH_SKIP_AFTER - EPS;
       if (skip || state.modeTime >= DEATH_TIME - EPS) {
         if (state.lives > 0) {
@@ -175,6 +205,7 @@ export function stepGame(state: GameState, input: InputState, dt: number): GameS
       state.time += dt;
       stepEffects(state.effects, dt);
       stepBugs(state, dt);
+      state.pets = stepPets(state.pets, state.camX, dt);
       if (go && state.modeTime >= GOAL_INPUT_AFTER - EPS) {
         // Level 1 is the last level for now: save the highscore and go back to the title.
         state.highscore = Math.max(state.highscore, state.score);
@@ -210,6 +241,9 @@ function reachGoal(state: GameState): void {
   state.goalBonus = timeBonus(state.levelTime);
   state.score += GOAL_POINTS + state.goalBonus;
   burst(state.effects, state.random, goalRect.x + 24, goalRect.y + 20, state.level.theme.accent, 40, 300);
+  // Prompts in flight bring no points any more.
+  state.prompts = [];
+  state.banner = null;
   state.events.push('win');
   setMode(state, 'won');
 }
@@ -223,6 +257,8 @@ function die(state: GameState): void {
   const y = Math.min(player.y + 14, VIEW_H - 10);
   burst(effects, state.random, player.x + PLAYER_W / 2, y, DEATH_COLOR, 30, 320);
   state.events.push('hurt');
+  // A red banner above the red death bar would be restless.
+  state.banner = null;
   setMode(state, 'dying');
 }
 
@@ -230,10 +266,54 @@ function die(state: GameState): void {
 function respawn(state: GameState): void {
   state.bugs = buildBugs(state.level);
   state.tokens = buildTokens(state.level);
+  state.prompts = [];
+  state.pets = [];
+  state.credits = CREDITS_MAX;
+  state.rateLock = 0;
+  state.banner = null;
   state.player = createPlayer(state.world, state.spawn);
   state.player.invulnerable = INVULNERABLE_TIME;
   state.camX = cameraX(state.player, state.world);
   setMode(state, 'playing');
+}
+
+/** A shot costs one credit. Without one: "429", and X/F does nothing for 2 s. */
+function tryShoot(state: GameState): void {
+  if (state.rateLock > EPS) return;
+  if (hasCredit(state.credits)) {
+    state.credits -= 1;
+    shoot(state);
+    return;
+  }
+  state.rateLock = RATE_LOCK_TIME;
+  state.banner = showBanner(texts.rateLimitBanner, ERROR_COLOR, RATE_LOCK_TIME);
+  state.events.push('ratelimit');
+}
+
+/** A prompt with a random command flies off in front of Claudia. The command stays above her, so it can be read. */
+function shoot(state: GameState): void {
+  const { player } = state;
+  const command = pick(texts.promptCommands, state.random);
+  state.prompts.push(createPrompt(player, command));
+  say(state.effects, player.x - 20, player.y - 12, command.text, PROMPT_COLOR, SAYING_LIFE);
+  state.events.push('shoot');
+}
+
+/** Moves the prompts. A prompt at a wall goes poof; a bug it hits becomes a pet (+75). */
+function convertBugs(state: GameState, dt: number): void {
+  const { effects } = state;
+  const result = stepPrompts(state.prompts, state.bugs, state.world, dt);
+  state.prompts = result.prompts;
+  for (const w of result.wallHits) burst(effects, state.random, w.x, w.y, '#fff', 4, 80);
+  for (const { prompt, bug } of result.hits) {
+    const kind = prompt.pet ?? pick(PET_KINDS, state.random);
+    state.bugs = state.bugs.filter((b) => b !== bug);
+    state.pets.push(createPet(kind, bug));
+    state.score += PROMPT_POINTS;
+    burst(effects, state.random, bug.x + BUG_W / 2, bug.y + BUG_H / 2, '#fff', POOF_PARTICLES);
+    say(effects, bug.x, bug.y - 14, texts.petSayings[kind], PROMPT_COLOR, SAYING_LIFE);
+    state.events.push('poof');
+  }
 }
 
 function stepBugs(state: GameState, dt: number): void {
@@ -258,7 +338,7 @@ function touchBugs(state: GameState, input: InputState): boolean {
       bug.deadTime = 0;
       state.score += BUG_POINTS;
       burst(effects, state.random, bug.x + BUG_W / 2, bug.y + BUG_H / 2, BUG_PARTICLE_COLOR, 14);
-      say(effects, bug.x, bug.y - 14, pick(texts.bugMessages, state.random), '#fff');
+      say(effects, bug.x, bug.y - 14, pick(texts.bugMessages, state.random), '#fff', SAYING_LIFE);
       state.events.push('stomp');
     }
     player.vy = -(input.jumpHeld ? BOUNCE_HELD : BOUNCE) * JUMP;

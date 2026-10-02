@@ -12,6 +12,7 @@ const level = loadLevel1();
 const input = (over: Partial<InputState> = {}): InputState => ({ ...NO_INPUT, ...over });
 const ENTER = input({ enterPressed: true });
 const PAUSE = input({ pausePressed: true });
+const SHOOT = input({ shootPressed: true });
 const ALL_KEYS = input({ left: true, right: true, jumpPressed: true, jumpHeld: true });
 
 function step(state: GameState, inp = input(), n = 1): GameState {
@@ -157,6 +158,7 @@ describe('checkpoint', () => {
     const state = jumpingOverCheckpoint();
     expect(state.checkpoints[0].active).toBe(true);
     expect(state.effects.texts.map((t) => t.text)).toEqual(['Autosave...']);
+    expect(state.effects.texts[0].life).toBe(1.3);
     expect(state.spawn).toEqual({ x: 2053, y: 452 });
   });
 
@@ -300,6 +302,7 @@ describe('bugs', () => {
     expect(state.effects.particles.every((q) => q.color === '#ff5a8a')).toBe(true);
     expect(state.effects.texts).toHaveLength(1);
     expect(texts.bugMessages).toContain(state.effects.texts[0].text);
+    expect(state.effects.texts[0].life).toBe(2.5);
     expect(state.effects.shake).toBe(0);
     expect(state.player.vy).toBeLessThan(0);
     expect(state.player.onGround).toBe(false);
@@ -732,6 +735,238 @@ describe('sounds', () => {
     const over = playingGame();
     over.mode = 'gameOver';
     expect(eventsOf(over, keys, 72)).toEqual([]);
+  });
+});
+
+describe('prompt cannon', () => {
+  /** Claudia standing on the ground at x, looking right, the first bug (708) ahead of her. */
+  function standingAt(x: number, random = fixedRandom([0])): GameState {
+    const state = playingGame(random);
+    Object.assign(state.player, { x, y: 452, onGround: true });
+    return state;
+  }
+
+  /** Steps until a prompt has hit (at most 60 steps). */
+  function untilPoof(state: GameState): GameState {
+    for (let i = 0; i < 60; i++) {
+      state = step(state);
+      if (state.events.includes('poof')) return state;
+    }
+    throw new Error('no hit');
+  }
+
+  it('X/F while playing fires a prompt in front of Claudia and sounds "shoot"', () => {
+    const state = step(standingAt(300), SHOOT);
+    expect(state.events).toEqual(['shoot']);
+    expect(state.prompts).toHaveLength(1);
+    expect(state.prompts[0]).toMatchObject({ dir: 1, y: 458, text: 'Sei ein Feature!', pet: 'gift' });
+    expect(state.prompts[0].x).toBeCloseTo(322 + 560 / 60);
+  });
+
+  it('the command stays above Claudia as a floating text for 2.5 s, so it can be read', () => {
+    const state = step(standingAt(300), SHOOT);
+    expect(state.effects.texts).toHaveLength(1);
+    expect(state.effects.texts[0]).toMatchObject({ text: 'Sei ein Feature!', color: '#ffe9a8', x: 280, y: 440, life: 2.5 });
+  });
+
+  it('fires to the left when Claudia looks left, and also in a jump', () => {
+    let state = standingAt(300);
+    state.player.facing = -1;
+    state = step(state, SHOOT);
+    expect(state.prompts[0].dir).toBe(-1);
+    expect(state.prompts[0].x).toBeCloseTo(300 - 16 - 560 / 60);
+    state = step(state, input({ jumpPressed: true, jumpHeld: true }), 5);
+    expect(state.player.onGround).toBe(false);
+    state = step(state, { ...SHOOT, jumpHeld: true });
+    expect(state.prompts).toHaveLength(2);
+  });
+
+  it('a hit turns the bug into a pet: bug gone, +75, "poof", saying in #ffe9a8, 14 white particles, no shake', () => {
+    const state = untilPoof(step(standingAt(600), SHOOT));
+    expect(state.bugs).toHaveLength(6);
+    expect(state.prompts).toHaveLength(0);
+    expect(state.pets).toHaveLength(1);
+    expect(state.pets[0].kind).toBe('gift');
+    expect(state.score).toBe(75);
+    expect(state.events).toEqual(['poof']);
+    // the command of the shot, then the saying of the pet
+    expect(state.effects.texts.map((t) => t.text)).toEqual(['Sei ein Feature!', "It's not a bug, it's a feature!"]);
+    expect(state.effects.texts[1]).toMatchObject({ color: '#ffe9a8', life: 2.5 });
+    expect(state.effects.particles).toHaveLength(14);
+    expect(state.effects.particles.every((q) => q.color === '#fff')).toBe(true);
+    expect(state.effects.shake).toBe(0);
+  });
+
+  it('each command gives its pet; a dud picks a random pet with the next random number', () => {
+    // 0.3 · 8 → "Du bist eine Gummiente."
+    let state = untilPoof(step(standingAt(600, fixedRandom([0.3])), SHOOT));
+    expect(state.pets[0].kind).toBe('duck');
+    // 0.7 · 8 → "Bitte fix das.", then 0.8 · 4 → cookie
+    state = step(standingAt(600, fixedRandom([0.7, 0.8])), SHOOT);
+    expect(state.prompts[0]).toMatchObject({ text: 'Bitte fix das.', pet: null });
+    state = untilPoof(state);
+    expect(state.pets[0].kind).toBe('cookie');
+    expect(state.effects.texts[1].text).toBe('Alle Cookies akzeptiert!');
+  });
+
+  it('a bug turned into a pet in the step it touches Claudia costs no life', () => {
+    const state = step(standingAt(708 - 22 - 0.5), SHOOT);
+    expect(state.mode).toBe('playing');
+    expect(state.lives).toBe(3);
+    expect(state.events).toEqual(['shoot', 'poof']);
+  });
+
+  it('X/F does nothing on the title, in the intro, pause, death sequence, once won and at game over', () => {
+    const title = createGame(level, fixedRandom([0]));
+    expect(step(title, SHOOT, 80)).toMatchObject({ mode: 'title', prompts: [] });
+    const intro = startLevel(createGame(level, fixedRandom([0])), 0, 0);
+    expect(step(intro, SHOOT, 30)).toMatchObject({ mode: 'intro', prompts: [] });
+    expect(step(step(playingGame(), PAUSE), SHOOT, 30)).toMatchObject({ mode: 'paused', prompts: [] });
+    expect(step(untilDying(fallingIntoPit()), SHOOT, 60)).toMatchObject({ mode: 'dying', prompts: [] });
+    const won = playingGame();
+    won.mode = 'won';
+    expect(step(won, SHOOT, 80)).toMatchObject({ mode: 'won', prompts: [] });
+    const over = playingGame();
+    over.mode = 'gameOver';
+    expect(step(over, SHOOT, 80)).toMatchObject({ mode: 'gameOver', prompts: [] });
+  });
+
+  it('a prompt in flight goes on in the death sequence and can still turn a bug (+75)', () => {
+    let state = step(standingAt(330), SHOOT);
+    state = untilDying(putIntoPit(state));
+    expect(state.prompts).toHaveLength(1);
+    expect(state.score).toBe(0);
+    state = untilPoof(state);
+    expect(state.mode).toBe('dying');
+    expect(state.score).toBe(75);
+    expect(state.bugs).toHaveLength(6);
+  });
+
+  it('after the respawn: no prompts, no pets, all 7 bugs back', () => {
+    let state = untilPoof(step(standingAt(600), SHOOT));
+    state = step(state, SHOOT);
+    expect(state.prompts).toHaveLength(1);
+    state = endOfDeath(untilDying(putIntoPit(state)));
+    expect(state.mode).toBe('playing');
+    expect(state.prompts).toHaveLength(0);
+    expect(state.pets).toHaveLength(0);
+    expect(state.bugs).toHaveLength(7);
+    expect(state.bugs[0].x).toBe(708);
+  });
+
+  it('reaching the goal clears prompts in flight; pets stay', () => {
+    let state = step(standingAt(3500), SHOOT);
+    state.camX = 3200;
+    state.pets.push({ kind: 'duck', x: 3900, y: 300, vx: 0, vy: -420, angle: 0, facing: 1, t: 0 });
+    Object.assign(state.player, { x: 3990, y: 392, vy: -100, onGround: false });
+    state = step(state);
+    expect(state.mode).toBe('won');
+    expect(state.prompts).toHaveLength(0);
+    expect(state.pets).toHaveLength(1);
+    const y = state.pets[0].y;
+    state = step(state, input(), 5);
+    expect(state.pets[0].y).not.toBe(y);
+  });
+
+  it('in the pause prompts and pets stand still for 60 steps', () => {
+    let state = untilPoof(step(standingAt(600), SHOOT));
+    state = step(state, SHOOT);
+    state = step(state, PAUSE);
+    const before = structuredClone({ prompts: state.prompts, pets: state.pets });
+    expect(before.prompts).toHaveLength(1);
+    expect(before.pets).toHaveLength(1);
+    state = step(state, input(), 60);
+    expect({ prompts: state.prompts, pets: state.pets }).toEqual(before);
+  });
+});
+
+describe('API credits and rate limit', () => {
+  /** Claudia standing at the start, looking left: prompts fly out of the level and hit nothing. */
+  function lookingLeft(): GameState {
+    const state = playingGame(fixedRandom([0]));
+    state.player.facing = -1;
+    return state;
+  }
+
+  /** Five quick shots, then a sixth without credits. */
+  function rateLimited(): GameState {
+    const state = step(lookingLeft(), SHOOT, 6);
+    expect(state.rateLock).toBe(2);
+    return state;
+  }
+
+  it('starts with 5 credits; a shot costs one; 5 quick shots give 5 prompts', () => {
+    let state = lookingLeft();
+    expect(state.credits).toBe(5);
+    state = step(state, SHOOT);
+    expect(state.credits).toBe(4);
+    state = step(state, SHOOT, 4);
+    expect(state.prompts).toHaveLength(5);
+    expect(state.credits).toBeCloseTo(4 / 90);
+  });
+
+  it('recharging goes on while shooting: 2.5 credits, a shot → about 1.5', () => {
+    const state = lookingLeft();
+    state.credits = 2.5;
+    step(state, SHOOT);
+    expect(state.credits).toBeCloseTo(1.5 + 1 / 90);
+  });
+
+  it('a shot without credits: no prompt, 2 s lock, the 429 banner in red and "ratelimit"', () => {
+    const state = rateLimited();
+    expect(state.prompts).toHaveLength(5);
+    expect(state.events).toEqual(['ratelimit']);
+    expect(state.banner).toEqual({ text: '429 Too Many Requests – bitte warte kurz', color: '#ff6b6b', time: 2 });
+  });
+
+  it('during the lock X/F does nothing and credits recharge; after 120 steps (2 s) a shot works again', () => {
+    let state = rateLimited();
+    const credits = state.credits;
+    for (let i = 0; i < 119; i++) {
+      state = step(state, SHOOT);
+      expect(state.events).toEqual([]);
+      expect(state.prompts.length).toBeLessThanOrEqual(5);
+    }
+    expect(state.rateLock).toBeGreaterThan(0);
+    expect(state.banner?.text).toBe('429 Too Many Requests – bitte warte kurz');
+    expect(state.credits).toBeCloseTo(credits + 119 / 90);
+    state = step(state, SHOOT);
+    expect(state.rateLock).toBe(0);
+    expect(state.banner).toBeNull();
+    expect(state.events).toEqual(['shoot']);
+    expect(state.prompts).toHaveLength(1);
+  });
+
+  it('in the pause credits, lock and banner stand still', () => {
+    let state = rateLimited();
+    state = step(state, PAUSE);
+    const before = structuredClone({ credits: state.credits, rateLock: state.rateLock, banner: state.banner });
+    state = step(state, SHOOT, 60);
+    expect({ credits: state.credits, rateLock: state.rateLock, banner: state.banner }).toEqual(before);
+  });
+
+  it('a death hides the banner; after the respawn: 5 credits, no lock', () => {
+    let state = putIntoPit(rateLimited());
+    state = untilDying(state);
+    expect(state.banner).toBeNull();
+    state = endOfDeath(state);
+    expect(state.mode).toBe('playing');
+    expect(state.credits).toBe(5);
+    expect(state.rateLock).toBe(0);
+    expect(state.banner).toBeNull();
+  });
+
+  it('reaching the goal hides the banner', () => {
+    const state = rateLimited();
+    Object.assign(state.player, { x: 3990, y: 392, vy: -100, onGround: false });
+    step(state);
+    expect(state.mode).toBe('won');
+    expect(state.banner).toBeNull();
+  });
+
+  it('a new start of the level: 5 credits, no lock, no banner', () => {
+    const state = startLevel(rateLimited(), 0, 0);
+    expect(state).toMatchObject({ credits: 5, rateLock: 0, banner: null });
   });
 });
 

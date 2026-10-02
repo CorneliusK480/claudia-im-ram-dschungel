@@ -20,6 +20,8 @@ export interface FloatingText {
   color: string;
   /** Seconds since it appeared */
   t: number;
+  /** Seconds it stays visible */
+  life: number;
 }
 
 /** Visual feedback. Lives in the game state so it stops and goes with the game. */
@@ -52,8 +54,10 @@ export function burst(
   }
 }
 
-export function say(effects: Effects, x: number, y: number, text: string, color: string): void {
-  effects.texts.push({ x, y, text, color, t: 0 });
+export function say(
+  effects: Effects, x: number, y: number, text: string, color: string, life = TEXT_LIFE,
+): void {
+  effects.texts.push({ x, y, text, color, t: 0, life });
 }
 
 export function stepEffects(effects: Effects, dt: number): void {
@@ -65,6 +69,6 @@ export function stepEffects(effects: Effects, dt: number): void {
   }
   effects.particles = effects.particles.filter((q) => q.life > EPS);
   for (const t of effects.texts) t.t += dt;
-  effects.texts = effects.texts.filter((t) => t.t < TEXT_LIFE - EPS);
+  effects.texts = effects.texts.filter((t) => t.t < t.life - EPS);
   effects.shake = effects.shake - dt > EPS ? effects.shake - dt : 0;
 }

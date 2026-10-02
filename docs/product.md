@@ -90,7 +90,7 @@ Build order. Each slice is something you can see and click when it's done. `/afs
    Checkpoint, Ziel und Game Over machen Geräusche, und M schaltet den Ton aus und an. Die
    Einstellung bleibt gespeichert. Die Musik der anderen Level und die übrigen Geräusche kommen mit
    ihren Slices.
-6. **Prompt-Kanone** — Schießen mit Rate Limit.
+6. **Prompt-Kanone** (done) — Schießen mit Rate Limit.
    Done when: X/F feuert Prompts ab, und Bugs werden zu Feature-Geschenk, Schmetterling,
    Gummiente oder Cookie. Die
    API-Credits-Leiste leert sich und lädt wieder auf. Bei Dauerfeuer erscheint

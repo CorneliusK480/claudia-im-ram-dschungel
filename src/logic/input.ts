@@ -9,6 +9,8 @@ export interface InputState {
   enterPressed: boolean;
   /** P or ESC was newly pressed since the last logic step. */
   pausePressed: boolean;
+  /** X or F was newly pressed since the last logic step. */
+  shootPressed: boolean;
 }
 
 export const NO_INPUT: InputState = {
@@ -18,4 +20,5 @@ export const NO_INPUT: InputState = {
   jumpPressed: false,
   enterPressed: false,
   pausePressed: false,
+  shootPressed: false,
 };

@@ -14,8 +14,9 @@ export function drawEffects(ctx: CanvasRenderingContext2D, effects: Effects, cam
   ctx.textBaseline = 'alphabetic';
   for (const t of effects.texts) {
     const x = t.x - camX;
-    const y = t.y - t.t * TEXT_RISE;
-    ctx.globalAlpha = Math.max(0, 1 - t.t / TEXT_LIFE);
+    // Every text rises TEXT_RISE · TEXT_LIFE px in total; longer-lived ones rise slower.
+    const y = t.y - (t.t / t.life) * TEXT_RISE * TEXT_LIFE;
+    ctx.globalAlpha = Math.max(0, 1 - t.t / t.life);
     ctx.fillStyle = '#000';
     ctx.fillText(t.text, x + 1, y + 1);
     ctx.fillStyle = t.color;
