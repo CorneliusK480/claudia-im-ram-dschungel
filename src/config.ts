@@ -72,6 +72,14 @@ export const BONUS_TIME_LIMIT = 240;
 export const BONUS_PER_SECOND = 5;
 /** Name of the highscore in the browser storage. */
 export const HIGHSCORE_KEY = 'claudiaRamDschungelHighscore';
+/** Name of the "sound off" setting in the browser storage: '1' = off, '0' = on. */
+export const SOUND_OFF_KEY = 'claudiaRamDschungelTonAus';
+
+// Music (docs/prototype-reference.md, section 10.3)
+/** Plans all eighth notes that begin within this many seconds. */
+export const MUSIC_LOOKAHEAD = 0.15;
+/** After a gap (start, pause, hidden tab) the music begins again this much later. */
+export const MUSIC_START_DELAY = 0.03;
 
 // Effects
 export const DEATH_SHAKE = 0.3;

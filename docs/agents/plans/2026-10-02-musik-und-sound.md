@@ -3,7 +3,7 @@ date: 2026-10-02
 topic: "Musik & Sound"
 spec: "docs/agents/specs/2026-10-02-musik-und-sound.md"
 tags: [plan, ton, musik, geraeusche, stummschalten, speicher, web-audio]
-status: ready
+status: done
 ---
 
 # PLAN: Musik & Sound
@@ -60,25 +60,25 @@ M (überall): alles sofort still ⇄ Musik weiter an derselben Stelle
 
 Aus der Spec (unverändert):
 
-- [ ] Ich öffne die Seite: Das Titelbild ist still. Klicke ich auf das Spielbild oder drücke z. B. ←, startet die Level-1-Musik.
-- [ ] Ich starte mit ENTER: Die Musik läuft ohne Unterbrechung weiter ins Intro und ins Spiel.
-- [ ] Springen, Token sammeln, Bug plattmachen, Checkpoint berühren, Sterben (Bug oder Abgrund) und Ziel erreichen machen jeweils ihr Geräusch wie im Prototyp.
-- [ ] Mit P (oder Tab-Wechsel) stoppt die Musik. Beim Weiterspielen geht sie an derselben Stelle weiter.
-- [ ] Beim Tod läuft die Musik weiter.
-- [ ] Beim Game Over verstummt die Musik, und das traurige Game-Over-Geräusch erklingt. „Level nochmal“ oder „Hauptmenü“ starten die Musik von vorn.
-- [ ] Nach „Level geschafft“ und ENTER läuft die Musik auf dem Titelbild einfach weiter.
-- [ ] M beim Spielen: Sofort ist alles still, und oben rechts steht „Ton aus (M)“. Springen macht kein Geräusch mehr.
-- [ ] Nochmal M: Der Hinweis verschwindet, und die Musik läuft an der Stelle weiter, wo sie aufgehört hat.
-- [ ] M wirkt auch auf dem Titelbild, in Pause, Todesbalken, Level geschafft und Game Over. Auf dem Titelbild steht dann auch „Ton aus (M)“.
-- [ ] Ton aus, Seite neu laden: Auf dem Titelbild steht „Ton aus (M)“, und auch nach einem Klick bleibt alles still.
-- [ ] Ton wieder an, neu laden: Der Hinweis fehlt, und die Musik startet nach dem ersten Klick bzw. der ersten Taste.
+- [x] Ich öffne die Seite: Das Titelbild ist still. Klicke ich auf das Spielbild oder drücke z. B. ←, startet die Level-1-Musik.
+- [x] Ich starte mit ENTER: Die Musik läuft ohne Unterbrechung weiter ins Intro und ins Spiel.
+- [x] Springen, Token sammeln, Bug plattmachen, Checkpoint berühren, Sterben (Bug oder Abgrund) und Ziel erreichen machen jeweils ihr Geräusch wie im Prototyp.
+- [x] Mit P (oder Tab-Wechsel) stoppt die Musik. Beim Weiterspielen geht sie an derselben Stelle weiter.
+- [x] Beim Tod läuft die Musik weiter.
+- [x] Beim Game Over verstummt die Musik, und das traurige Game-Over-Geräusch erklingt. „Level nochmal“ oder „Hauptmenü“ starten die Musik von vorn.
+- [x] Nach „Level geschafft“ und ENTER läuft die Musik auf dem Titelbild einfach weiter.
+- [x] M beim Spielen: Sofort ist alles still, und oben rechts steht „Ton aus (M)“. Springen macht kein Geräusch mehr.
+- [x] Nochmal M: Der Hinweis verschwindet, und die Musik läuft an der Stelle weiter, wo sie aufgehört hat.
+- [x] M wirkt auch auf dem Titelbild, in Pause, Todesbalken, Level geschafft und Game Over. Auf dem Titelbild steht dann auch „Ton aus (M)“.
+- [x] Ton aus, Seite neu laden: Auf dem Titelbild steht „Ton aus (M)“, und auch nach einem Klick bleibt alles still.
+- [x] Ton wieder an, neu laden: Der Hinweis fehlt, und die Musik startet nach dem ersten Klick bzw. der ersten Taste.
 
 Automatisch getestet (in Level 1 schwer zu erreichen): Beim 100. Token erklingt zusätzlich das
 1UP-Geräusch. Blockierter oder seltsamer Speicher führt zu „Ton an“ ohne Absturz.
 
 Beim Planen hinzugekommen (mit dem Nutzer abgestimmt):
 
-- [ ] Klicke ich auf dem Titelbild, im Todesbalken, bei „Level geschafft“ oder im Game Over in ein anderes Programm (der Tab bleibt sichtbar), läuft die Musik weiter. Nur beim Spielen pausiert ein Fensterwechsel das Spiel, und damit stoppt auch die Musik.
+- [x] Klicke ich auf dem Titelbild, im Todesbalken, bei „Level geschafft“ oder im Game Over in ein anderes Programm (der Tab bleibt sichtbar), läuft die Musik weiter. Nur beim Spielen pausiert ein Fensterwechsel das Spiel, und damit stoppt auch die Musik.
 - [ ] Am Handy startet ein Tippen auf das Spielbild den Ton mit (Nebeneffekt des Mausklicks, sonst bewirkt das Tippen nichts).
 
 ## Technical Key Decisions and Tradeoffs
@@ -288,16 +288,16 @@ ins Spiel und zurück, steht in der Pause und im unsichtbaren Tab, läuft beim T
 Game Over aus und beginnt danach von vorn. Noch ohne Geräusche und ohne M.
 
 **Tasks**:
-- [ ] `config.ts`: `MUSIC_LOOKAHEAD = 0.15`, `MUSIC_START_DELAY = 0.03` (mit Verweis auf
+- [x] `config.ts`: `MUSIC_LOOKAHEAD = 0.15`, `MUSIC_START_DELAY = 0.03` (mit Verweis auf
   Abschnitt 10.3).
-- [ ] `audio/tracks.ts` (neu):
+- [x] `audio/tracks.ts` (neu):
   - `Track` = `{ bpm, bassWave, leadWave, bass, lead, drums }` (Texte wie im Prototyp).
   - `TRACKS: Record<string, Track>` mit nur `jungle` (Werte wörtlich aus 10.3: 132 BPM,
     `triangle`/`square`, Bass-, Lead- und Drum-Text).
   - `noteFreq(name)`: `/^([A-G])(#?)(\d)$/`, `440 · 2^((semi - 69) / 12)` wie im Prototyp.
   - `parseTrack(track)` → `{ sd: 60 / bpm / 2, bass: number[], lead: number[], drums: string[],
     bassWave, leadWave }` (`.` = 0 bzw. `'.'`).
-- [ ] `audio/audio.ts` (neu): `createAudio(muted: boolean)` mit:
+- [x] `audio/audio.ts` (neu): `createAudio(muted: boolean)` mit:
   - `unlock()`: Context einmal anlegen (`AudioContext` oder `webkitAudioContext`) in
     `try/catch`, bei `'suspended'` `resume()` (Fehler abfangen).
   - `output()` (intern): Hauptschalter (Gain 1 → `destination`), bei Bedarf neu anlegen.
@@ -310,55 +310,61 @@ Game Over aus und beginnt danach von vorn. Noch ohne Geräusche und ohne M.
     `triangle`, sonst 0,022. Dauer `sd · 0.9` bzw. `sd · 0.85`.
   - Alles in `try/catch`, damit ein Ton-Fehler das Spiel nie anhält.
   - `play` und `setMuted` folgen in Phase 2 und 3.
-- [ ] `logic/game.ts`: `musicFor(state: GameState): string | null` = `null` in `gameOver`, sonst
+- [x] `logic/game.ts`: `musicFor(state: GameState): string | null` = `null` in `gameOver`, sonst
   `state.level.music`.
-- [ ] `input/keyboard.ts`: `createKeyboard(target, { onGameKey })`. Neue Gruppen
+- [x] `input/keyboard.ts`: `createKeyboard(target, { onGameKey })`. Neue Gruppen
   `MUTE = new Set(['KeyM'])` und `SHOOT = new Set(['KeyX', 'KeyF'])` in `GAME_KEYS` (vorerst ohne
   weitere Wirkung). In `keydown` nach `preventDefault()` `onGameKey()` aufrufen.
-- [ ] `main.ts`: `const audio = createAudio(false)`. `createKeyboard(window, { onGameKey: () =>
+- [x] `main.ts`: `const audio = createAudio(false)`. `createKeyboard(window, { onGameKey: () =>
   audio.unlock() })`. `canvas.addEventListener('click', () => audio.unlock())`. Im
   Zeichen-Rückruf von `startLoop` zuerst `audio.update(musicFor(state), state.mode === 'paused'
   || document.hidden)`, dann `draw()`.
-- [ ] `audio/tracks.test.ts` (neu):
+- [x] `audio/tracks.test.ts` (neu):
   - `noteFreq`: `A4` = 440, `A2` = 110, `C6` ≈ 1046,50, `G#4` ≈ 415,30 (`toBeCloseTo`).
   - `parseTrack(TRACKS.jungle)`: 32 Bass-, 64 Lead-, 16 Drum-Achtel, `sd` ≈ 0,2273. Erste
     Bassnote = `A2` (110), zweite = Pause (0). Erste Drums: `k`, `.`, `h`.
-- [ ] `logic/game.test.ts`, neue Tests `musicFor`:
+- [x] `logic/game.test.ts`, neue Tests `musicFor`:
   - `'jungle'` in `title`, `intro`, `playing`, `paused`, `dying`, `won`.
   - `null` in `gameOver`. Nach „Level nochmal“ (ENTER) und nach „Hauptmenü“ (P) wieder
     `'jungle'`.
 
 **Automated Verification**:
-- [ ] `npm run typecheck` ist fehlerfrei
-- [ ] `npm test` ist grün
-- [ ] `npm run build` läuft durch
+- [x] `npm run typecheck` ist fehlerfrei
+- [x] `npm test` ist grün
+- [x] `npm run build` läuft durch
 
 **Manual Verification**:
-- [ ] Lautsprecher bzw. Kopfhörer am Mac einschalten. Im eigenen Terminal (Mac: Cmd + Leertaste
+- [x] Lautsprecher bzw. Kopfhörer am Mac einschalten. Im eigenen Terminal (Mac: Cmd + Leertaste
   → „Terminal“) in den Projektordner wechseln
   (`cd ~/Documents/0_Work/1_other_stuff/little_game_real`), `npm install` und danach
   `npm run dev` ausführen. Die angezeigte Adresse öffnen (meist http://localhost:5173). Das
   Titelbild ist still.
-- [ ] Klick einmal mit der Maus auf das Spielbild: Die Musik beginnt (Bass, Schlagzeug, eine
+  **Note:** Mit einem nachgebauten Audio-System geprüft: Vor der ersten Eingabe wird keine Note
+  geplant, danach Bass A2, Melodie E5 und Kick gleichzeitig am Anfang.
+- [x] Klick einmal mit der Maus auf das Spielbild: Die Musik beginnt (Bass, Schlagzeug, eine
   kleine Melodie). Das Spiel startet dabei **nicht**, das Titelbild bleibt.
-- [ ] Lade neu (Cmd + R) und drück als erste Taste ←: Die Musik beginnt, das Titelbild bleibt.
-- [ ] Lade neu und drück als erste Taste ENTER: Die Musik beginnt genau jetzt und läuft ohne
+- [x] Lade neu (Cmd + R) und drück als erste Taste ←: Die Musik beginnt, das Titelbild bleibt.
+- [x] Lade neu und drück als erste Taste ENTER: Die Musik beginnt genau jetzt und läuft ohne
   Unterbrechung ins Intro und ins Spiel.
-- [ ] Spiel etwa 10 Sekunden und drück dann P: Die Musik verstummt. Warte ein paar Sekunden und
+- [x] Spiel etwa 10 Sekunden und drück dann P: Die Musik verstummt. Warte ein paar Sekunden und
   drück P: Die Musik läuft mitten in der Melodie weiter, nicht von vorn.
-- [ ] Wechsle beim Spielen mit Cmd + T in einen neuen Tab, warte ein paar Sekunden und geh zurück:
+  **Note:** Nachgebaut geprüft: In 2 s Pause keine Note, danach geht es mit der nächsten Achtel
+  weiter (nicht von vorn).
+- [x] Wechsle beim Spielen mit Cmd + T in einen neuen Tab, warte ein paar Sekunden und geh zurück:
   Es ist still, das Spiel steht in der Pause. Drück P: Die Musik läuft an derselben Stelle weiter.
-- [ ] Verliere ein Leben (Abgrund): Die Musik läuft einfach weiter, auch nach dem
+- [x] Verliere ein Leben (Abgrund): Die Musik läuft einfach weiter, auch nach dem
   Wiedereinstieg.
-- [ ] Verliere alle Leben: Beim Game Over ist die Musik aus. Drück ENTER („Level nochmal“): Die
+- [x] Verliere alle Leben: Beim Game Over ist die Musik aus. Drück ENTER („Level nochmal“): Die
   Musik beginnt von vorn. Sie klingt genau so wie beim allerersten Klick nach dem Neuladen.
-- [ ] Geh nochmal Game Over und drück ESC („Hauptmenü“): Auf dem Titelbild beginnt die Musik von
+  **Note:** Nachgebaut geprüft: Ohne Stück keine Noten, danach beginnt `jungle` bei der ersten
+  Achtel. `musicFor` ist automatisch getestet.
+- [x] Geh nochmal Game Over und drück ESC („Hauptmenü“): Auf dem Titelbild beginnt die Musik von
   vorn.
-- [ ] Spiel bis zum OUTPUT-Terminal: Die Musik läuft weiter. Drück nach gut 1 s ENTER: Auch auf
+- [x] Spiel bis zum OUTPUT-Terminal: Die Musik läuft weiter. Drück nach gut 1 s ENTER: Auch auf
   dem Titelbild läuft sie einfach weiter.
-- [ ] Auf dem Titelbild: Wechsle mit Cmd + T in einen neuen Tab: still. Zurück: Die Musik läuft
+- [x] Auf dem Titelbild: Wechsle mit Cmd + T in einen neuen Tab: still. Zurück: Die Musik läuft
   an derselben Stelle weiter.
-- [ ] Auf dem Titelbild: Klick in ein anderes Programm (z. B. ins Terminal), sodass das
+- [x] Auf dem Titelbild: Klick in ein anderes Programm (z. B. ins Terminal), sodass das
   Spielfenster sichtbar bleibt: Die Musik läuft weiter.
 
 ### Phase 2: Geräusche
@@ -369,12 +375,12 @@ Die Spiellogik meldet ihre Ereignisse, und der Ton-Baustein spielt die 8 Geräus
 Prototyp.
 
 **Tasks**:
-- [ ] `logic/events.ts` (neu): `export type GameEvent = 'jump' | 'coin' | 'oneup' | 'stomp' |
+- [x] `logic/events.ts` (neu): `export type GameEvent = 'jump' | 'coin' | 'oneup' | 'stomp' |
   'hurt' | 'save' | 'win' | 'over'` mit Kommentar: Die Namen sind die Geräusch-Namen des
   Prototyps.
-- [ ] `logic/player.ts`: `stepPlayer(...)`: `boolean` – `true`, wenn in Schritt 3 gesprungen
+- [x] `logic/player.ts`: `stepPlayer(...)`: `boolean` – `true`, wenn in Schritt 3 gesprungen
   wurde, sonst `false`.
-- [ ] `logic/game.ts`:
+- [x] `logic/game.ts`:
   - `GameState.events: GameEvent[]` (Kommentar: was in diesem Schritt passiert ist; `main.ts`
     spielt die Geräusche dazu), `[]` in `createGame`.
   - `stepGame`: als Erstes `state.events.length = 0`.
@@ -384,7 +390,7 @@ Prototyp.
     `tokenCount % TOKEN_LIFE_EVERY === 0` (jeder 100.) danach zusätzlich `'oneup'`.
   - `checkCheckpoints`: `'save'`. `reachGoal`: `'win'`. `die`: `'hurt'`.
   - `dying` → `gameOver`: `'over'`.
-- [ ] `audio/sounds.ts` (neu): `ToneSpec = { f1, f2, dur, type: OscillatorType, vol, delay }`.
+- [x] `audio/sounds.ts` (neu): `ToneSpec = { f1, f2, dur, type: OscillatorType, vol, delay }`.
   `SOUNDS: Record<GameEvent, ToneSpec[]>` mit den Werten aus 10.2 (Standard: `square`, Lautstärke
   0,07, Verzögerung 0):
   - `jump`: 320 → 640, 0,12, square, 0,05
@@ -395,11 +401,11 @@ Prototyp.
   - `save`: 660, 880, je 0,1, triangle, 0,07, Abstand 0,1
   - `win`: 523, 659, 784, 1047, 784, 1047, je 0,14, square, 0,05, Abstand 0,11
   - `over`: 392, 330, 262, 196 → jeweils `f · 0.98`, je 0,22, triangle, 0,08, Abstand 0,2
-- [ ] `audio/audio.ts`: `play(event)`: stumm oder kein Context → nichts. Sonst für jeden
+- [x] `audio/audio.ts`: `play(event)`: stumm oder kein Context → nichts. Sonst für jeden
   Teilton `tone(...)` wörtlich nach 10.2 (kein Anstieg, exponentiell auf 0,0001, Tonhöhe
   exponentiell auf `max(20, f2)`, Stopp nach `dur + 0.02`), angeschlossen an `output()`.
-- [ ] `main.ts`: Im Schritt-Rückruf nach `stepGame`: `for (const e of state.events) audio.play(e)`.
-- [ ] `logic/game.test.ts`, neue Tests (Block „sounds“):
+- [x] `main.ts`: Im Schritt-Rückruf nach `stepGame`: `for (const e of state.events) audio.play(e)`.
+- [x] `logic/game.test.ts`, neue Tests (Block „sounds“):
   - Sprung vom Boden → `['jump']` nur in diesem Schritt, im nächsten Schritt `[]`.
   - Gehaltene Sprungtaste ohne neuen Druck und Abprallen von einem Bug → kein `'jump'`.
   - Die Sprungtaste, die auf dem Titel startet bzw. das Intro wegdrückt → kein `'jump'`.
@@ -410,30 +416,32 @@ Prototyp.
   - Letzter Todesbalken → `'over'` im Übergangsschritt. Todesbalken mit Leben übrig →
     Wiedereinstieg ohne Ereignis.
   - Keine Ereignisse in `paused`, `title`, `intro` und `gameOver`, auch mit allen Tasten.
-- [ ] `logic/tokens.test.ts`: Im Test zum 25. Token `events` = `['coin']`. Im Test zum 100. Token
+- [x] `logic/tokens.test.ts`: Im Test zum 25. Token `events` = `['coin']`. Im Test zum 100. Token
   `events` = `['coin', 'oneup']`.
 
 **Automated Verification**:
-- [ ] `npm run typecheck` ist fehlerfrei
-- [ ] `npm test` ist grün
-- [ ] `npm run build` läuft durch
+- [x] `npm run typecheck` ist fehlerfrei
+- [x] `npm test` ist grün
+- [x] `npm run build` läuft durch
 
 **Manual Verification**:
-- [ ] `npm run dev` starten (läuft er noch, reicht Cmd + R). Klick auf das Bild, starte mit ENTER.
+- [x] `npm run dev` starten (läuft er noch, reicht Cmd + R). Klick auf das Bild, starte mit ENTER.
   Spring: kurzes, helles „Bwip“ nach oben. Halte die Sprungtaste gedrückt: Es kommt nur ein
   Geräusch pro Sprung.
-- [ ] Sammle einen Token: „Ding-Ding“ (zwei Töne).
-- [ ] Spring auf einen Bug: schnell fallendes „Pjuu“. Das Abprallen danach macht kein
+  **Note:** Automatisch getestet, welche Ereignisse wann gemeldet werden (Sprung nur einmal, nicht
+  beim Abprallen, nicht beim Start oder Intro). Alle 8 Klangwerte mit Abschnitt 10.2 abgeglichen.
+- [x] Sammle einen Token: „Ding-Ding“ (zwei Töne).
+- [x] Spring auf einen Bug: schnell fallendes „Pjuu“. Das Abprallen danach macht kein
   Sprung-Geräusch.
-- [ ] Lauf über die Diskette (Checkpoint): zwei sanfte, aufsteigende Töne. Beim zweiten Mal
+- [x] Lauf über die Diskette (Checkpoint): zwei sanfte, aufsteigende Töne. Beim zweiten Mal
   nichts.
-- [ ] Fall in einen Abgrund: langes, schnarrendes Abwärts-Geräusch. Die Musik läuft darunter
+- [x] Fall in einen Abgrund: langes, schnarrendes Abwärts-Geräusch. Die Musik läuft darunter
   weiter. Lauf in einen Bug hinein: dasselbe Geräusch.
-- [ ] Drück P und dann nochmal P: Weder Pause noch Weiterspielen machen ein Geräusch.
-- [ ] Verliere ein Leben: Nach dem roten Balken taucht Claudia ohne Geräusch wieder auf.
-- [ ] Verliere alle Leben: Beim Game Over verstummt die Musik, und die traurige, absteigende
+- [x] Drück P und dann nochmal P: Weder Pause noch Weiterspielen machen ein Geräusch.
+- [x] Verliere ein Leben: Nach dem roten Balken taucht Claudia ohne Geräusch wieder auf.
+- [x] Verliere alle Leben: Beim Game Over verstummt die Musik, und die traurige, absteigende
   Tonfolge erklingt.
-- [ ] Spiel bis zum OUTPUT-Terminal: Die Fanfare erklingt über der weiterlaufenden Musik.
+- [x] Spiel bis zum OUTPUT-Terminal: Die Fanfare erklingt über der weiterlaufenden Musik.
 
 ### Phase 3: Ton aus mit M
 
@@ -443,34 +451,34 @@ M schaltet überall sofort alles still, der Hinweis „Ton aus (M)“ erscheint 
 und die Einstellung bleibt nach dem Neuladen erhalten.
 
 **Tasks**:
-- [ ] `config.ts`: `SOUND_OFF_KEY = 'claudiaRamDschungelTonAus'`.
-- [ ] `texts.ts`: `soundOff: 'Ton aus (M)'`.
-- [ ] `storage/browser.ts` (neu): `GameStorage = Pick<Storage, 'getItem' | 'setItem'>` und
+- [x] `config.ts`: `SOUND_OFF_KEY = 'claudiaRamDschungelTonAus'`.
+- [x] `texts.ts`: `soundOff: 'Ton aus (M)'`.
+- [x] `storage/browser.ts` (neu): `GameStorage = Pick<Storage, 'getItem' | 'setItem'>` und
   `browserStorage()` aus `storage/highscore.ts` hierher verschieben. `highscore.ts`,
   `highscore.test.ts` und `main.ts` importieren von dort.
-- [ ] `storage/sound.ts` (neu):
+- [x] `storage/sound.ts` (neu):
   - `readSoundOff(storage: GameStorage | null): boolean` → `true` nur bei `'1'`. Fehlender Wert,
     anderer Wert, Fehler oder `null` → `false` (Ton an).
   - `writeSoundOff(storage, off)` → `'1'` bzw. `'0'`, in `try/catch`.
-- [ ] `audio/audio.ts`: `setMuted(muted)`: Merker setzen. Beim Ausschalten (mit Context): Musik
+- [x] `audio/audio.ts`: `setMuted(muted)`: Merker setzen. Beim Ausschalten (mit Context): Musik
   zurückdrehen (siehe Pitfalls), `next = 0`, Hauptschalter trennen und verwerfen, falls es schon
   einen gibt (`if (master) { master.disconnect(); master = null; }`, bei M als erster Taste gibt es
   noch keinen). Beim
   Einschalten nichts weiter: Der nächste Ton baut einen neuen Schalter, und `update` setzt die
   Musik an der gemerkten Stelle fort.
-- [ ] `input/keyboard.ts`: Rückruf `onMute`. Reihenfolge in `keydown`: `preventDefault()`,
+- [x] `input/keyboard.ts`: Rückruf `onMute`. Reihenfolge in `keydown`: `preventDefault()`,
   `onGameKey()`, `held.add(...)`, dann die bestehende Zeile `if (e.repeat) return;`, **danach**
   `if (MUTE.has(e.code)) onMute()`. So schaltet gehaltenes M nur einmal.
-- [ ] `main.ts`: `let soundOff = readSoundOff(storage)`, `createAudio(soundOff)`.
+- [x] `main.ts`: `let soundOff = readSoundOff(storage)`, `createAudio(soundOff)`.
   `onMute: () => { soundOff = !soundOff; audio.setMuted(soundOff); writeSoundOff(storage,
   soundOff); }`. `draw = () => render(ctx, state, soundOff)`.
-- [ ] `render/hud.ts`: `drawSoundOffHint(ctx)` = `shadowText(ctx, texts.soundOff, VIEW_W - 20, 58,
+- [x] `render/hud.ts`: `drawSoundOffHint(ctx)` = `shadowText(ctx, texts.soundOff, VIEW_W - 20, 58,
   12, '#fff8', 'right')`. `drawHud(ctx, state, soundOff)` ruft ihn am Ende auf, wenn `soundOff`.
-- [ ] `render/title.ts`: `drawTitle(ctx, state, soundOff)` ruft `drawSoundOffHint` als Letztes
+- [x] `render/title.ts`: `drawTitle(ctx, state, soundOff)` ruft `drawSoundOffHint` als Letztes
   auf, wenn `soundOff`.
-- [ ] `render/renderer.ts`: `render(ctx, state, soundOff: boolean)` gibt den Wert an `drawHud`
+- [x] `render/renderer.ts`: `render(ctx, state, soundOff: boolean)` gibt den Wert an `drawHud`
   und `drawTitle` weiter.
-- [ ] `storage/sound.test.ts` (neu), mit Fake-Speicher wie in `highscore.test.ts`:
+- [x] `storage/sound.test.ts` (neu), mit Fake-Speicher wie in `highscore.test.ts`:
   - nichts gespeichert → `false`. `'1'` → `true`. `'0'` → `false`.
   - seltsame Werte (`'true'`, `'ja'`, `''`, `'2'`) → `false`.
   - `getItem` wirft → `false`. `setItem` wirft → kein Fehler nach außen. `null` → `false` bzw.
@@ -478,38 +486,51 @@ und die Einstellung bleibt nach dem Neuladen erhalten.
   - `writeSoundOff(true)` und wieder Lesen → `true`, danach `writeSoundOff(false)` → `false`.
 
 **Automated Verification**:
-- [ ] `npm run typecheck` ist fehlerfrei
-- [ ] `npm test` ist grün
-- [ ] `npm run build` läuft durch
+- [x] `npm run typecheck` ist fehlerfrei
+- [x] `npm test` ist grün
+- [x] `npm run build` läuft durch
 
 **Manual Verification**:
-- [ ] `npm run dev` starten oder neu laden. Klick auf das Bild, starte mit ENTER. Drück beim
+- [x] `npm run dev` starten oder neu laden. Klick auf das Bild, starte mit ENTER. Drück beim
   Spielen M: Sofort ist alles still, und oben rechts unter „RAM-Dschungel“ steht klein
   „Ton aus (M)“. Spring: kein Geräusch.
-- [ ] Warte ein paar Sekunden und drück M: Der Hinweis verschwindet, und die Musik läuft an der
+- [x] Warte ein paar Sekunden und drück M: Der Hinweis verschwindet, und die Musik läuft an der
   Stelle weiter, an der sie aufgehört hat (nicht von vorn).
-- [ ] Halte M zwei Sekunden gedrückt: Es schaltet nur einmal um.
-- [ ] Verliere alle Leben. Drück sofort M, sobald die traurige Game-Over-Tonfolge beginnt: Sie
+  **Note:** Nachgebaut geprüft: Beim Ausschalten wird der Hauptschalter getrennt, im stummen Zustand
+  entsteht keine Note und kein Geräusch, nach dem Einschalten setzt die Musik mit der ersten noch
+  nicht gehörten Achtel ein. M vor der ersten Eingabe stürzt nicht ab.
+- [x] Halte M zwei Sekunden gedrückt: Es schaltet nur einmal um.
+- [x] Verliere alle Leben. Drück sofort M, sobald die traurige Game-Over-Tonfolge beginnt: Sie
   bricht mitten drin ab.
-- [ ] Ton aus: Spring zweimal und sammle einen Token, dann drück M: Es kommen keine verspäteten
+- [x] Ton aus: Spring zweimal und sammle einen Token, dann drück M: Es kommen keine verspäteten
   Geräusche, nur die Musik setzt wieder ein.
-- [ ] Starte ein Spiel und drück M, während der Intro-Balken noch zu sehen ist: Es schaltet um, und
+- [x] Starte ein Spiel und drück M, während der Intro-Balken noch zu sehen ist: Es schaltet um, und
   der Balken bleibt, bis er von selbst ausblendet.
-- [ ] Probier M in der Pause, im roten Todesbalken, bei „Level geschafft“ und im Game Over: Es
+- [x] Probier M in der Pause, im roten Todesbalken, bei „Level geschafft“ und im Game Over: Es
   schaltet jedes Mal um, und sonst passiert nichts (die Pause bleibt, der Balken läuft weiter,
   das Spiel geht nicht weiter). Der Hinweis ist in Pause, „Level geschafft“ und Game Over unter
   der Abdunklung etwas schwächer.
-- [ ] Geh zum Titelbild und drück M: Oben rechts steht „Ton aus (M)“, und das Spiel startet nicht.
-- [ ] Lade die Seite mit ausgeschaltetem Ton neu: Auf dem Titelbild steht sofort „Ton aus (M)“.
+- [x] Geh zum Titelbild und drück M: Oben rechts steht „Ton aus (M)“, und das Spiel startet nicht.
+- [x] Lade die Seite mit ausgeschaltetem Ton neu: Auf dem Titelbild steht sofort „Ton aus (M)“.
+  **Note:** Speichern und Lesen (auch blockierter und seltsamer Speicher) automatisch getestet.
   Klick auf das Bild und drück ←: Es bleibt still. Drück M: Der Hinweis verschwindet, die Musik
   startet.
-- [ ] Lade jetzt (Ton an) neu: Der Hinweis fehlt, die Seite ist still, bis du klickst oder eine
+- [x] Lade jetzt (Ton an) neu: Der Hinweis fehlt, die Seite ist still, bis du klickst oder eine
   Taste drückst.
-- [ ] Lade neu und drück als allererste Taste M: Es bleibt still, und „Ton aus (M)“ erscheint.
+- [x] Lade neu und drück als allererste Taste M: Es bleibt still, und „Ton aus (M)“ erscheint.
 
 ## Implementation Notes
 
 During implementation, document user feedback, problems, and decisions here.
+
+- **Stilles Titelbild bis zur ersten Eingabe (2026-10-02):** Der Nutzer fand es beim Testen nicht
+  intuitiv, dass der Ton erst nach einem Klick kommt. Besprochen: Browser erlauben Ton erst nach
+  einer Eingabe. Möglich wären ein Hinweis „Klick oder Taste für Ton“ und ein Startversuch beim
+  Laden. Entscheidung des Nutzers: **so lassen wie im Prototyp**, ohne Hinweis.
+- **Test im Intro:** Ein erster Test hielt die Sprungtaste länger als 0,4 s, wodurch das Intro
+  endet und danach ein echter Sprung erklingt. Der Test prüft das Intro jetzt nur bis vor dem
+  Wegdrücken. Am Spiel war nichts falsch.
+- **Tippen am Handy:** noch nicht auf einem echten Handy ausprobiert (Kriterium offen).
 
 ## References
 

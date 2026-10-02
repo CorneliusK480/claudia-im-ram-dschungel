@@ -9,6 +9,7 @@ import { bugRect, buildBugs, isStomp, stepBug, type Bug } from './bugs';
 import { cameraX, titleCameraX } from './camera';
 import { buildCheckpoints, spawnOf, touchesCheckpoint, type Checkpoint } from './checkpoints';
 import { burst, createEffects, say, stepEffects, type Effects } from './effects';
+import type { GameEvent } from './events';
 import type { InputState } from './input';
 import { createPlayer, rectOf, stepPlayer, type Player } from './player';
 import { pick, type Random } from './random';
@@ -45,6 +46,8 @@ export interface GameState {
   random: Random;
   /** Best score so far. Only the logic raises it; saving it is up to main.ts. */
   highscore: number;
+  /** What happened in this step. main.ts plays the sounds for it. */
+  events: GameEvent[];
 }
 
 /** The title screen, with a fresh level 1 in the background. */
@@ -72,6 +75,7 @@ export function createGame(level: LevelData, random: Random = Math.random, highs
     time: 0,
     random,
     highscore,
+    events: [],
   };
 }
 
@@ -90,6 +94,8 @@ export function startLevel(state: GameState, score: number, tokenCount: number):
 
 /** One fixed logic step. Returns the new state (a new object after a restart). */
 export function stepGame(state: GameState, input: InputState, dt: number): GameState {
+  // Each sound only once: the events of the last step are gone.
+  state.events.length = 0;
   state.modeTime += dt;
   // Starts, skips the intro and confirms the end screens.
   const go = input.enterPressed || input.jumpPressed;
@@ -119,7 +125,7 @@ export function stepGame(state: GameState, input: InputState, dt: number): GameS
       state.levelTime += dt;
       state.time += dt;
       stepEffects(state.effects, dt);
-      stepPlayer(state.player, input, state.world, dt);
+      if (stepPlayer(state.player, input, state.world, dt)) state.events.push('jump');
       if (state.player.y > PIT_Y) {
         die(state);
         return state;
@@ -150,6 +156,7 @@ export function stepGame(state: GameState, input: InputState, dt: number): GameS
         } else {
           state.highscore = Math.max(state.highscore, state.score);
           setMode(state, 'gameOver');
+          state.events.push('over');
         }
       }
       return state;
@@ -182,6 +189,11 @@ export function timeBonus(levelTime: number): number {
   return Math.max(0, Math.floor((BONUS_TIME_LIMIT - levelTime) * BONUS_PER_SECOND + 1e-6));
 }
 
+/** Name of the music for this state: none at game over, else the track of the level. */
+export function musicFor(state: GameState): string | null {
+  return state.mode === 'gameOver' ? null : state.level.music;
+}
+
 /** Pauses the game if it is being played, e.g. when the tab or window is left. */
 export function pauseGame(state: GameState): GameState {
   if (state.mode === 'playing') setMode(state, 'paused');
@@ -198,6 +210,7 @@ function reachGoal(state: GameState): void {
   state.goalBonus = timeBonus(state.levelTime);
   state.score += GOAL_POINTS + state.goalBonus;
   burst(state.effects, state.random, goalRect.x + 24, goalRect.y + 20, state.level.theme.accent, 40, 300);
+  state.events.push('win');
   setMode(state, 'won');
 }
 
@@ -209,6 +222,7 @@ function die(state: GameState): void {
   // Kept inside the picture, so the particles are visible after a fall into a pit.
   const y = Math.min(player.y + 14, VIEW_H - 10);
   burst(effects, state.random, player.x + PLAYER_W / 2, y, DEATH_COLOR, 30, 320);
+  state.events.push('hurt');
   setMode(state, 'dying');
 }
 
@@ -245,6 +259,7 @@ function touchBugs(state: GameState, input: InputState): boolean {
       state.score += BUG_POINTS;
       burst(effects, state.random, bug.x + BUG_W / 2, bug.y + BUG_H / 2, BUG_PARTICLE_COLOR, 14);
       say(effects, bug.x, bug.y - 14, pick(texts.bugMessages, state.random), '#fff');
+      state.events.push('stomp');
     }
     player.vy = -(input.jumpHeld ? BOUNCE_HELD : BOUNCE) * JUMP;
     player.onGround = false;
@@ -265,8 +280,10 @@ function collectTokens(state: GameState): void {
     state.tokenCount += 1;
     state.score += TOKEN_POINTS;
     burst(effects, state.random, token.x, token.y, state.level.theme.accent, 6);
+    state.events.push('coin');
     if (state.tokenCount % TOKEN_LIFE_EVERY === 0) {
       state.lives += 1;
+      state.events.push('oneup');
       say(effects, player.x, player.y - 16, texts.oneUp, SCORE_COLOR);
     } else if (state.tokenCount % TOKEN_TEXT_EVERY === 0) {
       say(effects, token.x, token.y, texts.contextTokens(state.tokenCount), state.level.theme.accent);
@@ -279,6 +296,7 @@ function checkCheckpoints(state: GameState): void {
     if (cp.active || !touchesCheckpoint(state.player, cp)) continue;
     cp.active = true;
     state.spawn = spawnOf(cp);
+    state.events.push('save');
     say(state.effects, cp.col * TILE, 14 * TILE - 10, texts.autosave, SCORE_COLOR);
   }
 }

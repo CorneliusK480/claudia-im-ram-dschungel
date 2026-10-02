@@ -1,19 +1,8 @@
 import { HIGHSCORE_KEY } from '../config';
-
-/** The part of the browser storage that is used here. */
-export type HighscoreStorage = Pick<Storage, 'getItem' | 'setItem'>;
-
-/** The browser storage, or null if the browser blocks it. */
-export function browserStorage(): HighscoreStorage | null {
-  try {
-    return window.localStorage;
-  } catch {
-    return null;
-  }
-}
+import type { GameStorage } from './browser';
 
 /** The saved highscore. 0 if nothing is saved, the value is no valid number or the storage fails. */
-export function readHighscore(storage: HighscoreStorage | null): number {
+export function readHighscore(storage: GameStorage | null): number {
   try {
     const text = storage?.getItem(HIGHSCORE_KEY);
     if (!text) return 0;
@@ -25,7 +14,7 @@ export function readHighscore(storage: HighscoreStorage | null): number {
 }
 
 /** Saves the highscore. If the storage fails, the game simply goes on without it. */
-export function writeHighscore(storage: HighscoreStorage | null, value: number): void {
+export function writeHighscore(storage: GameStorage | null, value: number): void {
   try {
     storage?.setItem(HIGHSCORE_KEY, String(value));
   } catch {

@@ -13,7 +13,7 @@ import { drawTitle } from './title';
 import { drawTokens } from './tokens';
 
 /** Draws the whole game state. Only reads the state. */
-export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
+export function render(ctx: CanvasRenderingContext2D, state: GameState, soundOff: boolean): void {
   const theme = state.level.theme;
   // rounded, so the ground does not flicker
   const camX = Math.round(state.camX);
@@ -40,10 +40,10 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
 
   // The title has no display at the top.
   if (mode === 'title') {
-    drawTitle(ctx, state);
+    drawTitle(ctx, state, soundOff);
     return;
   }
-  drawHud(ctx, state);
+  drawHud(ctx, state, soundOff);
   if (mode === 'intro') drawIntroOverlay(ctx, state.level, theme, state.modeTime);
   else if (mode === 'paused') drawPauseOverlay(ctx);
   else if (mode === 'dying') drawDeathOverlay(ctx, state.deathMessage, state.lives);

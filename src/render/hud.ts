@@ -7,7 +7,7 @@ import { shadowText } from './text';
 const BASELINE = 34;
 
 /** The display at the top: lives, tokens, score and the level name. */
-export function drawHud(ctx: CanvasRenderingContext2D, state: GameState): void {
+export function drawHud(ctx: CanvasRenderingContext2D, state: GameState, soundOff: boolean): void {
   ctx.fillStyle = '#0008';
   ctx.beginPath();
   ctx.roundRect(10, 10, 440, 34, 8);
@@ -21,4 +21,10 @@ export function drawHud(ctx: CanvasRenderingContext2D, state: GameState): void {
   // "Level 1: RAM-Dschungel" → "RAM-Dschungel"
   const name = state.level.name.split(': ')[1] ?? state.level.name;
   shadowText(ctx, name, VIEW_W - 20, BASELINE, 15, '#fffa', 'right');
+  if (soundOff) drawSoundOffHint(ctx);
+}
+
+/** "Ton aus (M)" at the top right, below the level name. */
+export function drawSoundOffHint(ctx: CanvasRenderingContext2D): void {
+  shadowText(ctx, texts.soundOff, VIEW_W - 20, 58, 12, '#fff8', 'right');
 }

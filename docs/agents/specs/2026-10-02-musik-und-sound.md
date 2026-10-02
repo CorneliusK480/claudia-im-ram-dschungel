@@ -3,7 +3,7 @@ date: 2026-10-02
 topic: "Musik & Sound"
 slice: 5
 tags: [spec]
-status: ready
+status: done
 ---
 
 # SPEC: Musik & Sound
@@ -158,18 +158,18 @@ Settled during the interview — the plan must not ask these again.
 
 ## Acceptance criteria
 
-- [ ] Ich öffne die Seite: Das Titelbild ist still. Klicke ich auf das Spielbild oder drücke z. B. ←, startet die Level-1-Musik.
-- [ ] Ich starte mit ENTER: Die Musik läuft ohne Unterbrechung weiter ins Intro und ins Spiel.
-- [ ] Springen, Token sammeln, Bug plattmachen, Checkpoint berühren, Sterben (Bug oder Abgrund) und Ziel erreichen machen jeweils ihr Geräusch wie im Prototyp.
-- [ ] Mit P (oder Tab-Wechsel) stoppt die Musik. Beim Weiterspielen geht sie an derselben Stelle weiter.
-- [ ] Beim Tod läuft die Musik weiter.
-- [ ] Beim Game Over verstummt die Musik, und das traurige Game-Over-Geräusch erklingt. „Level nochmal“ oder „Hauptmenü“ starten die Musik von vorn.
-- [ ] Nach „Level geschafft“ und ENTER läuft die Musik auf dem Titelbild einfach weiter.
-- [ ] M beim Spielen: Sofort ist alles still, und oben rechts steht „Ton aus (M)“. Springen macht kein Geräusch mehr.
-- [ ] Nochmal M: Der Hinweis verschwindet, und die Musik läuft an der Stelle weiter, wo sie aufgehört hat.
-- [ ] M wirkt auch auf dem Titelbild, in Pause, Todesbalken, Level geschafft und Game Over. Auf dem Titelbild steht dann auch „Ton aus (M)“.
-- [ ] Ton aus, Seite neu laden: Auf dem Titelbild steht „Ton aus (M)“, und auch nach einem Klick bleibt alles still.
-- [ ] Ton wieder an, neu laden: Der Hinweis fehlt, und die Musik startet nach dem ersten Klick bzw. der ersten Taste.
+- [x] Ich öffne die Seite: Das Titelbild ist still. Klicke ich auf das Spielbild oder drücke z. B. ←, startet die Level-1-Musik.
+- [x] Ich starte mit ENTER: Die Musik läuft ohne Unterbrechung weiter ins Intro und ins Spiel.
+- [x] Springen, Token sammeln, Bug plattmachen, Checkpoint berühren, Sterben (Bug oder Abgrund) und Ziel erreichen machen jeweils ihr Geräusch wie im Prototyp.
+- [x] Mit P (oder Tab-Wechsel) stoppt die Musik. Beim Weiterspielen geht sie an derselben Stelle weiter.
+- [x] Beim Tod läuft die Musik weiter.
+- [x] Beim Game Over verstummt die Musik, und das traurige Game-Over-Geräusch erklingt. „Level nochmal“ oder „Hauptmenü“ starten die Musik von vorn.
+- [x] Nach „Level geschafft“ und ENTER läuft die Musik auf dem Titelbild einfach weiter.
+- [x] M beim Spielen: Sofort ist alles still, und oben rechts steht „Ton aus (M)“. Springen macht kein Geräusch mehr.
+- [x] Nochmal M: Der Hinweis verschwindet, und die Musik läuft an der Stelle weiter, wo sie aufgehört hat.
+- [x] M wirkt auch auf dem Titelbild, in Pause, Todesbalken, Level geschafft und Game Over. Auf dem Titelbild steht dann auch „Ton aus (M)“.
+- [x] Ton aus, Seite neu laden: Auf dem Titelbild steht „Ton aus (M)“, und auch nach einem Klick bleibt alles still.
+- [x] Ton wieder an, neu laden: Der Hinweis fehlt, und die Musik startet nach dem ersten Klick bzw. der ersten Taste.
 
 Automatisch getestet (in Level 1 schwer zu erreichen): Beim 100. Token erklingt zusätzlich das
 1UP-Geräusch. Blockierter oder seltsamer Speicher führt zu „Ton an“ ohne Absturz.

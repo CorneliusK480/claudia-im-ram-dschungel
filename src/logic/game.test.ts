@@ -5,7 +5,7 @@ import { loadLevel1 } from '../test/level1';
 import { fixedRandom } from '../test/random';
 import { texts } from '../texts';
 import { burst } from './effects';
-import { createGame, pauseGame, startLevel, stepGame, timeBonus, type GameState } from './game';
+import { createGame, musicFor, pauseGame, startLevel, stepGame, timeBonus, type GameState } from './game';
 import { NO_INPUT, type InputState } from './input';
 
 const level = loadLevel1();
@@ -635,6 +635,126 @@ describe('level time', () => {
     state = endOfDeath(state);
     expect(state.mode).toBe('playing');
     expect(state.levelTime).toBe(t);
+  });
+});
+
+describe('sounds', () => {
+  const JUMP_KEY = input({ jumpPressed: true, jumpHeld: true });
+
+  /** Claudia falling onto the first bug, her feet 5 px above it. */
+  function fallingOnBug(): GameState {
+    const state = playingGame(fixedRandom([0.5]));
+    Object.assign(state.player, { x: 709, y: 462 - 28 - 5, vy: 600, onGround: false });
+    return state;
+  }
+
+  /** All events of `n` steps. */
+  function eventsOf(state: GameState, inp: InputState, n: number): string[] {
+    const all: string[] = [];
+    for (let i = 0; i < n; i++) {
+      state = step(state, inp);
+      all.push(...state.events);
+    }
+    return all;
+  }
+
+  it('a jump from the ground sounds once, in its step only', () => {
+    let state = step(playingGame(), JUMP_KEY);
+    expect(state.events).toEqual(['jump']);
+    state = step(state, input({ jumpHeld: true }));
+    expect(state.events).toEqual([]);
+  });
+
+  it('holding the jump key without a new press makes no jump sound', () => {
+    expect(eventsOf(step(playingGame(), JUMP_KEY), input({ jumpHeld: true }), 120)).not.toContain('jump');
+  });
+
+  it('bouncing off a bug is a stomp, not a jump', () => {
+    expect(step(fallingOnBug(), input({ jumpHeld: true })).events).toEqual(['stomp']);
+  });
+
+  it('two bugs at once sound twice', () => {
+    const state = fallingOnBug();
+    Object.assign(state.bugs[1], { x: 712, y: 462 });
+    expect(step(state).events).toEqual(['stomp', 'stomp']);
+  });
+
+  it('the jump key that starts the game or skips the intro makes no sound', () => {
+    let state = step(createGame(level), JUMP_KEY);
+    expect(state.mode).toBe('intro');
+    expect(state.events).toEqual([]);
+    state = step(step(state, input(), 23), JUMP_KEY);
+    expect(state.mode).toBe('playing');
+    expect(state.events).toEqual([]);
+    expect(step(state, input({ jumpHeld: true })).events).toEqual([]);
+  });
+
+  it('a fall into a pit and a bug from the side sound "hurt"', () => {
+    expect(untilDying(fallingIntoPit()).events).toEqual(['hurt']);
+    const state = playingGame(fixedRandom([0.5]));
+    Object.assign(state.player, { x: 708 - 22 - 0.5, y: 452, onGround: true });
+    expect(step(state).events).toEqual(['hurt']);
+  });
+
+  it('a checkpoint sounds "save" once', () => {
+    let state = playingGame(fixedRandom([0.5]));
+    Object.assign(state.player, { x: 64 * 32, y: 300, vy: -100, onGround: false });
+    state = step(state);
+    expect(state.events).toEqual(['save']);
+    expect(step(state).events).toEqual([]);
+  });
+
+  it('the goal sounds "win"', () => {
+    const state = playingGame();
+    Object.assign(state.player, { x: 3990, y: 392, vy: -100, onGround: false });
+    expect(step(state).events).toEqual(['win']);
+  });
+
+  it('the end of the last death sequence sounds "over"; a respawn makes no sound', () => {
+    let state = step(untilDying(fallingIntoPit()), input(), 191);
+    state = step(state);
+    expect(state.mode).toBe('playing');
+    expect(state.events).toEqual([]);
+    state.lives = 0;
+    state = step(untilDying(putIntoPit(state)), input(), 191);
+    expect(state.events).toEqual([]);
+    state = step(state);
+    expect(state.mode).toBe('gameOver');
+    expect(state.events).toEqual(['over']);
+  });
+
+  it('makes no sound in the pause, on the title, in the intro and at game over, with any keys', () => {
+    const keys = input({ left: true, right: true, jumpPressed: true, jumpHeld: true, enterPressed: true });
+    const paused = step(playingGame(), PAUSE);
+    expect(eventsOf(paused, input({ left: true, right: true, jumpPressed: true, jumpHeld: true }), 60)).toEqual([]);
+    expect(eventsOf(createGame(level), keys, 1)).toEqual([]);
+    expect(eventsOf(startLevel(createGame(level), 0, 0), keys, 23)).toEqual([]);
+    const over = playingGame();
+    over.mode = 'gameOver';
+    expect(eventsOf(over, keys, 72)).toEqual([]);
+  });
+});
+
+describe('musicFor', () => {
+  it('is the level track on the title, in the intro, playing, paused, dying and won', () => {
+    expect(musicFor(createGame(level))).toBe('jungle');
+    expect(musicFor(startLevel(createGame(level), 0, 0))).toBe('jungle');
+    for (const mode of ['playing', 'paused', 'dying', 'won'] as const) {
+      const state = playingGame();
+      state.mode = mode;
+      expect(musicFor(state)).toBe('jungle');
+    }
+  });
+
+  it('is no music at game over, and the level track again after "again" (ENTER) and "menu" (P)', () => {
+    for (const key of [ENTER, PAUSE]) {
+      let state = playingGame();
+      state.mode = 'gameOver';
+      expect(musicFor(state)).toBeNull();
+      state = step(state, key, 72);
+      expect(state.mode).not.toBe('gameOver');
+      expect(musicFor(state)).toBe('jungle');
+    }
   });
 });
 

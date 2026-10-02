@@ -98,6 +98,7 @@ describe('collecting tokens', () => {
     expect(state.lives).toBe(3);
     expect(textsOf(state)).toEqual([texts.contextTokens(25)]);
     expect(state.effects.texts[0]).toMatchObject({ x: 304, y: 336, text: 'Kontext +25 Tokens' });
+    expect(state.events).toEqual(['coin']);
   });
 
   it('gives an extra life and "1UP" at the 100th token instead of the context text', () => {
@@ -108,5 +109,6 @@ describe('collecting tokens', () => {
     expect(state.score).toBe(10);
     expect(state.lives).toBe(4);
     expect(textsOf(state)).toEqual(['1UP: Neue Session!']);
+    expect(state.events).toEqual(['coin', 'oneup']);
   });
 });

@@ -79,7 +79,7 @@ Build order. Each slice is something you can see and click when it's done. `/afs
    Done when: Titelbild → Level-Intro → Spiel → Pause (P) → „Level geschafft“ mit Zeitbonus →
    Game Over (Level nochmal mit Score 0 oder zurück ins Menü). Der Highscore ist auch nach
    dem Neuladen noch da.
-5. **Musik & Sound** — Chiptune und Geräusche.
+5. **Musik & Sound** (done) — Chiptune und Geräusche.
    Done when: Level 1 und das Titelbild haben ihre Musik. Sprung, Token, 1UP, Bug plattmachen, Tod,
    Checkpoint, Ziel und Game Over machen Geräusche, und M schaltet den Ton aus und an. Die
    Einstellung bleibt gespeichert. Die Musik der anderen Level und die übrigen Geräusche kommen mit

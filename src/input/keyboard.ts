@@ -5,7 +5,17 @@ const RIGHT = new Set(['ArrowRight', 'KeyD']);
 const JUMP = new Set(['ArrowUp', 'KeyW', 'Space']);
 const ENTER = new Set(['Enter', 'NumpadEnter']);
 const PAUSE = new Set(['KeyP', 'Escape']);
-const GAME_KEYS = new Set([...LEFT, ...RIGHT, ...JUMP, ...ENTER, ...PAUSE]);
+const MUTE = new Set(['KeyM']);
+/** The prompt cannon (slice 6). For now these keys only start the sound. */
+const SHOOT = new Set(['KeyX', 'KeyF']);
+const GAME_KEYS = new Set([...LEFT, ...RIGHT, ...JUMP, ...ENTER, ...PAUSE, ...MUTE, ...SHOOT]);
+
+export interface KeyboardCallbacks {
+  /** Every game key, also held ones: browsers allow sound only after an input. */
+  onGameKey(): void;
+  /** M, once per press: sound off or on. Not part of the InputState, so it never starts or ends anything. */
+  onMute(): void;
+}
 
 export interface Keyboard {
   /** Current input. "Pressed" events stay until `consume()` is called. */
@@ -18,7 +28,7 @@ export interface Keyboard {
  * Turns key events into an InputState. Uses `event.code` (key position),
  * so it works the same on German and English keyboards.
  */
-export function createKeyboard(target: Window): Keyboard {
+export function createKeyboard(target: Window, callbacks: KeyboardCallbacks): Keyboard {
   const held = new Set<string>();
   let jumpPressed = false;
   let enterPressed = false;
@@ -28,9 +38,11 @@ export function createKeyboard(target: Window): Keyboard {
     if (!GAME_KEYS.has(e.code)) return;
     // Space and arrows would otherwise scroll the page.
     e.preventDefault();
+    callbacks.onGameKey();
     held.add(e.code);
     // Auto repeat of a held key is not a new press.
     if (e.repeat) return;
+    if (MUTE.has(e.code)) callbacks.onMute();
     if (JUMP.has(e.code)) jumpPressed = true;
     if (ENTER.has(e.code)) enterPressed = true;
     if (PAUSE.has(e.code)) pausePressed = true;

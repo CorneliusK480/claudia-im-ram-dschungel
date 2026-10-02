@@ -36,8 +36,8 @@ export function createPlayer(world: World, at = world.startPos): Player {
   };
 }
 
-/** One physics step. Changes `player` in place. The order of the steps matters. */
-export function stepPlayer(player: Player, input: InputState, world: World, dt: number): void {
+/** One physics step. Changes `player` in place. The order of the steps matters. Returns true if Claudia jumped. */
+export function stepPlayer(player: Player, input: InputState, world: World, dt: number): boolean {
   const p = player;
 
   // 1. Horizontal: accelerate or brake (same on the ground and in the air)
@@ -56,7 +56,8 @@ export function stepPlayer(player: Player, input: InputState, world: World, dt: 
   p.invulnerable = Math.max(0, p.invulnerable - dt);
 
   // 3. Jump
-  if (p.jumpBuffer > EPS && p.coyote > EPS) {
+  const jumped = p.jumpBuffer > EPS && p.coyote > EPS;
+  if (jumped) {
     p.vy = -JUMP;
     p.jumpBuffer = 0;
     p.coyote = 0;
@@ -97,6 +98,7 @@ export function stepPlayer(player: Player, input: InputState, world: World, dt: 
     }
     p.vy = 0;
   }
+  return jumped;
 }
 
 export function rectOf(p: Player) {

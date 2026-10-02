@@ -25,6 +25,7 @@ export const texts = {
   hudLives: (n: number) => `x${n}`,
   hudTokens: (n: number) => `Tokens ${n}`,
   hudScore: (n: number) => `Score ${n}`,
+  soundOff: 'Ton aus (M)',
 
   // Floating texts
   contextTokens: (n: number) => `Kontext +${n} Tokens`,

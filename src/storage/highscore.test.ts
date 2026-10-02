@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { readHighscore, writeHighscore, type HighscoreStorage } from './highscore';
+import type { GameStorage } from './browser';
+import { readHighscore, writeHighscore } from './highscore';
 
 /** A small storage in memory, like the browser one. */
-function fakeStorage(start: Record<string, string> = {}): HighscoreStorage {
+function fakeStorage(start: Record<string, string> = {}): GameStorage {
   const data = new Map(Object.entries(start));
   return {
     getItem: (key) => data.get(key) ?? null,
@@ -14,7 +15,7 @@ function fakeStorage(start: Record<string, string> = {}): HighscoreStorage {
 
 const saved = (value: string) => fakeStorage({ claudiaRamDschungelHighscore: value });
 
-const broken: HighscoreStorage = {
+const broken: GameStorage = {
   getItem: () => {
     throw new Error('SecurityError');
   },
