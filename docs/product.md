@@ -80,25 +80,29 @@ Build order. Each slice is something you can see and click when it's done. `/afs
    Game Over (Level nochmal mit Score 0 oder zurück ins Menü). Der Highscore ist auch nach
    dem Neuladen noch da.
 5. **Musik & Sound** — Chiptune und Geräusche.
-   Done when: Jedes Level hat seine eigene Musik, Aktionen machen Geräusche, und M schaltet den Ton
-   aus und an. Die Einstellung bleibt gespeichert.
+   Done when: Level 1 und das Titelbild haben ihre Musik. Sprung, Token, 1UP, Bug plattmachen, Tod,
+   Checkpoint, Ziel und Game Over machen Geräusche, und M schaltet den Ton aus und an. Die
+   Einstellung bleibt gespeichert. Die Musik der anderen Level und die übrigen Geräusche kommen mit
+   ihren Slices.
 6. **Prompt-Kanone** — Schießen mit Rate Limit.
    Done when: X/F feuert Prompts ab, und Bugs werden zu Toaster, Ente oder Pflanze. Die
    API-Credits-Leiste leert sich und lädt wieder auf. Bei Dauerfeuer erscheint
-   „429 Too Many Requests“.
+   „429 Too Many Requests“. Schießen, Verwandeln und 429 haben ihre Geräusche.
 7. **Restliche Gefahren & Gags** — alles Übrige aus Level 1.
    Done when: Viren, Stacheln, Firewall-Power-up, Halluzinations-Plattformen, Prompt-Injector
    (Steuerung vertauscht) und „War diese Antwort hilfreich? 👍 👎“ beim Tod funktionieren wie im
-   Prototyp.
+   Prototyp, jeweils mit ihren Geräuschen wie im Prototyp.
 8. **Level 2–4** — die weiteren Welten.
    Done when: Cache-Canyon (Datenbusse), Festplatten-Höhle (Decke, Memory Leaks,
    Doppelsprung-Power-up) und CPU-Vulkan (Lava, bröckelnde Register) sind nacheinander
-   durchspielbar, jedes Level mit eigenen Farben.
+   durchspielbar, jedes Level mit eigenen Farben und eigener Musik. Doppelsprung und bröckelnde
+   Register haben ihre Geräusche.
 9. **Boss-Level & Abspann** — LEGACY_BUG.exe, diesmal fair.
    Done when: Der Boss läuft, springt, wirft Code-Brocken und macht Schockwellen wie im Prototyp.
    Nach jedem Angriff ist er kurz sichtbar **erschöpft**: Sein Kopf blinkt, und eine seitliche
    Berührung ist dann harmlos. Nur in dieser Phase treffen Draufspringen **und** Prompts. Nach
    5 Treffern öffnet sich das Terminal, und der Abspann „ALLE TASKS ERLEDIGT! 🎉“ erscheint.
+   Boss-Musik und Boss-Geräusche wie im Prototyp.
 10. **Handy-Steuerung** — Touch-Knöpfe.
     Done when: Auf dem Handy erscheinen die Knöpfe ◀ ▶ 💬 ⤒, und das ganze Spiel ist damit spielbar,
     vom Titelbild bis zum Abspann.

@@ -115,11 +115,12 @@ Abweichung vom Prototyp, entschieden in Slice 4).
 
 - **Empty:** Kein Highscore vorhanden → die Zeile „Highscore“ auf dem Titel fehlt einfach.
 - **Loading:** Es gibt keine sichtbare Ladephase, das Spiel startet sofort auf dem Titelbild. Ton
-  startet erst nach dem ersten Tastendruck oder Tippen, weil Browser das so verlangen.
+  startet erst nach dem ersten Tastendruck, Mausklick oder Tippen, weil Browser das so verlangen.
 - **Error:** Ist eine Level-Datei fehlerhaft, erscheint ein deutlicher Hinweis statt eines leeren
   Bildschirms (assumption). Ist der Speicher im Browser blockiert, läuft das Spiel trotzdem, nur ohne
   gespeicherten Highscore.
-- **Ton aus:** kleiner Hinweis „Ton aus (M)“ oben rechts.
+- **Ton aus:** kleiner Hinweis „Ton aus (M)“ oben rechts, auch auf dem Titelbild (bewusste
+  Abweichung vom Prototyp, entschieden in Slice 5, weil „Ton aus“ jetzt gespeichert bleibt).
 
 ## Open questions
 

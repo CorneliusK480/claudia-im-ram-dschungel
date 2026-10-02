@@ -1643,3 +1643,879 @@ In anderer Schreibweise:
 | 305 | localStorage-Schlüssel `'claudeJungleHigh'` (lesen) |
 | 439 | localStorage-Schlüssel `'claudeJungleHigh'` (schreiben) |
 | 1350 | Titelbild: `'CLAUDE'` (große Überschrift) |
+
+---
+
+## 10. Ton und Musik im Detail (Slice 5)
+
+Aus `game.html` nachgetragen (Ton, Musik, Stummschalten). Code wörtlich, „Claude“ steht so wie im
+Prototyp. Zeilennummern beziehen sich auf `game.html`.
+
+Alle Code-Ausschnitte sind wörtlich aus `game.html` kopiert (automatisch per Zeilenbereich, nicht abgetippt). Der ganze Ton wird zur Laufzeit mit der **Web Audio API** erzeugt. Es gibt **keine** Audiodateien.
+
+Überblick über den Audio-Teil (Zeilen 175–299):
+
+- `actx`, `muted`, `noiseBuf`: globale Variablen (Zeile 176)
+- `initAudio()`: AudioContext anlegen/fortsetzen (Zeilen 177–180)
+- `tone()`: Baustein für alle Geräusche (Zeilen 181–192)
+- `SND`: alle Geräusche (Zeilen 193–216)
+- `TRACKS`: alle Musikspuren (Zeilen 218–242)
+- `noteFreq()` und das Vorberechnen der Notenlisten (Zeilen 243–253)
+- `music`, `playMusic()`, `noteAt()`, `drumAt()`, `tickMusic()` (Zeilen 254–299)
+
+---
+
+### 10.1 Audio-Start
+
+#### `initAudio()` komplett
+
+(game.html, Zeilen 175–180)
+
+```js
+// ---------------------------------------------------------------- Sound
+let actx = null, muted = false, noiseBuf = null;
+function initAudio() {
+  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+  if (actx && actx.state === 'suspended') actx.resume();
+}
+```
+
+- **AudioContext:** wird beim ersten Aufruf **einmal** erzeugt (`window.AudioContext` oder für ältere Safari-Versionen `window.webkitAudioContext`). Schlägt das fehl, wird der Fehler still verschluckt (`catch (e) {}`). `actx` bleibt dann `null` und das Spiel bleibt einfach stumm, ohne Fehlermeldung.
+- **Fortsetzen:** Bei jedem Aufruf gilt: Ist der Context `'suspended'` (Autoplay-Sperre des Browsers), wird `actx.resume()` aufgerufen. Das Promise wird nicht abgewartet.
+- **Master-Lautstärke / Gain-Knoten / Kompressor:** **gibt es nicht.** Jede Note und jedes Geräusch erzeugt eigene Knoten (Oszillator → Gain bzw. Rauschen → Filter → Gain) und hängt sie **direkt** an `actx.destination`. Es gibt keinen gemeinsamen Lautstärkeregler, keinen Kompressor/Limiter und keine Trennung von Musik- und Geräusch-Lautstärke.
+
+#### Wann `initAudio()` aufgerufen wird
+
+| Stelle | Zeile | Bedingung |
+|---|---|---|
+| `keydown` | 160 | Nur bei Tasten aus `KEYMAP` (Pfeiltasten, A, D, W, Leertaste, ENTER, P, ESC, M, X, F). Bei anderen Tasten bricht der Handler vorher ab (`if (!k) return;`). |
+| Touch-Knöpfe ◀ ▶ 💬 ⤒ | 169 | `touchstart` auf einem Knopf (nur auf Touch-Geräten) |
+| Tippen auf die Zeichenfläche | 172 | `touchstart` auf dem Canvas (nur auf Touch-Geräten) |
+
+Ein **Mausklick** startet das Audio **nicht** (es gibt keinen `click`/`mousedown`-Handler). Auch `keyup` ruft `initAudio()` nicht auf.
+
+(game.html, Zeilen 158–173)
+
+```js
+addEventListener('keydown', e => {
+  const k = KEYMAP[e.code]; if (!k) return;
+  e.preventDefault(); initAudio();
+  if (!held[k]) pressed[k] = true;
+  held[k] = true;
+});
+addEventListener('keyup', e => { const k = KEYMAP[e.code]; if (k) held[k] = false; });
+if ('ontouchstart' in window) {
+  document.getElementById('touch').style.display = 'flex';
+  document.querySelectorAll('#touch button').forEach(b => {
+    const k = b.dataset.k;
+    b.addEventListener('touchstart', e => { e.preventDefault(); initAudio(); if (!held[k]) pressed[k] = true; held[k] = true; });
+    b.addEventListener('touchend', e => { e.preventDefault(); held[k] = false; });
+  });
+  canvas.addEventListener('touchstart', () => { initAudio(); pressed.start = true; });
+}
+```
+
+Die Musik-Planung prüft zusätzlich bei jedem Bild, ob der Context läuft (Zeile 287). `tone()` prüft nur auf `!actx`, also nicht auf `'running'`. Geräusche werden darum auch an einen noch pausierten Context geschickt, sind dort aber stumm.
+
+---
+
+### 10.2 Geräusche
+
+#### Baustein `tone()` wörtlich
+
+(game.html, Zeilen 181–192)
+
+```js
+function tone(f1, f2, dur, type = 'square', vol = 0.07, delay = 0) {
+  if (muted || !actx) return;
+  const t0 = actx.currentTime + delay;
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(f1, t0);
+  o.frequency.exponentialRampToValueAtTime(Math.max(20, f2), t0 + dur);
+  g.gain.setValueAtTime(vol, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g).connect(actx.destination);
+  o.start(t0); o.stop(t0 + dur + 0.02);
+}
+```
+
+So funktioniert ein Ton:
+
+- **Parameter:** `f1` (Startfrequenz Hz), `f2` (Endfrequenz Hz), `dur` (Dauer s), `type` (Wellenform, Standard `'square'`), `vol` (Lautstärke, Standard `0.07`), `delay` (Verzögerung s, Standard `0`).
+- **Stummschaltung:** Wenn `muted` gesetzt oder kein `actx` vorhanden ist, passiert nichts.
+- **Tonhöhe:** springt auf `f1` und gleitet **exponentiell** auf `f2` (mindestens 20 Hz) über `dur`. Bei `f1 === f2` bleibt die Tonhöhe konstant.
+- **Hüllkurve:** **kein Attack**. Die Lautstärke springt sofort auf `vol` (`setValueAtTime`) und fällt dann exponentiell auf 0.0001 über `dur` ab. Es klingt also wie ein Anschlag mit Ausklingen. Der harte Einsatz kann leise knacken.
+- **Ende:** Der Oszillator stoppt `dur + 0.02` s nach dem Start.
+- **Kette:** Oszillator → Gain → `actx.destination`.
+- Mehrere Töne mit `delay` ergeben kleine Melodien (Arpeggios).
+
+#### `SND`-Objekt komplett wörtlich
+
+(game.html, Zeilen 193–216)
+
+```js
+const SND = {
+  jump: () => tone(320, 640, 0.12, 'square', 0.05),
+  djump: () => { tone(500, 1100, 0.14, 'triangle', 0.07); tone(750, 1500, 0.1, 'square', 0.03, 0.04); },
+  coin: () => { tone(988, 988, 0.05, 'square', 0.04); tone(1319, 1319, 0.12, 'square', 0.04, 0.05); },
+  stomp: () => tone(500, 60, 0.18, 'square', 0.07),
+  hurt: () => tone(300, 40, 0.5, 'sawtooth', 0.07),
+  shield: () => tone(200, 900, 0.25, 'triangle', 0.08),
+  power: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, f, 0.1, 'square', 0.05, i * 0.07)),
+  save: () => [660, 880].forEach((f, i) => tone(f, f, 0.1, 'triangle', 0.07, i * 0.1)),
+  win: () => [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, f, 0.14, 'square', 0.05, i * 0.11)),
+  over: () => [392, 330, 262, 196].forEach((f, i) => tone(f, f * 0.98, 0.22, 'triangle', 0.08, i * 0.2)),
+  oneup: () => [784, 988, 1175, 1568].forEach((f, i) => tone(f, f, 0.08, 'square', 0.05, i * 0.06)),
+  crumble: () => tone(180, 60, 0.25, 'sawtooth', 0.03),
+  thud: () => { tone(120, 30, 0.35, 'sine', 0.2); tone(80, 30, 0.3, 'square', 0.05); },
+  throw: () => tone(700, 200, 0.2, 'triangle', 0.05),
+  bossHit: () => { tone(900, 100, 0.3, 'square', 0.08); tone(300, 50, 0.4, 'sawtooth', 0.06, 0.05); },
+  boom: () => { for (let i = 0; i < 6; i++) tone(200 - i * 25, 30, 0.4, 'sawtooth', 0.06, i * 0.12); },
+  shoot: () => tone(1200, 600, 0.08, 'square', 0.035),
+  ratelimit: () => { tone(140, 120, 0.15, 'square', 0.07); tone(140, 120, 0.15, 'square', 0.07, 0.2); },
+  poof: () => { tone(400, 1400, 0.15, 'triangle', 0.07); tone(1400, 1800, 0.08, 'square', 0.03, 0.12); },
+  inject: () => { for (let i = 0; i < 5; i++) tone(300 + i * 150, 200 + i * 100, 0.08, 'sawtooth', 0.05, i * 0.06); },
+  hallu: () => { tone(700, 150, 0.6, 'sine', 0.09); tone(705, 155, 0.6, 'sine', 0.06); },
+  blip: () => tone(880, 880, 0.06, 'square', 0.04),
+};
+```
+
+#### Einzelwerte aller Geräusche
+
+| Name | Teiltöne (`f1 → f2` Hz, Dauer s, Wellenform, Lautstärke, Verzögerung s) | Gesamtlänge ca. |
+|---|---|---|
+| `jump` | 320 → 640, 0.12, square, 0.05 | 0.12 s |
+| `djump` | 500 → 1100, 0.14, triangle, 0.07; dazu 750 → 1500, 0.1, square, 0.03, +0.04 | 0.14 s |
+| `coin` | 988 → 988, 0.05, square, 0.04; dann 1319 → 1319, 0.12, square, 0.04, +0.05 (Töne H5 und E6) | 0.17 s |
+| `stomp` | 500 → 60, 0.18, square, 0.07 | 0.18 s |
+| `hurt` | 300 → 40, 0.5, sawtooth, 0.07 | 0.5 s |
+| `shield` | 200 → 900, 0.25, triangle, 0.08 | 0.25 s |
+| `power` | 523, 659, 784, 1047 (C5 E5 G5 C6), je 0.1, square, 0.05, Abstand 0.07 | 0.31 s |
+| `save` | 660, 880 (≈ E5, A5), je 0.1, triangle, 0.07, Abstand 0.1 | 0.2 s |
+| `win` | 523, 659, 784, 1047, 784, 1047 (C5 E5 G5 C6 G5 C6), je 0.14, square, 0.05, Abstand 0.11 | 0.69 s |
+| `over` | 392, 330, 262, 196 (G4 E4 C4 G3), je 0.22, triangle, 0.08, Abstand 0.2, jeweils leicht abfallend auf `f * 0.98` | 0.82 s |
+| `oneup` | 784, 988, 1175, 1568 (G5 H5 D6 G6), je 0.08, square, 0.05, Abstand 0.06 | 0.26 s |
+| `crumble` | 180 → 60, 0.25, sawtooth, 0.03 | 0.25 s |
+| `thud` | 120 → 30, 0.35, **sine, 0.2**; dazu 80 → 30, 0.3, square, 0.05 | 0.35 s |
+| `throw` | 700 → 200, 0.2, triangle, 0.05 | 0.2 s |
+| `bossHit` | 900 → 100, 0.3, square, 0.08; dazu 300 → 50, 0.4, sawtooth, 0.06, +0.05 | 0.45 s |
+| `boom` | 6 Töne: 200, 175, 150, 125, 100, 75 → je 30, 0.4, sawtooth, 0.06, Abstand 0.12 | 1.0 s |
+| `shoot` | 1200 → 600, 0.08, square, 0.035 | 0.08 s |
+| `ratelimit` | 140 → 120, 0.15, square, 0.07, zweimal (+0 und +0.2) | 0.35 s |
+| `poof` | 400 → 1400, 0.15, triangle, 0.07; dann 1400 → 1800, 0.08, square, 0.03, +0.12 | 0.2 s |
+| `inject` | 5 Töne: 300→200, 450→300, 600→400, 750→500, 900→600, je 0.08, sawtooth, 0.05, Abstand 0.06 | 0.32 s |
+| `hallu` | 700 → 150, 0.6, sine, 0.09; dazu 705 → 155, 0.6, sine, 0.06 (gleichzeitig) | 0.6 s |
+| `blip` | 880 → 880, 0.06, square, 0.04 | 0.06 s |
+
+**Rauschen:** Kein Geräusch aus `SND` benutzt Rauschen. Rauschen gibt es nur für Snare und HiHat der Musik (`drumAt`, Abschnitt 10.3).
+
+#### Wann welches Geräusch erklingt
+
+| Name | Wann es erklingt (Stelle im Code) | Wie es klingt |
+|---|---|---|
+| `jump` | Normaler Sprung vom Boden oder in der Coyote-Zeit, in `updatePlayer()` (Zeile 487) | kurzes, helles „Bwip“ nach oben (Oktav-Glissando) |
+| `djump` | Doppelsprung in der Luft (Power-up „Extended Thinking“ nötig), `updatePlayer()` (Zeile 490) | höheres, weicheres „Wuiip“ mit schimmerndem Obertons-Pieps |
+| `coin` | Token eingesammelt (Zeile 541). Bei jedem 100. Token zusätzlich `oneup` | klassisches Münz-„Ding-Ding“, zwei Töne |
+| `stomp` | Bug oder Virus von oben zertreten, `stompOrHurt()` (Zeile 720). Prompt-Injector von oben zertreten (Zeile 633) | tiefer werdendes „Pjuu“, schnell fallend |
+| `hurt` | Claude stirbt, `die()` (Zeile 590): Treffer ohne Firewall, Lava, Absturz | langes, schnarrendes Abwärts-Glissando (Sägezahn) |
+| `shield` | Firewall fängt einen Treffer ab, `hurt()` (Zeile 582). Firewall blockt einen Prompt-Injector (Zeile 638) | aufsteigendes, weiches „Wuuup“ |
+| `power` | Firewall-Power-up eingesammelt (Zeile 550). Doppelsprung-Power-up eingesammelt (Zeile 557). Ziel öffnet sich nach dem Boss-Sieg (Zeile 738) | schnelles Dur-Arpeggio C-E-G-C nach oben |
+| `save` | Checkpoint (Diskette) aktiviert (Zeile 566) | zwei sanfte, aufsteigende Töne |
+| `win` | Ziel erreicht (Zeile 574). Nach dem letzten Level **noch einmal** beim Wechsel in den Abspann (Zeile 427) | Fanfare C-E-G-C-G-C |
+| `over` | Game Over, beim Übergang vom Todesbalken (Zeile 420) | traurige, absteigende Tonfolge G-E-C-G, weich |
+| `oneup` | Jeder 100. Token: Extra-Leben „1UP: Neue Session!“ (Zeile 543) | schnelles, hohes Arpeggio G-H-D-G |
+| `crumble` | Spieler landet auf einem bröselnden Register (Level 4), wenn es zu bröseln beginnt (Zeile 509) | leises, kurzes Knirschen nach unten |
+| `thud` | Boss landet nach einem Sprung, dabei entstehen Schockwellen (Zeile 755) | dumpfer, lauter Bass-Schlag (lautestes Geräusch) |
+| `throw` | Boss wirft Code-Schnipsel (TODO, FIXME …) (Zeile 776) | fallendes „Fjuu“ |
+| `bossHit` | Boss wird von oben getroffen (Zeile 796) | lauter, fallender Treffer-Ton mit schnarrendem Nachklang |
+| `boom` | Boss besiegt (letzter Treffer, Zeile 800) | Explosion aus 6 rasch aufeinanderfolgenden, absinkenden Sägezahn-Stößen, ca. 1 s |
+| `shoot` | Prompt abgefeuert (X/F), wenn API-Credits da sind, `shoot()` (Zeile 452) | sehr kurzes, hohes „Piu“ |
+| `ratelimit` | Prompt abfeuern ohne Credits → „429 Too Many Requests“, 2 s Sperre, `shoot()` (Zeile 446). Während der Sperre bleibt weiteres Drücken stumm (Zeile 444) | zwei tiefe, brummende Fehler-„Bööp Bööp“ |
+| `poof` | Prompt trifft Bug/Virus/Injector, der wird zu Toaster/Ente/Pflanze, `convert()` (Zeile 457) | aufsteigendes „Puff“ mit hellem Glitzern am Ende |
+| `inject` | Prompt-Injector berührt Claude ohne Firewall → Steuerung 4 s vertauscht (Zeile 641) | aufgeregte, stufig steigende Sägezahn-Kaskade |
+| `hallu` | Durch eine halluzinierte Plattform gefallen, sie wird entlarvt (Zeile 530) | langes, schwebendes Abwärts-„Wuuuu“. Zwei leicht verstimmte Sinustöne (5 Hz Unterschied) erzeugen ein Schwebungs-Wabern |
+| `blip` | Antwort auf die Feedback-Frage „War diese Antwort hilfreich?“ (← 👍 / → 👎) im Todesbalken (Zeile 416) | einzelner kurzer Piep |
+
+Alle 22 Geräusche aus `SND` werden irgendwo benutzt. Es gibt kein ungenutztes Geräusch. Für diese Dinge gibt es **kein eigenes Geräusch**:
+
+- Treffer auf den Boss mit einem Prompt (Text „Prompt abgelehnt.“ u. ä., Zeile 663)
+- Prompt trifft Boss-Geschoss („Code Review: abgelehnt“, Zeile 658)
+- Prompt prallt gegen eine Wand
+- Memory-Leak-Tropfen
+- Level-Intro, Pause, Menü-Auswahl, Start des Spiels
+- Respawn nach dem Tod
+- Ablauf der vertauschten Steuerung
+- Boss-Sprüche
+
+Code-Stellen, an denen Geräusche ausgelöst werden:
+
+Feedback-Frage im Todesbalken (Zeilen 413–417):
+
+(game.html, Zeilen 413–417)
+
+```js
+    // "War diese Antwort hilfreich?" – ← = 👍, → = 👎
+    if (!feedback && stateT > 0.7 && (pressed.left || pressed.right)) {
+      feedback = { up: !!pressed.left, text: pick(pressed.left ? FEEDBACK_UP : FEEDBACK_DOWN), t: stateT };
+      SND.blip();
+    }
+```
+
+Game Over und Abspann (Zeilen 418–428):
+
+(game.html, Zeilen 418–428)
+
+```js
+    const done = feedback ? stateT - feedback.t > 1.6 : stateT > 3.2;
+    if (done || (stateT > 0.7 && pressed.start)) {
+      if (lives <= 0) { saveHigh(); playMusic(null); SND.over(); setState('gameover'); }
+      else respawn();
+    }
+  } else if (state === 'levelDone') {
+    updateWorld(dt, false);
+    if (stateT > 1.2 && go) {
+      if (levelIdx + 1 < LEVELS.length) loadLevel(levelIdx + 1);
+      else { saveHigh(); playMusic(null); setState('win'); SND.win(); }
+    }
+```
+
+Prompt-Kanone mit Rate Limit (Zeilen 443–453):
+
+(game.html, Zeilen 443–453)
+
+```js
+function shoot() {
+  if (rate.lock > 0) return;
+  if (rate.credits < 1) {
+    rate.lock = 2; SND.ratelimit();
+    showBanner('429 Too Many Requests – bitte warte kurz', '#ff6b6b', 2);
+    return;
+  }
+  rate.credits -= 1; rate.idle = 0;
+  ents.shots.push({ x: p.face > 0 ? p.x + p.w : p.x - 16, y: p.y + 8, w: 16, h: 14, vx: p.face * 560, life: 0.75, text: pick(PROMPTS), face: p.face });
+  SND.shoot();
+}
+```
+
+Verwandlung durch Prompt (Zeilen 455–462):
+
+(game.html, Zeilen 455–462)
+
+```js
+// Gegner wird durch einen Prompt in etwas Harmloses verwandelt
+function convert(e, prompt, dir) {
+  e.alive = false; e.squash = 99; score += 75; SND.poof();
+  const kind = /Toaster/.test(prompt) ? 'toaster' : /Gummiente/.test(prompt) ? 'duck' : /Zimmerpflanze/.test(prompt) ? 'plant' : pick(['toaster', 'duck', 'plant']);
+  ents.pets.push({ x: e.x + e.w / 2, y: e.y + e.h / 2, vx: dir * (60 + Math.random() * 80), vy: -480, rot: 0, kind });
+  burst(e.x + e.w / 2, e.y + e.h / 2, '#fff', 14, 160);
+  say(e.x - 30, e.y - 16, PET_MSGS[kind], '#ffe9a8');
+}
+```
+
+Sprung und Doppelsprung (Zeilen 482–495):
+
+(game.html, Zeilen 482–495)
+
+```js
+  if (p.onGround) p.usedDouble = false;
+  p.coyote = p.onGround ? 0.1 : p.coyote - dt;
+  p.jumpBuf = pressed.jump ? 0.13 : p.jumpBuf - dt;
+  if (p.jumpBuf > 0 && p.coyote > 0) {
+    p.vy = -JUMP; p.jumpBuf = 0; p.coyote = 0; p.onGround = false;
+    SND.jump(); burst(p.x + p.w / 2, p.y + p.h, '#ffffff88', 5, 80);
+  } else if (pressed.jump && hasDouble && !p.usedDouble && !p.onGround) {
+    p.vy = -JUMP * 0.88; p.jumpBuf = 0; p.usedDouble = true;
+    SND.djump();
+    for (let k = 0; k < 12; k++) {
+      const a = k / 12 * Math.PI * 2;
+      ents.particles.push({ x: p.x + p.w / 2, y: p.y + p.h, vx: Math.cos(a) * 140, vy: Math.sin(a) * 40, life: 0.35, color: '#d68cff', size: 3 });
+    }
+  }
+```
+
+Bröselndes Register (Zeilen 504–512):
+
+(game.html, Zeilen 504–512)
+
+```js
+  if (vyBefore >= 0) {
+    for (const m of ents.movers) {
+      if (m.gone) continue;
+      if (p.x + p.w > m.x && p.x < m.x + m.w && prevBottom <= m.y + 2 && p.y + p.h >= m.y) {
+        p.y = m.y - p.h; p.vy = 0; p.onGround = true; p.riding = m;
+        if (m.crumble && m.timer < 0) { m.timer = 0; SND.crumble(); }
+      }
+    }
+  }
+```
+
+Halluzinierte Plattform (Zeilen 523–532):
+
+(game.html, Zeilen 523–532)
+
+```js
+  // Halluzinierte Plattformen: beim Durchfallen entlarven
+  for (let c = l; c <= r; c++) for (let rr = t0; rr <= t1; rr++) {
+    if (tileAt(c, rr) !== 5) continue;
+    let a = c, b = c;
+    while (tileAt(a - 1, rr) === 5) a--;
+    while (tileAt(b + 1, rr) === 5) b++;
+    for (let k = a; k <= b; k++) grid[rr][k] = 6;
+    SND.hallu(); showBanner(pick(HALLU_MSGS), '#d68cff', 2.6);
+    burst((a + b + 1) / 2 * T, rr * T + 6, '#d68cff', 20, 160);
+  }
+```
+
+Tokens, Power-ups, Checkpoints, Ziel (Zeilen 537–576):
+
+(game.html, Zeilen 537–576)
+
+```js
+  // Tokens
+  for (const t of ents.tokens) {
+    if (t.taken) continue;
+    if (Math.abs(p.x + p.w / 2 - t.x) < 20 && Math.abs(p.y + p.h / 2 - t.y) < 22) {
+      t.taken = true; tokens++; score += 10; SND.coin();
+      burst(t.x, t.y, theme.accent, 6, 120);
+      if (tokens % 100 === 0) { lives++; SND.oneup(); say(p.x, p.y - 20, '1UP: Neue Session!', '#ffd84a'); }
+      else if (tokens % 25 === 0) say(t.x, t.y - 10, `Kontext +${tokens} Tokens`, theme.accent);
+    }
+  }
+  // Power-ups
+  for (const pw of ents.power) {
+    if (!pw.taken && Math.abs(p.x + p.w / 2 - pw.x) < 22 && Math.abs(p.y + p.h / 2 - pw.y) < 24) {
+      pw.taken = true; p.shield = true; score += 50; SND.power();
+      say(pw.x, pw.y - 20, 'Firewall aktiv!', '#7cf');
+      burst(pw.x, pw.y, '#7cf', 16);
+    }
+  }
+  for (const d of ents.dj) {
+    if (!d.taken && Math.abs(p.x + p.w / 2 - d.x) < 22 && Math.abs(p.y + p.h / 2 - d.y) < 24) {
+      d.taken = true; score += 50; SND.power();
+      say(d.x - 60, d.y - 24, hasDouble ? 'Denkt schon nach... +50' : 'Extended Thinking: Doppelsprung!', '#d68cff');
+      hasDouble = true;
+      burst(d.x, d.y, '#d68cff', 20);
+    }
+  }
+  // Checkpoints
+  for (const s of ents.saves) {
+    if (!s.active && p.x + p.w > s.x && p.x < s.x + T) {
+      s.active = true; p.spawnX = s.x + 5; p.spawnY = s.y + 4; SND.save();
+      say(s.x, s.y - 30, 'Autosave...', '#ffd84a');
+    }
+  }
+  // Ziel (hohe Trefferzone, damit es auch im Sprung zählt)
+  if (!ents.goal.locked && overlap(p, { x: ents.goal.x, y: ents.goal.y - 160, w: 48, h: 224 })) {
+    const bonus = Math.max(0, Math.floor((240 - levelTime) * 5));
+    score += 500 + bonus; ents.goal.bonus = bonus;
+    SND.win(); burst(ents.goal.x + 24, ents.goal.y + 20, theme.accent, 40, 300);
+    setState('levelDone');
+  }
+```
+
+Firewall-Treffer und Tod (Zeilen 579–594):
+
+(game.html, Zeilen 579–594)
+
+```js
+function hurt() {
+  if (p.inv > 0 || state !== 'play') return;
+  if (p.shield) {
+    p.shield = false; p.inv = 1.4; SND.shield();
+    say(p.x, p.y - 16, 'Firewall hat\'s abgefangen!', '#7cf');
+    burst(p.x + p.w / 2, p.y + p.h / 2, '#7cf', 16);
+    p.vy = -JUMP * 0.5;
+  } else die();
+}
+function die(msg) {
+  if (state !== 'play') return;
+  lives--; deathMsg = msg || pick(DEATH_MSGS); SND.hurt(); shake = 0.3;
+  feedback = null; invertT = 0;
+  burst(p.x + p.w / 2, Math.min(p.y + p.h / 2, VH - 10), '#D97757', 30, 320);
+  setState('dead');
+}
+```
+
+Prompt-Injector (Zeilen 625–645):
+
+(game.html, Zeilen 625–645)
+
+```js
+  // Prompt-Injectors: kein Schaden, aber vertauschte Steuerung
+  for (const e of ents.injectors) {
+    if (!e.alive) { e.squash += dt; continue; }
+    walk(e, dt);
+    e.signT -= dt;
+    if (e.signT <= 0) { e.sign = pick(INJECT_SIGNS); e.signT = 2.5; }
+    if (interactive && overlap(p, e)) {
+      if (p.vy > 0 && p.y + p.h - e.y < 16) {
+        e.alive = false; score += 150; SND.stomp();
+        p.vy = held.jump ? -JUMP * 0.85 : -JUMP * 0.55; p.usedDouble = false;
+        burst(e.x + e.w / 2, e.y + e.h / 2, '#d68cff', 14);
+        say(e.x - 20, e.y - 14, 'Injection abgewehrt!', '#fff');
+      } else if (p.shield) {
+        e.alive = false; p.shield = false; p.inv = 1; SND.shield();
+        say(e.x - 30, e.y - 14, 'Firewall blockt Injection!', '#7cf');
+      } else {
+        e.alive = false; invertT = 4; SND.inject(); shake = 0.2;
+        say(e.x - 20, e.y - 14, 'Hehe. Neue Anweisungen!', '#d68cff');
+      }
+    }
+  }
+```
+
+Bug/Virus zertreten (Zeilen 718–726):
+
+(game.html, Zeilen 718–726)
+
+```js
+function stompOrHurt(e, msgs, pts) {
+  if (p.vy > 0 && p.y + p.h - e.y < 16) {
+    e.alive = false; score += pts; SND.stomp();
+    p.vy = held.jump ? -JUMP * 0.85 : -JUMP * 0.55;
+    p.usedDouble = false;
+    burst(e.x + e.w / 2, e.y + e.h / 2, '#ff5a8a', 14);
+    say(e.x, e.y - 14, pick(msgs), '#fff');
+  } else hurt();
+}
+```
+
+Boss (Zeilen 737–740, 753–759, 773–784, 795–809):
+
+(game.html, Zeilen 737–740)
+
+```js
+    if (b.deadT > 1.8 && ents.goal.locked) {
+      ents.goal.locked = false; SND.power();
+      say(VW / 2 - 140, 200, 'Legacy-Code refactored! Ab zum OUTPUT!', '#9aff9a');
+    }
+```
+
+(game.html, Zeilen 753–759)
+
+```js
+  if (b.onGround && !wasGround) {
+    // Landung: Schockwellen nach links und rechts
+    shake = 0.35; SND.thud();
+    burst(b.x + b.w / 2, FLOOR, '#aaa', 20, 200);
+    if (interactive) for (const dir of [-1, 1]) ents.waves.push({ x: b.x + b.w / 2 - 12, y: FLOOR - 16, w: 24, h: 16, vx: dir * (260 + rage * 30) });
+    b.mode = 'walk';
+  }
+```
+
+(game.html, Zeilen 773–784)
+
+```js
+    } else if (b.mode === 'throw') {
+      b.vx = 0; b.throwT -= dt;
+      if (b.throwT <= 0) {
+        SND.throw();
+        const n = 3 + (rage >= 3 ? 1 : 0);
+        for (let k = 0; k < n; k++) {
+          ents.projs.push({ x: b.x + b.w / 2, y: b.y, w: 30, h: 14, label: pick(PROJ_LABELS),
+            vx: b.face * (120 + k * 90 + Math.random() * 40), vy: -520 - Math.random() * 180, rot: 0 });
+        }
+        b.mode = 'walk';
+      }
+    }
+```
+
+(game.html, Zeilen 795–809)
+
+```js
+        if (b.inv <= 0) {
+          b.hp--; b.inv = 1.0; shake = 0.3; score += 300; SND.bossHit();
+          burst(p.x + p.w / 2, hb.y, '#ffd84a', 20, 260);
+          say(b.x, b.y - 20, pick(BOSS_HIT_MSGS), '#ffd84a');
+          if (b.hp <= 0) {
+            b.dead = true; b.vx = 0; score += 2000; SND.boom();
+            ents.projs = []; ents.waves = [];
+            b.talk = 'Aber... es lief doch...'; b.talkT = 2;
+          } else {
+            // Er spuckt kleine Bugs aus
+            for (let k = 0; k < (b.hp <= 2 ? 2 : 1); k++)
+              ents.bugs.push({ x: b.x + b.w / 2, y: b.y + 20, w: 24, h: 18, vx: (k ? 1 : -1) * 80, vy: -400, alive: true, squash: 0 });
+            if (b.hp === 2) ents.power.push({ x: 15 * T, y: 5 * T, taken: false });
+          }
+        }
+```
+
+---
+
+### 10.3 Musik
+
+#### Spuren `TRACKS` wörtlich
+
+(game.html, Zeilen 218–242)
+
+```js
+// ---------------------------------------------------------------- Musik
+// Jede Spur: Achtelnoten, durch Leerzeichen getrennt, "." = Pause. Drums: k = Kick, s = Snare, h = HiHat.
+const TRACKS = {
+  jungle: { bpm: 132, bassWave: 'triangle', leadWave: 'square',
+    bass: 'A2 . A3 . A2 . A3 A2 F2 . F3 . F2 . F3 F2 G2 . G3 . G2 . G3 G2 E2 . E3 . E2 . G#2 B2',
+    lead: 'E5 . A4 . C5 . E5 D5 C5 . A4 . . . . . D5 . F5 . A5 . G5 F5 E5 . . . . . . . ' +
+          'B4 . D5 . G5 . F5 E5 D5 . B4 . . . . . C5 . B4 . A4 . G#4 . A4 . . . . . . .',
+    drums: 'k . h . s . h . k k h . s . h h' },
+  cache: { bpm: 150, bassWave: 'triangle', leadWave: 'square',
+    bass: 'E2 E3 E2 E3 E2 E3 E2 E3 C2 C3 C2 C3 C2 C3 C2 C3 D2 D3 D2 D3 D2 D3 D2 D3 B1 B2 B1 B2 B1 B2 B1 B2',
+    lead: 'E5 G5 B5 G5 E5 G5 B5 G5 E5 G5 C6 G5 E5 G5 C6 G5 F#5 A5 D6 A5 F#5 A5 D6 A5 D#5 F#5 B5 F#5 D#5 F#5 B5 A5',
+    drums: 'k . h k s . h . k . h k s . h h' },
+  cave: { bpm: 112, bassWave: 'triangle', leadWave: 'triangle',
+    bass: 'D2 . . . D2 . A1 . A#1 . . . A#1 . F1 . C2 . . . C2 . G1 . A1 . . . A1 . C#2 .',
+    lead: 'A4 . . . F4 . . . D5 . . . C5 . A#4 . A4 . . . G4 . . . E4 . . . C#5 . . .',
+    drums: 'k . . . s . . h k . k . s . . h' },
+  volcano: { bpm: 160, bassWave: 'square', leadWave: 'square',
+    bass: 'G2 G2 G3 G2 G2 G2 A#2 G2 D#2 D#2 D#3 D#2 D#2 D#2 F2 D#2 F2 F2 F3 F2 F2 F2 A2 F2 D2 D2 D3 D2 F#2 F#2 A2 D3',
+    lead: 'G5 . G5 A#5 . A5 G5 . D#5 . . . . . F5 . F5 . F5 A5 . G5 F5 . D5 . . . F#5 . A5 .',
+    drums: 'k h s h k k s h' },
+  boss: { bpm: 172, bassWave: 'sawtooth', leadWave: 'square',
+    bass: 'C2 C3 C2 C3 C2 C3 C2 C3 G#1 G#2 G#1 G#2 G#1 G#2 G#1 G#2 A#1 A#2 A#1 A#2 A#1 A#2 A#1 A#2 G1 G2 G1 G2 B1 B2 D2 D3',
+    lead: 'C5 . D#5 . G5 . F#5 G5 G#5 . G5 . D#5 . C5 . A#4 . D5 . F5 . D5 A#4 B4 . D5 . G5 . F5 D5',
+    drums: 'k h s h k h s s' },
+};
+```
+
+#### Notenlisten vorberechnen (`noteFreq()`)
+
+(game.html, Zeilen 243–253)
+
+```js
+function noteFreq(n) {
+  const m = /^([A-G])(#?)(\d)$/.exec(n);
+  const semi = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[m[1]] + (m[2] ? 1 : 0) + (+m[3] + 1) * 12;
+  return 440 * Math.pow(2, (semi - 69) / 12);
+}
+for (const k in TRACKS) {
+  const tr = TRACKS[k];
+  tr.bassN = tr.bass.trim().split(/\s+/).map(n => n === '.' ? 0 : noteFreq(n));
+  tr.leadN = tr.lead.trim().split(/\s+/).map(n => n === '.' ? 0 : noteFreq(n));
+  tr.drumN = tr.drums.trim().split(/\s+/);
+}
+```
+
+- Noten haben das Format Buchstabe + optional `#` + Oktave (`A2`, `G#4`, `C6`). Es gibt **keine** Bs (♭), nur Kreuze. Gerechnet wird in gleichstufiger Stimmung mit A4 = 440 Hz (MIDI-Nummer 69).
+- `.` = Pause (Frequenz 0). Schlagzeug: `k` = Kick, `s` = Snare, `h` = HiHat, `.` = nichts.
+- Jedes Zeichen ist **eine Achtelnote**. Die Spuren sind beim Laden der Seite schon in Zahlenlisten umgerechnet (`bassN`, `leadN`, `drumN`).
+
+#### Daten aller Spuren
+
+Die Länge einer Achtel ist `sd = 60 / bpm / 2` Sekunden. Bass, Melodie (Lead) und Schlagzeug laufen **jeweils unabhängig in Schleife**, über `music.step % Länge`. Die Gesamtschleife ist das kleinste gemeinsame Vielfache. Die Tonarten habe ich aus den Noten abgeleitet, im Code stehen sie nicht.
+
+| Spur | Level | BPM | Achtel (s) | Bass-Wellenform | Lead-Wellenform | Bass: Achtel / Dauer | Lead: Achtel / Dauer | Drums: Achtel / Dauer | Gesamtschleife | Tonart (abgeleitet) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `jungle` | 1 + Titelbild | 132 | 0.2273 | triangle | square | 32 / 7.27 s | 64 / 14.55 s | 16 / 3.64 s | 64 Achtel = 14.55 s | a-Moll (mit Gis: harmonisch) |
+| `cache` | 2 | 150 | 0.2000 | triangle | square | 32 / 6.40 s | 32 / 6.40 s | 16 / 3.20 s | 32 Achtel = 6.40 s | e-Moll (mit Dis) |
+| `cave` | 3 | 112 | 0.2679 | triangle | **triangle** | 32 / 8.57 s | 32 / 8.57 s | 16 / 4.29 s | 32 Achtel = 8.57 s | d-Moll (mit Cis, „A#“ = B) |
+| `volcano` | 4 | 160 | 0.1875 | **square** | square | 32 / 6.00 s | 32 / 6.00 s | 8 / 1.50 s | 32 Achtel = 6.00 s | g-Moll (mit Fis, „A#“ = B, „D#“ = Es) |
+| `boss` | 5 (Boss) | 172 | 0.1744 | **sawtooth** | square | 32 / 5.58 s | 32 / 5.58 s | 8 / 1.40 s | 32 Achtel = 5.58 s | c-Moll (mit H, „G#“ = As, „A#“ = B) |
+
+Akkordfolgen im Bass (je 8 Achtel = ein Takt):
+
+- `jungle`: A – F – G – E (am Ende Gis, H als Überleitung)
+- `cache`: E – C – D – H, durchgehend Oktavsprünge
+- `cave`: D – A – B – F – C – G – A – Cis, sehr luftig mit vielen Pausen
+- `volcano`: G – Es – F – D (mit Fis, A zum Schluss)
+- `boss`: C – As – B – G (H, D zum Schluss), durchgehend Oktavsprünge
+
+Zuordnung der Spuren zu den Leveln (Zeilen 48, 65, 83, 104, 124):
+
+(game.html, Zeile 48)
+
+```js
+    music: 'jungle', width: 130, start: [2, 14], goal: [125, 14],
+```
+
+(game.html, Zeile 65)
+
+```js
+    music: 'cache', width: 140, start: [2, 14], goal: [135, 14],
+```
+
+(game.html, Zeile 83)
+
+```js
+    music: 'cave', width: 150, start: [2, 14], goal: [146, 14],
+```
+
+(game.html, Zeile 104)
+
+```js
+    music: 'volcano', width: 150, start: [2, 14], goal: [146, 14],
+```
+
+(game.html, Zeile 124)
+
+```js
+    music: 'boss', width: 30, start: [2, 14], goal: [28, 14],
+```
+
+#### Abspielen: `music`, `playMusic()`, `noteAt()`, `drumAt()`, `tickMusic()` wörtlich
+
+(game.html, Zeilen 254–299)
+
+```js
+const music = { track: null, step: 0, next: 0 };
+function playMusic(name) {
+  const tr = name ? TRACKS[name] : null;
+  if (music.track === tr) return;
+  music.track = tr; music.step = 0; music.next = 0;
+}
+function noteAt(freq, t0, dur, type, vol) {
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol, t0 + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g).connect(actx.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+}
+function drumAt(kind, t0) {
+  if (kind === 'k') {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.frequency.setValueAtTime(150, t0); o.frequency.exponentialRampToValueAtTime(40, t0 + 0.12);
+    g.gain.setValueAtTime(0.13, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.14);
+    o.connect(g).connect(actx.destination); o.start(t0); o.stop(t0 + 0.16);
+  } else if (kind === 's' || kind === 'h') {
+    if (!noiseBuf) {
+      noiseBuf = actx.createBuffer(1, actx.sampleRate * 0.3, actx.sampleRate);
+      const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const src = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain();
+    src.buffer = noiseBuf; f.type = 'highpass'; f.frequency.value = kind === 'h' ? 7000 : 1500;
+    const dur = kind === 'h' ? 0.04 : 0.12;
+    g.gain.setValueAtTime(kind === 'h' ? 0.025 : 0.06, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(f).connect(g).connect(actx.destination); src.start(t0); src.stop(t0 + dur + 0.02);
+  }
+}
+function tickMusic() {
+  if (!actx || actx.state !== 'running') return;
+  const tr = music.track;
+  if (!tr || muted || state === 'pause') { music.next = 0; return; }
+  const sd = 60 / tr.bpm / 2;
+  if (music.next < actx.currentTime) music.next = actx.currentTime + 0.03;
+  while (music.next < actx.currentTime + 0.15) {
+    const s = music.step, b = tr.bassN[s % tr.bassN.length], l = tr.leadN[s % tr.leadN.length];
+    if (b) noteAt(b, music.next, sd * 0.9, tr.bassWave, tr.bassWave === 'sawtooth' ? 0.035 : 0.06);
+    if (l) noteAt(l, music.next, sd * 0.85, tr.leadWave, tr.leadWave === 'triangle' ? 0.05 : 0.022);
+    drumAt(tr.drumN[s % tr.drumN.length], music.next);
+    music.next += sd; music.step++;
+  }
+}
+```
+
+**`playMusic(name)`:**
+
+- `name` ist ein Spurname oder `null` (= keine Musik).
+- **Ist es dieselbe Spur wie die aktuelle, passiert nichts**: kein Neustart, die Schleife läuft nahtlos weiter.
+- Sonst: `music.track` wechselt, `step = 0` und `next = 0`. Die neue Spur startet **sofort von vorn**. Es gibt **kein Überblenden**. Die bis zu 0.15 s bereits vorausgeplanten Noten der alten Spur klingen noch aus. Dadurch können sich ganz kurz beide Spuren überlappen.
+
+**`tickMusic()`:** Planung mit Vorlauf („Lookahead-Scheduler“):
+
+- Wird **einmal pro gezeichnetem Bild** in `frame()` aufgerufen (Zeile 1417), also nicht im festen 1/60-s-Takt der Spiellogik.
+- Bricht ab, wenn kein `actx` da ist oder er nicht `'running'` ist.
+- Bricht ab und setzt `music.next = 0`, wenn keine Spur gesetzt ist, `muted` gilt oder `state === 'pause'`.
+- Liegt `music.next` in der Vergangenheit (Start, nach Pause, nach Ruckeln, nach Tab-Wechsel), wird neu angesetzt: `actx.currentTime + 0.03` (30 ms Puffer). **`music.step` bleibt dabei erhalten**: Die Musik setzt an der Stelle fort, an der sie aufgehört hat. Verpasste Noten werden nicht nachgeholt, aber auch nicht übersprungen.
+- **Vorlauf:** Es werden alle Achtel geplant, die in den nächsten **0.15 s** beginnen.
+- Pro Achtel: Bassnote, Melodienote und Schlagzeug-Schlag (falls keine Pause), dann `next += sd`, `step++`.
+
+**Instrumente und Lautstärken:**
+
+| Stimme | Erzeugung | Dauer | Lautstärke | Hüllkurve |
+|---|---|---|---|---|
+| Bass | Oszillator, Wellenform `bassWave` | `sd * 0.9` | `0.035` bei sawtooth (nur `boss`), sonst `0.06` | `noteAt`: 10 ms exponentieller Anstieg von 0.0001, dann exponentielles Ausklingen bis Notenende |
+| Lead/Melodie | Oszillator, Wellenform `leadWave` | `sd * 0.85` | `0.05` bei triangle (nur `cave`), sonst `0.022` | wie Bass |
+| Kick `k` | Oszillator ohne gesetzten Typ = **Sinus**, 150 → 40 Hz in 0.12 s | 0.14 s (Stopp 0.16 s) | `0.13` | sofort voll, exponentiell aus bis 0.14 s |
+| Snare `s` | weißes Rauschen → Hochpass **1500 Hz** | 0.12 s | `0.06` | sofort voll, exponentiell aus |
+| HiHat `h` | weißes Rauschen → Hochpass **7000 Hz** | 0.04 s | `0.025` | sofort voll, exponentiell aus |
+
+**Rauschen:** Beim ersten Snare/HiHat-Schlag wird **einmal** ein Mono-Puffer von 0.3 s mit Zufallswerten zwischen −1 und 1 angelegt (`noiseBuf`). Jeder Schlag spielt denselben Puffer **von Anfang an**, darum klingt jede Snare und jede HiHat exakt gleich.
+
+#### Welche Spur in welchem Zustand läuft
+
+| Zustand | Musik | Code |
+|---|---|---|
+| **Seitenstart / Titelbild** | `jungle`, aber erst hörbar, wenn der AudioContext läuft, also nach dem ersten Tastendruck (siehe Abschnitt 10.5) | `toTitle()`: `loadLevel(0)` → `playMusic('jungle')`, dann `playMusic('jungle')` (zweiter Aufruf ohne Wirkung) |
+| **Titel → Spielstart** | `jungle` läuft **nahtlos weiter**, kein Neustart, weil Level 1 dieselbe Spur hat | `newGame()` → `loadLevel(0)` → `playMusic('jungle')` = gleiche Spur → `return` |
+| **Level-Intro** | Spur des Levels (`L.music`). Bei einem Levelwechsel **sofortiger Wechsel, Neustart von vorn** | `loadLevel()` Zeile 347 |
+| **Spielen** | Spur des Levels | – |
+| **Pause** | **Stille.** Es werden keine neuen Noten geplant, bereits geplante (≤ 0.15 s) klingen aus. Beim Weiterspielen geht es **an derselben Stelle** weiter (`step` bleibt) | `tickMusic` Zeile 289 |
+| **Tod (Todesbalken)** | Level-Spur läuft **weiter**, `hurt` erklingt darüber | – |
+| **Level geschafft** | Level-Spur läuft **weiter**, `win` erklingt darüber. Beim Weiter: sofortiger Wechsel zur nächsten Spur, von vorn | Zeilen 425–426 |
+| **Game Over** | **Musik aus** (`playMusic(null)`), dazu `over` | Zeile 420 |
+| **Game Over → Level nochmal** | Level-Spur **von vorn** (weil vorher `null`) | Zeile 430 → `loadLevel()` |
+| **Game Over → Hauptmenü** | `jungle` **von vorn** | Zeile 431 → `toTitle()` |
+| **Abspann** | **Musik aus** (`playMusic(null)`), dazu `win` | Zeile 427 |
+| **Abspann → Titel** | `jungle` **von vorn** | Zeile 433 → `toTitle()` |
+
+Der Boss-Sieg ändert die Musik **nicht**: `boss` läuft weiter, bis das Level geschafft und der Abspann erreicht ist.
+
+Aufrufe von `playMusic()` und `tickMusic()`:
+
+(game.html, Zeilen 322–323)
+
+```js
+function loadLevel(i) {
+  levelIdx = i; L = LEVELS[i]; theme = L.theme; grid = buildGrid(L);
+```
+
+(game.html, Zeilen 346–349)
+
+```js
+  cam = 0; levelTime = 0;
+  playMusic(L.music);
+  setState('intro');
+}
+```
+
+(game.html, Zeile 438)
+
+```js
+function toTitle() { loadLevel(0); playMusic('jungle'); setState('title'); }
+```
+
+(game.html, Zeilen 1411–1421)
+
+```js
+// ---------------------------------------------------------------- Loop
+toTitle();
+let last = performance.now(), acc = 0;
+function frame(now) {
+  acc += Math.min(0.25, (now - last) / 1000); last = now;
+  while (acc >= STEP) { update(STEP); acc -= STEP; }
+  tickMusic();
+  render();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+```
+
+---
+
+### 10.4 Stummschalten
+
+- **Variable:** `let … muted = false` (Zeile 176). Beim Laden der Seite ist der Ton also immer **an**.
+- **Taste:** M (`KeyM` → `'mute'`, Zeile 156). Umschalten in `update()`: `if (pressed.mute) muted = !muted;` (Zeile 397), **in jedem Zustand**: Titel, Intro, Spiel, Pause, Tod, Level geschafft, Game Over, Abspann. Weil M eine zugeordnete Taste ist, ruft sie auch `initAudio()` auf. Auf Touch-Geräten gibt es **keinen** Knopf dafür.
+- **Was verstummt:** **beides**, Geräusche und Musik.
+  - Geräusche: `tone()` bricht bei `muted` ab (Zeile 182).
+  - Musik: `tickMusic()` plant bei `muted` nichts mehr und setzt `music.next = 0` (Zeile 289).
+  - Schon geplante oder laufende Töne werden **nicht** abgebrochen: bis zu 0.15 s Musik und laufende Geräusche, z. B. `over` (0.82 s) oder `boom` (1 s), spielen zu Ende.
+  - Beim Wieder-Einschalten setzt die Musik **an der gleichen Stelle** fort (`step` bleibt), nicht von vorn.
+  - Die Musik läuft im Hintergrund nicht stumm mit. Der Schrittzähler steht still, solange stummgeschaltet ist.
+- **Gespeichert:** **nein.** Es gibt keinen localStorage-Schlüssel für den Ton. Der einzige Schlüssel im Spiel ist `'claudeJungleHigh'` für den Highscore. Nach einem Neuladen ist der Ton wieder an.
+- **Hinweis „Ton aus (M)“:** in `drawHUD()` (Zeile 1305), nur wenn `muted` gilt:
+  - Text `'Ton aus (M)'`, 12 px, fett, Farbe `#fff8` (Weiß, ≈ 53 % deckend), **rechtsbündig** an x `VW - 20` (940), Grundlinie y 58, also direkt unter dem Levelnamen rechts oben. Mit schwarzem Schatten (+2/+2).
+  - Sichtbar in allen Zuständen, in denen das HUD gezeichnet wird: Intro, Spiel, Pause, Tod, Level geschafft, Game Over, Abspann. In Pause, Level geschafft, Game Over und Abspann liegt er **unter** dem abdunkelnden Panel, ist also schwächer.
+  - **Auf dem Titelbild nicht sichtbar**, weil `render()` dort vor `drawHUD()` mit `return` aussteigt. Das Titelbild nennt nur die Taste: `'X / F : Prompt abfeuern     P : Pause     M : Musik & Ton an/aus'`.
+  - Ein Hinweis „Ton an“ oder ein Lautsprecher-Symbol gibt es nicht.
+
+(game.html, Zeile 176)
+
+```js
+let actx = null, muted = false, noiseBuf = null;
+```
+
+(game.html, Zeilen 155–157)
+
+```js
+const KEYMAP = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right',
+  Space: 'jump', ArrowUp: 'jump', KeyW: 'jump', Enter: 'start', KeyP: 'pause', Escape: 'pause', KeyM: 'mute',
+  KeyX: 'shoot', KeyF: 'shoot' };
+```
+
+(game.html, Zeilen 393–398)
+
+```js
+function update(dt) {
+  gt += dt; stateT += dt;
+  shake = Math.max(0, shake - dt);
+  if (banner && (banner.t -= dt) <= 0) banner = null;
+  if (pressed.mute) muted = !muted;
+  const go = pressed.start || pressed.jump;
+```
+
+(game.html, Zeilen 1296–1305)
+
+```js
+function drawHUD() {
+  ctx.fillStyle = '#0008'; rr(10, 10, 440, 34, 8); ctx.fill();
+  drawRobot(20, 14, 1, 0, 0.85);
+  text(`x${lives}`, 44, 34, 16, '#fff', 'left');
+  text(`Tokens ${tokens}`, 90, 34, 16, theme.accent, 'left');
+  text(`Score ${score}`, 230, 34, 16, '#ffd84a', 'left');
+  if (p.shield) text('FW', 385, 34, 14, '#7cf', 'left');
+  if (hasDouble) text('2x', 415, 34, 14, '#d68cff', 'left');
+  text(L.name.split(': ')[1], VW - 20, 34, 15, '#fffa', 'right');
+  if (muted) text('Ton aus (M)', VW - 20, 58, 12, '#fff8', 'right');
+```
+
+(game.html, Zeilen 1348–1360)
+
+```js
+  if (state === 'title') {
+    panel(0.55);
+    text('CLAUDE', VW / 2, 130, 64, '#D97757');
+    text('im RAM-Dschungel', VW / 2, 180, 32, theme.accent);
+    drawRobot(VW / 2 - 33, 215 + Math.abs(Math.sin(gt * 3)) * -20, 1, gt * 300, 3);
+    text('Drücke ENTER oder LEERTASTE', VW / 2, 360, 22, blinkCol());
+    text('← → / A D : laufen     ↑ / W / Leertaste : springen', VW / 2, 410, 15, '#ccc');
+    text('X / F : Prompt abfeuern     P : Pause     M : Musik & Ton an/aus', VW / 2, 435, 15, '#ccc');
+    text('Hilf Claude, sich durch den Speicher zum OUTPUT zu kämpfen!', VW / 2, 480, 15, '#ffd84a');
+    if (highscore) text(`Highscore: ${highscore}`, VW / 2, 515, 14, '#fff9');
+    return;
+  }
+  drawHUD();
+```
+
+---
+
+### 10.5 Besonderheiten und Auffälligkeiten
+
+#### Pause
+
+- Die Musik verstummt (keine neuen Noten, Rest ≤ 0.15 s klingt aus) und setzt beim Weiterspielen an derselben Stelle fort, mit 30 ms Puffer.
+- Geräusche: In der Pause wird nichts ausgelöst, weil Spieler und Welt stillstehen. `tone()` selbst kennt die Pause nicht.
+- M funktioniert in der Pause.
+- Die Pause hat kein eigenes Geräusch, weder beim Pausieren noch beim Fortsetzen.
+
+#### Tab-Wechsel / Fenster im Hintergrund
+
+- Es gibt **keinen** `visibilitychange`-/`blur`-Handler und kein `actx.suspend()`.
+- Im Hintergrund-Tab ruft der Browser `requestAnimationFrame` nicht mehr (oder stark gedrosselt) auf. Damit wird `tickMusic()` nicht mehr aufgerufen, und die Musik **bricht nach ≤ 0.15 s ab**. Der AudioContext selbst läuft weiter.
+- Beim Zurückkehren setzt die Musik an derselben Stelle fort (`next` liegt in der Vergangenheit → Neuansatz +0.03 s).
+- Ob ein Browser den Hintergrund-Tab ganz anders drosselt (z. B. `setTimeout`-ähnlich alle 1 s), hängt vom Browser ab. Im Code ist das nicht behandelt. **Nicht getestet.**
+- Wenn der Browser den Context selbst unterbricht (z. B. iOS bei einem Anruf, Zustand `'interrupted'`/`'suspended'`), bleibt das Spiel stumm, bis wieder eine zugeordnete Taste bzw. ein Touch `initAudio()` → `resume()` auslöst.
+
+#### Erster Start: Titelmusik ist meist nicht zu hören
+
+Der AudioContext entsteht erst beim ersten Tastendruck. Auf dem Titelbild ist der erste Tastendruck meist ENTER oder die Leertaste, und genau die starten gleichzeitig das Spiel. Wegen des nahtlosen Übergangs (`jungle` = Level 1) hört man die `jungle`-Spur zwar, aber erst ab dem Level-Intro. Das Titelbild selbst bleibt beim allerersten Besuch stumm, außer man drückt vorher eine andere zugeordnete Taste (z. B. ←). Drückt man als allererste Taste **M**, wird der Context gestartet **und** sofort stummgeschaltet.
+
+#### Lautstärke-Unterschiede
+
+Es gibt keinen Master-Regler, alle Werte gehen direkt an den Ausgang:
+
+- **Lautester Einzelwert:** `thud` (Boss-Landung) mit Sinus 0.2 plus Rechteck 0.05. Danach folgt der Kick der Musik mit 0.13.
+- Die Geräusche liegen sonst bei 0.03–0.09. Melodien mit Rechteck sind mit **0.022** sehr leise eingestellt, die Melodie in `cave` (Dreieck) mit 0.05. Rechteck und Sägezahn klingen bei gleichem Wert deutlich lauter als Sinus/Dreieck. Die Einstellungen gleichen das grob aus.
+- Der Bass ist bei `boss` (Sägezahn 0.035) leiser eingestellt als bei den anderen Spuren (0.06), klingt wegen des Sägezahns aber kräftiger.
+- `boom` (6 × Sägezahn 0.06) und `bossHit` überlagern sich mit der Boss-Musik. Ohne Kompressor ist bei vielen gleichzeitigen Geräuschen (z. B. mehrere Tokens + Stomp + Musik) Übersteuern denkbar. **Nicht gemessen.**
+
+#### Was wie ein Fehler oder eine Ungenauigkeit aussieht
+
+1. **`win` erklingt nach dem letzten Level zweimal:** einmal beim Berühren des Ziels (Zeile 574) und noch einmal beim Wechsel in den Abspann (Zeile 427).
+2. **Kein Überblenden, aber kurze Überlappung** beim Spurwechsel: Die vorausgeplanten ≤ 0.15 s der alten Spur laufen noch.
+3. **Stummschalten bricht laufende Töne nicht ab:** z. B. `over` oder `boom` spielen nach dem Drücken von M zu Ende.
+4. **Stummschaltung wird nicht gespeichert:** nach jedem Neuladen ist der Ton wieder an.
+5. **Kein Hinweis auf dem Titelbild,** wenn der Ton aus ist (das HUD fehlt dort).
+6. **Kein Touch-Knopf für den Ton:** Auf Handy/Tablet kann man nicht stummschalten.
+7. **Mausklick startet kein Audio,** nur Tasten aus `KEYMAP` und Touch. Andere Tasten (z. B. Shift, Buchstaben außer A/D/W/P/M/X/F) zählen nicht.
+8. **`tone()` hat keinen Attack:** Die Lautstärke springt sofort auf den Zielwert. Das kann leise klicken. Die Musik-Noten (`noteAt`) haben dagegen 10 ms Anstieg. Kick, Snare und HiHat setzen ebenfalls hart ein, was dort gewollt ist.
+9. **Gleiche Geräusche für verschiedene Ereignisse:** `power` für Firewall, Doppelsprung **und** Öffnen des Ziels nach dem Boss. `shield` für „Firewall fängt Treffer“ **und** „Firewall blockt Injection“. `stomp` für Bug, Virus und Injector.
+10. **`hurt` heißt „verletzt“, erklingt aber nur beim Tod** (in `die()`). Ein Treffer mit Firewall spielt `shield`.
+11. **Bei jedem 100. Token** erklingen `coin` und `oneup` gleichzeitig.
+12. **Musik hängt an der Bildrate:** `tickMusic()` läuft pro gezeichnetem Bild. Ruckelt das Spiel länger als 0.15 s, entsteht eine Lücke. Danach setzt die Musik verzögert fort, weil keine Noten übersprungen werden. Der Rhythmus „stolpert“ dann kurz.
+13. **Snare/HiHat sind immer derselbe Rausch-Schnipsel** (Anfang des 0.3-s-Puffers). Das wirkt etwas maschinell und ist vermutlich gewollt einfach.
+14. **Kick-Oszillator hat keinen gesetzten Typ**, der Standard ist Sinus. Das funktioniert, ist aber nur implizit.
+15. **Fehler beim Erzeugen des AudioContext werden still verschluckt.** Dann bleibt das Spiel ohne Hinweis stumm.
+16. **`tone()` prüft nicht, ob der Context läuft** (`'running'`), `tickMusic()` schon. Vor dem ersten `resume()` geplante Geräusche gehen still verloren. Das ist praktisch unkritisch, weil Geräusche erst nach Tastendrücken entstehen.
+17. **Game Over → Level nochmal** startet die Level-Musik von vorn. **Tod mit Respawn** lässt sie dagegen einfach weiterlaufen. Das ist uneinheitlich, aber vermutlich gewollt.
+18. **Titelmusik beim ersten Besuch praktisch nie zu hören** (siehe oben).
