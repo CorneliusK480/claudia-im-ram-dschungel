@@ -8,8 +8,9 @@ status: draft
 # Design: Claudia im RAM-Dschungel
 
 Ein verspieltes Retro-Jump-&-Run im Pixel-Look mit Terminal-Charme und leuchtenden Farben auf
-dunklem Grund. Der Prototyp `game.html` ist die visuelle Vorlage: Alles soll genauso aussehen und
-klingen.
+dunklem Grund. Der Prototyp `game.html` war die visuelle Vorlage für die Slices 1–5. Ab Slice 6 ist er nur
+noch Ideengeber: Neue Dinge sollen in diesen Stil passen, müssen aber nicht wie im Prototyp
+aussehen oder klingen.
 
 ## Style
 

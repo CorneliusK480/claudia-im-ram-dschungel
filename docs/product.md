@@ -17,8 +17,14 @@ wird, heißt sie jetzt **Claudia** und ist eine kleine Roboterin.
 
 Der Prototyp macht Spaß, steckt aber komplett in einer einzigen, schwer änderbaren Datei. Es gibt
 keine Tests, und die Level sind lange Zahlenlisten im Code. Neue Ideen aus dem Backlog lassen sich
-so kaum noch sicher einbauen. Die echte Version soll genau dasselbe Spiel bieten, aber so aufgebaut
-sein, dass man es verstehen, prüfen und erweitern kann.
+so kaum noch sicher einbauen. Die echte Version soll so aufgebaut sein, dass man sie verstehen,
+prüfen und erweitern kann.
+
+**Prototyp nur noch als Ideengeber (entschieden in Slice 6, 2026-10-02):** Die Slices 1–5 wurden
+möglichst genau nach dem Prototyp gebaut. Ab Slice 6 wird frei weiterentwickelt: Was in
+`docs/prototype-reference.md` steht, dient als Startpunkt, alles andere legen wir in der jeweiligen
+Spec selbst fest. Das Spiel darf dadurch vom Prototyp abweichen. `game.html` liegt nicht im
+Projekt und wird nicht mehr gebraucht.
 
 ## Users
 
@@ -31,7 +37,7 @@ sein, dass man es verstehen, prüfen und erweitern kann.
 
 1. Eine Spielerin öffnet den Link, startet auf dem Titelbild und spielt Level 1–5 nacheinander durch.
 2. Ein Spieler springt auf Bugs, sammelt Tokens und verwandelt Gegner mit der Prompt-Kanone in
-   Toaster, Gummienten oder Zimmerpflanzen.
+   Feature-Geschenke, Schmetterlinge, Gummienten oder Cookies.
 3. Eine Spielerin verliert alle Leben, versucht das Level nochmal (Score wieder bei 0) oder geht zurück
    ins Menü.
 4. Ein Spieler besiegt den Boss LEGACY_BUG.exe, sieht den Abspann und hat vielleicht einen neuen
@@ -41,7 +47,7 @@ sein, dass man es verstehen, prüfen und erweitern kann.
 ## First version
 
 **In scope**
-- Alles, was der Prototyp heute kann: 5 Level, alle Gegner und Fallen, Prompt-Kanone mit
+- Die Inhalte des Prototyps als Grundlage: 5 Level, alle Gegner und Fallen, Prompt-Kanone mit
   Rate Limit, Power-ups, Gags und Sprüche, Musik und Sound
 - Spielbar am Desktop (Tastatur) und am Handy (Touch-Knöpfe)
 - Highscore und „Ton an/aus“ bleiben im Browser gespeichert
@@ -85,24 +91,25 @@ Build order. Each slice is something you can see and click when it's done. `/afs
    Einstellung bleibt gespeichert. Die Musik der anderen Level und die übrigen Geräusche kommen mit
    ihren Slices.
 6. **Prompt-Kanone** — Schießen mit Rate Limit.
-   Done when: X/F feuert Prompts ab, und Bugs werden zu Toaster, Ente oder Pflanze. Die
+   Done when: X/F feuert Prompts ab, und Bugs werden zu Feature-Geschenk, Schmetterling,
+   Gummiente oder Cookie. Die
    API-Credits-Leiste leert sich und lädt wieder auf. Bei Dauerfeuer erscheint
    „429 Too Many Requests“. Schießen, Verwandeln und 429 haben ihre Geräusche.
 7. **Restliche Gefahren & Gags** — alles Übrige aus Level 1.
    Done when: Viren, Stacheln, Firewall-Power-up, Halluzinations-Plattformen, Prompt-Injector
-   (Steuerung vertauscht) und „War diese Antwort hilfreich? 👍 👎“ beim Tod funktionieren wie im
-   Prototyp, jeweils mit ihren Geräuschen wie im Prototyp.
+   (Steuerung vertauscht) und „War diese Antwort hilfreich? 👍 👎“ beim Tod funktionieren, jeweils
+   mit eigenen Geräuschen.
 8. **Level 2–4** — die weiteren Welten.
    Done when: Cache-Canyon (Datenbusse), Festplatten-Höhle (Decke, Memory Leaks,
    Doppelsprung-Power-up) und CPU-Vulkan (Lava, bröckelnde Register) sind nacheinander
    durchspielbar, jedes Level mit eigenen Farben und eigener Musik. Doppelsprung und bröckelnde
    Register haben ihre Geräusche.
 9. **Boss-Level & Abspann** — LEGACY_BUG.exe, diesmal fair.
-   Done when: Der Boss läuft, springt, wirft Code-Brocken und macht Schockwellen wie im Prototyp.
+   Done when: Der Boss läuft, springt, wirft Code-Brocken und macht Schockwellen.
    Nach jedem Angriff ist er kurz sichtbar **erschöpft**: Sein Kopf blinkt, und eine seitliche
    Berührung ist dann harmlos. Nur in dieser Phase treffen Draufspringen **und** Prompts. Nach
    5 Treffern öffnet sich das Terminal, und der Abspann „ALLE TASKS ERLEDIGT! 🎉“ erscheint.
-   Boss-Musik und Boss-Geräusche wie im Prototyp.
+   Der Boss hat eigene Musik und eigene Geräusche.
 10. **Handy-Steuerung** — Touch-Knöpfe.
     Done when: Auf dem Handy erscheinen die Knöpfe ◀ ▶ 💬 ⤒, und das ganze Spiel ist damit spielbar,
     vom Titelbild bis zum Abspann.

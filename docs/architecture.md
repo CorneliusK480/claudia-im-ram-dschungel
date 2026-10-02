@@ -53,7 +53,7 @@ So lassen sich die Regeln automatisch testen, ohne dass ein Bildschirm nötig is
 | What | Choice | Why (one line, plain language) |
 | ---- | ------ | ------------------------------ |
 | Sprache | TypeScript | JavaScript mit Typ-Prüfung: Viele Fehler fallen schon beim Schreiben auf statt erst beim Spielen. |
-| Spiel-Engine | keine, eigener Code | Man lernt mehr, und das Spiel fühlt sich exakt an wie der Prototyp. |
+| Spiel-Engine | keine, eigener Code | Man lernt mehr, und die Bewegung fühlt sich an wie im Prototyp. |
 | Grafik | HTML-Canvas (2D) | Funktioniert im Prototyp schon gut und läuft in jedem Browser. |
 | Ton | Web Audio (im Browser eingebaut) | Wie im Prototyp: Töne werden erzeugt, keine Dateien nötig. |
 | Bauwerkzeug | Vite | Startet beim Entwickeln sofort, lädt bei Änderungen neu und erzeugt am Ende fertige Webseiten-Dateien. |
@@ -87,12 +87,16 @@ Roboter steht in `.github/workflows/deploy.yml`.
 
 ## From the prototype
 
+Ab Slice 6 ist der Prototyp nur noch Ideengeber (siehe product.md, Problem). Was schon gebaut ist
+und was in `docs/prototype-reference.md` steht, bleibt. Neues wird in der jeweiligen Spec
+festgelegt.
+
 **Keep:**
 - Alle Spielwerte (Schwerkraft, Sprunghöhe, Tempo, Leben, Punkte, Zeitbonus), damit es sich
   gleich anfühlt
 - Den Aufbau der 5 Level (Positionen von Plattformen, Gegnern, Tokens)
 - Die feste Rechenschritt-Schleife, den Chiptune-Ansatz und das Zeichnen im Code
-- Alle Texte und Sprüche
+- Alle Texte und Sprüche, die in `docs/prototype-reference.md` stehen
 
 **Throw away / redo:**
 - Eine einzige Datei mit allem → klar getrennte Teile wie oben beschrieben

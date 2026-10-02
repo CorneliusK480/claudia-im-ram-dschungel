@@ -3,6 +3,9 @@
 Extrahiert aus dem Prototyp `game.html` (Array `LEVELS`, Zeilen 40–130) inkl. der Spielregeln,
 die das Verhalten der Level-Elemente bestimmen. Alle Werte entsprechen exakt dem Prototyp.
 
+> Ab Slice 6 ist der Prototyp nur noch Ideengeber (siehe product.md). Diese Datei wird nicht mehr
+> ergänzt. Was hier steht, ist ein Startpunkt, und die Specs dürfen davon abweichen.
+
 ---
 
 ## 1. Grundlagen & Koordinatensystem
